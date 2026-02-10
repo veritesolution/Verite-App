@@ -538,6 +538,10 @@ class SignUpActivity : AppCompatActivity() {
             ).apply {
                 setMargins(dpToPx(16), 0, dpToPx(16), dpToPx(16))
             }
+            setOnClickListener {
+                val intent = Intent(this@SignUpActivity, BluetoothActivity::class.java)
+                startActivity(intent)
+            }
         }
         rootLayout.addView(createAccountButton)
         

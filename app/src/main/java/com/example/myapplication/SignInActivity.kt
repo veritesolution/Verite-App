@@ -436,6 +436,10 @@ class SignInActivity : AppCompatActivity() {
             ).apply {
                 setMargins(dpToPx(16), 0, dpToPx(16), dpToPx(16))
             }
+            setOnClickListener {
+                val intent = Intent(this@SignInActivity, BluetoothActivity::class.java)
+                startActivity(intent)
+            }
         }
         rootLayout.addView(logInButton)
         
