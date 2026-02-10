@@ -211,6 +211,16 @@ class HeadbandHomeActivity : AppCompatActivity() {
                     set.centerVertically(label.id, node.id)
                 }
             }
+
+            if (feature.name == "TMR") {
+                val intent = android.content.Intent(this, TmrFeatureActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            } else if (feature.name == "To-Do List") {
+                val intent = android.content.Intent(this, TodoActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            }
         }
 
         set.connect(footerText.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(40))

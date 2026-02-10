@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingTop="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="←"
+            android:textColor="#00BFA5"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Select Category"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="40dp" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <Button
+                android:id="@+id/btnSmoking"
+                style="@style/CategoryButtonStyle"
+                android:text="Smoking"
+                app:icon="@android:drawable/ic_lock_idle_alarm" />
+
+            <Button
+                android:id="@+id/btnAlcohol"
+                style="@style/CategoryButtonStyle"
+                android:text="Alcohol"
+                app:icon="@android:drawable/ic_menu_camera" />
+
+            <Button
+                android:id="@+id/btnSocialMedia"
+                style="@style/CategoryButtonStyle"
+                android:text="Social Media"
+                app:icon="@android:drawable/ic_menu_share" />
+
+            <Button
+                android:id="@+id/btnGaming"
+                style="@style/CategoryButtonStyle"
+                android:text="Gaming"
+                app:icon="@android:drawable/ic_media_play" />
+
+            <Button
+                android:id="@+id/btnJunkFood"
+                style="@style/CategoryButtonStyle"
+                android:text="Junk Food"
+                app:icon="@android:drawable/ic_menu_gallery" />
+
+            <Button
+                android:id="@+id/btnPornography"
+                style="@style/CategoryButtonStyle"
+                android:text="Pornography"
+                app:icon="@android:drawable/ic_lock_lock" />
+
+            <Button
+                android:id="@+id/btnProcrastination"
+                style="@style/CategoryButtonStyle"
+                android:text="Procrastination"
+                app:icon="@android:drawable/ic_menu_recent_history" />
+
+            <Button
+                android:id="@+id/btnOther"
+                style="@style/CategoryButtonStyle"
+                android:text="Other"
+                app:icon="@android:drawable/ic_input_add" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
