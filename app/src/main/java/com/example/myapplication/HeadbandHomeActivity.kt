@@ -31,7 +31,7 @@ class HeadbandHomeActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.BLACK)
+            setBackgroundResource(R.drawable.group_1000006461)
         }
 
         // --- Header ---
@@ -218,6 +218,22 @@ class HeadbandHomeActivity : AppCompatActivity() {
                 label.setOnClickListener { startActivity(intent) }
             } else if (feature.name == "To-Do List") {
                 val intent = android.content.Intent(this, TodoActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            } else if (feature.name == "Sleep Data") {
+                val intent = android.content.Intent(this, SleepDataActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            } else if (feature.name == "Alarm") {
+                val intent = android.content.Intent(this, AlarmActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            } else if (feature.name == "Dream galore") {
+                val intent = android.content.Intent(this, DreamJournalActivity::class.java)
+                node.setOnClickListener { startActivity(intent) }
+                label.setOnClickListener { startActivity(intent) }
+            } else if (feature.name == "Bio Feedback") {
+                val intent = android.content.Intent(this, BioFeedbackActivity::class.java)
                 node.setOnClickListener { startActivity(intent) }
                 label.setOnClickListener { startActivity(intent) }
             }

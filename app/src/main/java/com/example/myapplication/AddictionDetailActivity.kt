@@ -30,7 +30,7 @@ class AddictionDetailActivity : AppCompatActivity() {
                 return@setOnClickListener
             }
 
-            val intent = Intent(this, AiPlanActivity::class.java).apply {
+            val intent = Intent(this, AiProcessingActivity::class.java).apply {
                 putExtra("ADDICTION_TYPE", addictionType)
                 putExtra("FREQUENCY", frequency)
                 putExtra("DURATION", duration)

@@ -38,9 +38,10 @@ class AiRepository {
     }
 
     private val PRIMARY_MODEL = "deepseek/deepseek-r1-0528:free"
-    private val FALLBACK_MODEL = "deepseek/deepseek-chat"
-    private val MAX_RETRIES = 3
-    private val RETRY_DELAY = 2000L // milliseconds
+    private val SECONDARY_MODEL = "deepseek/deepseek-chat"
+    private val TERTIARY_MODEL = "mistralai/mistral-7b-instruct:free"
+    private val MAX_RETRIES = 2
+    private val RETRY_DELAY = 1500L // milliseconds
 
     fun generate21DayPlan(
         addictionType: String,
@@ -110,39 +111,37 @@ class AiRepository {
             }
         }
 
-        // 🚀 FALLBACK MODEL
-        try {
-            println("⚡ Switching to fast fallback model...")
-            val fallbackRequest = AiRequest(
-                model = FALLBACK_MODEL,
-                messages = listOf(
-                    Message(role = "system", content = "You are a recovery specialist and empathetic counselor."),
-                    Message(role = "user", content = prompt)
+        // 🚀 FALLBACK CHAIN
+        val fallbacks = listOf(SECONDARY_MODEL, TERTIARY_MODEL)
+        for (fallback in fallbacks) {
+            try {
+                println("⚡ Switching to fallback model: $fallback")
+                val fallbackRequest = AiRequest(
+                    model = fallback,
+                    messages = listOf(
+                        Message(role = "system", content = "You are a recovery specialist and empathetic counselor."),
+                        Message(role = "user", content = prompt)
+                    )
                 )
-            )
 
-            val response = apiService.generatePlan(
-                authorization = "Bearer $apiKey",
-                referer = "https://verite.app",
-                title = "Verite App",
-                request = fallbackRequest
-            )
-            
-            val content = response.choices?.firstOrNull()?.message?.content
-            if (content != null) {
-                emit(Result.success(content))
-            } else {
-                val errorMessage = response.error?.message ?: "No plan generated even from fallback model."
-                emit(Result.failure(Exception(errorMessage)))
+                val response = apiService.generatePlan(
+                    authorization = "Bearer $apiKey",
+                    referer = "https://verite.app",
+                    title = "Verite App",
+                    request = fallbackRequest
+                )
+                
+                val content = response.choices?.firstOrNull()?.message?.content
+                if (content != null) {
+                    emit(Result.success(content))
+                    return@flow
+                }
+            } catch (e: Exception) {
+                println("⚠️ Fallback $fallback failed: ${e.message}")
             }
-        } catch (e: SocketTimeoutException) {
-            emit(Result.failure(Exception("AI is taking too long to respond. Please try again.")))
-        } catch (e: UnknownHostException) {
-            emit(Result.failure(Exception("Cannot connect to AI server. Please check your internet connection.")))
-        } catch (e: IOException) {
-            emit(Result.failure(Exception("Network error: ${e.message ?: "Connection lost"}")))
-        } catch (e: Exception) {
-            emit(Result.failure(e))
         }
+
+        // Final failure if all models failed
+        emit(Result.failure(Exception("AI services are currently busy or unavailable. Please try again in a few minutes.")))
     }
 }

@@ -1,4 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Vérité</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_center">Center</string>
+    <string name="nav_profile">Profile</string>
+    <string name="connected">Connected</string>
+    <string name="not_connected">Not Connected</string>
+    <string name="cd_back_button">Back Button</string>
+    <string name="auto_power_off">Auto Power Off</string>
+    <string name="cd_selection_indicator">Selection Indicator</string>
+    <string name="power_off_description">Adjust your device auto power off settings.</string>
+    <string name="confirm">Confirm</string>
+    <string name="help_feedback">Help &amp; Feedback</string>
+    <string name="help_center">Help Center</string>
+    <string name="send_feedback">Send Feedback</string>
+    <string name="terms_privacy">Terms &amp; Privacy</string>
+    <string name="licenses">Licenses</string>
+    <string name="done">Done</string>
+    <string name="my_devices">My Devices</string>
 </resources>

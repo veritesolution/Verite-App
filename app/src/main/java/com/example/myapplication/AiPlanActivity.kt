@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
@@ -15,6 +16,7 @@ import com.example.myapplication.data.repository.RecoveryRepository
 import com.example.myapplication.viewmodel.AiPlanState
 import com.example.myapplication.viewmodel.AiViewModel
 import com.example.myapplication.viewmodel.AiViewModelFactory
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class AiPlanActivity : AppCompatActivity() {
@@ -68,16 +70,18 @@ class AiPlanActivity : AppCompatActivity() {
                     }
                     is AiPlanState.Error -> {
                         loadingSpinner.visibility = View.GONE
+                        loadingText.visibility = View.VISIBLE
                         loadingText.text = "Error: ${state.message}"
-                        Toast.makeText(this@AiPlanActivity, state.message, Toast.LENGTH_LONG).show()
+                        loadingText.setTextColor(android.graphics.Color.RED)
+                        Toast.makeText(this@AiPlanActivity, "Plan generation failed", Toast.LENGTH_LONG).show()
                     }
                 }
             }
         }
 
         btnSave.setOnClickListener {
-            Toast.makeText(this, "Plan Saved Successfully!", Toast.LENGTH_SHORT).show()
-            finish()
+            val intent = Intent(this, AiAgreementActivity::class.java)
+            startActivity(intent)
         }
     }
 }

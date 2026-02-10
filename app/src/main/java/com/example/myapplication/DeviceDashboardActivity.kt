@@ -189,7 +189,10 @@ class DeviceDashboardActivity : AppCompatActivity() {
             startActivity(android.content.Intent(this, HeadbandHomeActivity::class.java))
         }
 
-        createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
+        val backrestCard = createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
+        backrestCard.setOnClickListener {
+            startActivity(Intent(this, BackrestHomeActivity::class.java))
+        }
         createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
         createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
 
