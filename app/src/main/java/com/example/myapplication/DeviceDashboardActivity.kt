@@ -120,7 +120,7 @@ class DeviceDashboardActivity : AppCompatActivity() {
         scrollView.addView(cardsLayout)
 
         // Function to create device cards
-        fun createDeviceCard(name: String, status: String, imageResId: Int) {
+        fun createDeviceCard(name: String, status: String, imageResId: Int): View {
             val cardView = RelativeLayout(this).apply {
                 setPadding(dpToPx(16), dpToPx(24), dpToPx(16), dpToPx(24))
                 background = GradientDrawable().apply {
@@ -177,13 +177,18 @@ class DeviceDashboardActivity : AppCompatActivity() {
             textLayout.addView(statusText)
 
             cardsLayout.addView(cardView)
+            return cardView
         }
 
         // Add Cards
-        val sleepBandResId = resources.getIdentifier("sleep_band", "drawable", packageName)
+            val sleepBandResId = resources.getIdentifier("sleep_band", "drawable", packageName)
         val backrestResId = resources.getIdentifier("smart_backrest", "drawable", packageName)
 
-        createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
+        val sleepBandCard = createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
+        sleepBandCard.setOnClickListener {
+            startActivity(android.content.Intent(this, HeadbandHomeActivity::class.java))
+        }
+
         createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
         createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
         createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
