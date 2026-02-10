@@ -186,7 +186,7 @@ class OnboardingActivity2 : AppCompatActivity() {
         val bciImage = ImageView(this).apply {
             id = View.generateViewId()
             try {
-                setImageResource(R.drawable.brain_1)
+                setImageResource(R.drawable.eeg_measure_removebg_preview)
             } catch (e: Exception) {
                 setBackgroundColor(Color.parseColor("#009688"))
             }

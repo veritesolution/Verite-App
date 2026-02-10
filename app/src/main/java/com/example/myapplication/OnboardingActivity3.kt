@@ -54,10 +54,10 @@ class OnboardingActivity3 : AppCompatActivity() {
             textSize = 24f
             setTextColor(Color.parseColor("#00E6B8"))
             setBackgroundColor(Color.TRANSPARENT)
-            setPadding(dpToPx(8), dpToPx(8), dpToPx(8), dpToPx(8))
+            setPadding(0, 0, 0, 0) // Remove padding to center text in fixed width
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                dpToPx(48), // Fixed width for balancing
+                dpToPx(48)
             )
             setOnClickListener {
                 finish()
@@ -94,6 +94,16 @@ class OnboardingActivity3 : AppCompatActivity() {
             )
         }
         headerLayout.addView(titleText)
+
+        // Dummy balancing view
+        val dummyView = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                dpToPx(48), // Match back button width
+                dpToPx(48)
+            )
+            visibility = View.INVISIBLE
+        }
+        headerLayout.addView(dummyView)
         
         // Gaming chair image
         val chairImage = ImageView(this).apply {
