@@ -210,9 +210,12 @@ class DeviceDashboardActivity : AppCompatActivity() {
         }
         rootLayout.addView(bottomNav)
 
-        fun addNavItem(iconResId: Int) {
+        fun addNavItem(iconResId: Int): View {
             val itemLayout = FrameLayout(this).apply {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
+                isClickable = true
+                isFocusable = true
+                
             }
             val icon = ImageView(this).apply {
                 setImageResource(iconResId)
@@ -223,11 +226,20 @@ class DeviceDashboardActivity : AppCompatActivity() {
             }
             itemLayout.addView(icon)
             bottomNav.addView(itemLayout)
+            return itemLayout
         }
 
-        addNavItem(android.R.drawable.ic_menu_view) // Home icon placeholder
-        addNavItem(android.R.drawable.star_on) // Features icon placeholder
-        addNavItem(android.R.drawable.ic_menu_myplaces) // Profile icon placeholder
+        addNavItem(R.drawable.vector) // First icon
+        val frameIcon = addNavItem(R.drawable.frame) // Second icon
+        val userIcon = addNavItem(R.drawable.user) // Third icon
+
+        frameIcon.setOnClickListener {
+             startActivity(Intent(this, OrynActivity::class.java))
+        }
+
+        userIcon.setOnClickListener {
+             startActivity(Intent(this, ProfileActivity::class.java))
+        }
 
         // Set Constraints
         val set = ConstraintSet()
