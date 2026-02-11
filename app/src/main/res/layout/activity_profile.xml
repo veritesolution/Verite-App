@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#051212">
+
+    <!-- Header -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_arrow_back"
+            app:tint="#00BFA5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Vérité"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <!-- Making the 'e' teal manually in code or assume the text is just title for now. 
+             If needed strictly like image, we can use Spannable in Code or HTML here. 
+             For XML simplicity, I'll stick to a single TextView or 3 TextViews. 
+             Let's use a single one and I'll handle the color in Kotlin if strictly needed, 
+             or just White for now as per base requirement, but the image showed multi-color.
+             Actually, let's just make it White for the header title as per common secondary screens,
+             or I can copy the Spannable logic from Dashboard if I want. 
+             For now, simple white text. -->
+        
+        <ImageView
+            android:id="@+id/imgProfileSmall"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:src="@drawable/user"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:paddingBottom="40dp">
+
+            <!-- Profile Image Section -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:layout_marginBottom="16dp">
+
+                <ImageView
+                    android:id="@+id/imgProfileLarge"
+                    android:layout_width="100dp"
+                    android:layout_height="100dp"
+                    android:src="@drawable/user" 
+                    android:scaleType="centerCrop"
+                    android:background="@drawable/gradient_circle_bg"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+                <!-- Note: src should be a real photo. using user placeholder for now. 
+                     If I have an image like 'woman.jpg' I'd use it. I remember seeing some images. -->
+                
+                <ImageView
+                    android:id="@+id/btnEditProfile"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:src="@drawable/ic_edit"
+                    android:background="@drawable/gradient_circle_bg"
+                    android:padding="6dp"
+                    app:tint="#000000"
+                    app:layout_constraintBottom_toBottomOf="@id/imgProfileLarge"
+                    app:layout_constraintEnd_toEndOf="@id/imgProfileLarge"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView
+                android:id="@+id/txtUserName"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Isiri Gangaamini"
+                android:textColor="#FFFFFF"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                android:layout_marginBottom="4dp"/>
+
+            <TextView
+                android:id="@+id/txtUserEmail"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="isiri@mail.com"
+                android:textColor="#B0BEC5"
+                android:textSize="14sp"
+                android:layout_marginBottom="32dp"/>
+
+            <!-- Settings Menu -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingHorizontal="16dp">
+
+                <!-- Account -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuAccount" />
+                
+                <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                <!-- Appearance -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuAppearance"/>
+                
+                <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                <!-- Language -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuLanguage"/>
+
+                <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                <!-- Notifications -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuNotifications"/>
+                
+                <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                <!-- Privacy -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuPrivacy"/>
+
+                <View android:layout_width="match_parent" android:layout_height="16dp"/>
+
+                <!-- Sound -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuSound"/>
+
+            </LinearLayout>
+
+            <androidx.appcompat.widget.AppCompatButton
+                android:id="@+id/btnLogout"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginHorizontal="16dp"
+                android:layout_marginTop="40dp"
+                android:text="Log Out"
+                android:textColor="#00BFA5"
+                android:background="@drawable/btn_outline_teal"
+                android:textAllCaps="false"
+                android:textSize="16sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

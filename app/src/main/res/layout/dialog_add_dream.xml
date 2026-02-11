@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="20dp"
+    android:background="@color/black">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dream Title"
+        android:textColor="@color/accent_teal"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/etDreamTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="e.g., A Castle in the Clouds"
+        android:textColor="@color/white"
+        android:backgroundTint="@color/accent_teal"
+        android:padding="12dp"
+        android:textColorHint="#4DFFFFFF"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Dream Details"
+        android:textColor="@color/accent_teal"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"/>
+
+    <EditText
+        android:id="@+id/etDreamContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Describe what happened..."
+        android:textColor="@color/white"
+        android:backgroundTint="@color/accent_teal"
+        android:padding="12dp"
+        android:textColorHint="#4DFFFFFF"
+        android:minLines="3"
+        android:gravity="top"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Overall Mood"
+        android:textColor="@color/accent_teal"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp"/>
+
+    <Spinner
+        android:id="@+id/spinnerMood"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="@color/white"
+        android:theme="@android:style/Theme.DeviceDefault"/>
+
+</LinearLayout>

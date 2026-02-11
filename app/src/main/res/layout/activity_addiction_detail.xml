@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#000000"
+    android:padding="16dp">
+
+    <!-- Header -->
+    <LinearLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:paddingTop="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/backButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:padding="8dp"
+            android:text="←"
+            android:textColor="#00BFA5"
+            android:textSize="24sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="Details"
+            android:textColor="#FFFFFF"
+            android:textSize="20sp"
+            android:textStyle="bold" />
+        
+        <View android:layout_width="40dp" android:layout_height="40dp"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="16dp"
+        android:contentDescription="Input Scroll"
+        app:layout_constraintBottom_toTopOf="@id/btnGenerate"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/InputLabelStyle"
+                android:text="How often do you engage in this?" />
+
+            <EditText
+                android:id="@+id/inputFrequency"
+                style="@style/InputFieldStyle"
+                android:hint="e.g., Daily, 3 times a week" />
+
+            <TextView
+                style="@style/InputLabelStyle"
+                android:text="How long has this been going on?" />
+
+            <EditText
+                android:id="@+id/inputDuration"
+                style="@style/InputFieldStyle"
+                android:hint="e.g., 5 years, 6 months" />
+
+            <TextView
+                style="@style/InputLabelStyle"
+                android:text="What triggers this behavior?" />
+
+            <EditText
+                android:id="@+id/inputTrigger"
+                style="@style/InputFieldStyle"
+                android:hint="e.g., Stress, Boredom, Loneliness"
+                android:inputType="textMultiLine"
+                android:lines="3"
+                android:gravity="top|start" />
+
+            <TextView
+                style="@style/InputLabelStyle"
+                android:text="Why do you want to stop?" />
+
+            <EditText
+                android:id="@+id/inputMotivation"
+                style="@style/InputFieldStyle"
+                android:hint="e.g., Health, Family, Money"
+                android:inputType="textMultiLine"
+                android:lines="3"
+                android:gravity="top|start" />
+
+        </LinearLayout>
+    </ScrollView>
+
+    <Button
+        android:id="@+id/btnGenerate"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:backgroundTint="#00BFA5"
+        android:text="Generate Recovery Plan"
+        android:textColor="#000000"
+        android:textStyle="bold"
+        android:padding="16dp"
+        app:cornerRadius="12dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
