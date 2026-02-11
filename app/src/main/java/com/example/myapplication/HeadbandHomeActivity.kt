@@ -18,6 +18,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.lifecycle.lifecycleScope
+import coil.load
+import coil.transform.CircleCropTransformation
+import com.example.myapplication.data.local.AppDatabase
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class HeadbandHomeActivity : AppCompatActivity() {
 
@@ -63,8 +69,27 @@ class HeadbandHomeActivity : AppCompatActivity() {
             setImageResource(android.R.drawable.ic_menu_myplaces)
             setColorFilter(Color.WHITE)
             layoutParams = ConstraintLayout.LayoutParams(dpToPx(40), dpToPx(40))
+            setOnClickListener {
+                startActivity(android.content.Intent(this@HeadbandHomeActivity, ProfileActivity::class.java))
+            }
         }
         rootLayout.addView(profileIcon)
+
+        // Observe User Profile
+        val database = AppDatabase.getDatabase(this)
+        lifecycleScope.launch {
+            database.userDao().getUser().collect { user ->
+                user?.profileImagePath?.let { path ->
+                    val file = java.io.File(path)
+                    if (file.exists()) {
+                        profileIcon.clearColorFilter()
+                        profileIcon.load(file) {
+                            transformations(CircleCropTransformation())
+                        }
+                    }
+                }
+            }
+        }
 
         // --- Central Headband ---
         val headbandImage = ImageView(this).apply {

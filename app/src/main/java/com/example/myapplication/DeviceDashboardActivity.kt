@@ -20,7 +20,9 @@ import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.Device
 import com.example.myapplication.data.model.DeviceType
 import com.example.myapplication.data.repository.DeviceRepository
-import kotlinx.coroutines.flow.first
+import coil.load
+import coil.transform.CircleCropTransformation
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 
 class DeviceDashboardActivity : AppCompatActivity() {
@@ -69,6 +71,21 @@ class DeviceDashboardActivity : AppCompatActivity() {
             }
         }
         headerLayout.addView(profileIcon)
+
+        // Observe User Profile
+        lifecycleScope.launch {
+            database.userDao().getUser().collect { user ->
+                user?.profileImagePath?.let { path ->
+                    val file = java.io.File(path)
+                    if (file.exists()) {
+                        profileIcon.clearColorFilter()
+                        profileIcon.load(file) {
+                            transformations(CircleCropTransformation())
+                        }
+                    }
+                }
+            }
+        }
 
         // App Title (Center)
         val titleText = TextView(this).apply {

@@ -10,8 +10,10 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import coil.load
 import coil.transform.CircleCropTransformation
+import com.example.myapplication.data.auth.AuthManager
 import com.example.myapplication.data.local.AppDatabase
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -65,6 +67,7 @@ class ProfileActivity : AppCompatActivity() {
 
         // Log Out
         findViewById<View>(R.id.btnLogout).setOnClickListener {
+            AuthManager(this).signOut()
             // Navigate to Welcome and clear stack
             val intent = Intent(this, WelcomeActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
