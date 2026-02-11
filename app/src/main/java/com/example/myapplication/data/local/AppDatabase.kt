@@ -9,11 +9,12 @@ import com.example.myapplication.data.model.DreamEntry
 import com.example.myapplication.data.model.PowerOffSettings
 import com.example.myapplication.data.model.RecoveryPlan
 import com.example.myapplication.data.model.TodoItem
+import com.example.myapplication.data.model.User
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [RecoveryPlan::class, TodoItem::class, DreamEntry::class, Device::class, PowerOffSettings::class],
-    version = 7,
+    entities = [RecoveryPlan::class, TodoItem::class, DreamEntry::class, Device::class, PowerOffSettings::class, User::class],
+    version = 8,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -23,6 +24,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun dreamDao(): DreamDao
     abstract fun deviceDao(): DeviceDao
     abstract fun settingsDao(): SettingsDao
+    abstract fun userDao(): UserDao
     
     companion object {
         @Volatile

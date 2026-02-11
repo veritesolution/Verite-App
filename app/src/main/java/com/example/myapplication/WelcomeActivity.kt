@@ -16,11 +16,41 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.data.auth.AuthManager
+import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.repository.DeviceRepository
+import kotlinx.coroutines.launch
 
 class WelcomeActivity : AppCompatActivity() {
     
+    private lateinit var authManager: AuthManager
+    private lateinit var deviceRepository: DeviceRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        authManager = AuthManager(this)
+        val database = AppDatabase.getDatabase(this)
+        deviceRepository = DeviceRepository(database.deviceDao())
+
+        // Check for existing session
+        if (authManager.currentUser != null) {
+            lifecycleScope.launch {
+                val connectedDevice = deviceRepository.getConnectedDevice()
+                val nextActivity = if (connectedDevice != null) {
+                    DeviceDashboardActivity::class.java
+                } else {
+                    BluetoothActivity::class.java
+                }
+                
+                val intent = Intent(this@WelcomeActivity, nextActivity)
+                intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+                startActivity(intent)
+                finish()
+            }
+            return
+        }
         
         // Create root ConstraintLayout
         val rootLayout = ConstraintLayout(this).apply {

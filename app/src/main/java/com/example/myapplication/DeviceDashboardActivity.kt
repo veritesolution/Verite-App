@@ -15,12 +15,24 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.model.Device
+import com.example.myapplication.data.model.DeviceType
+import com.example.myapplication.data.repository.DeviceRepository
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class DeviceDashboardActivity : AppCompatActivity() {
 
+    private lateinit var cardsLayout: LinearLayout
+    private lateinit var deviceRepository: DeviceRepository
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val database = AppDatabase.getDatabase(this)
+        deviceRepository = DeviceRepository(database.deviceDao())
 
         // Root Layout
         val rootLayout = ConstraintLayout(this).apply {
@@ -46,11 +58,14 @@ class DeviceDashboardActivity : AppCompatActivity() {
         // Profile Icon (Left)
         val profileIcon = ImageView(this).apply {
             id = View.generateViewId()
-            setImageResource(android.R.drawable.ic_menu_myplaces) // Placeholder icon
+            setImageResource(android.R.drawable.ic_menu_myplaces)
             setColorFilter(Color.WHITE)
             layoutParams = RelativeLayout.LayoutParams(dpToPx(40), dpToPx(40)).apply {
                 addRule(RelativeLayout.ALIGN_PARENT_START)
                 addRule(RelativeLayout.CENTER_VERTICAL)
+            }
+            setOnClickListener {
+                startActivity(Intent(this@DeviceDashboardActivity, ProfileActivity::class.java))
             }
         }
         headerLayout.addView(profileIcon)
@@ -79,7 +94,7 @@ class DeviceDashboardActivity : AppCompatActivity() {
         // Settings Icon (Right)
         val settingsIcon = ImageView(this).apply {
             id = View.generateViewId()
-            setImageResource(android.R.drawable.ic_menu_manage) // Placeholder
+            setImageResource(android.R.drawable.ic_menu_manage)
             setColorFilter(Color.WHITE)
             layoutParams = RelativeLayout.LayoutParams(dpToPx(40), dpToPx(40)).apply {
                 addRule(RelativeLayout.ALIGN_PARENT_END)
@@ -113,88 +128,11 @@ class DeviceDashboardActivity : AppCompatActivity() {
         }
         rootLayout.addView(scrollView)
 
-        val cardsLayout = LinearLayout(this).apply {
+        cardsLayout = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(80)) // Bottom padding for nav bar
+            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(80))
         }
         scrollView.addView(cardsLayout)
-
-        // Function to create device cards
-        fun createDeviceCard(name: String, status: String, imageResId: Int): View {
-            val cardView = RelativeLayout(this).apply {
-                setPadding(dpToPx(16), dpToPx(24), dpToPx(16), dpToPx(24))
-                background = GradientDrawable().apply {
-                    setColor(Color.parseColor("#051212")) // Very dark teal/black
-                    cornerRadius = dpToPx(32).toFloat()
-                    setStroke(dpToPx(1), Color.parseColor("#00BFA5"), 10f, 10f) // Subtle border effect
-                }
-                layoutParams = LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    dpToPx(180)
-                ).apply {
-                    setMargins(0, 0, 0, dpToPx(20))
-                }
-            }
-
-            val deviceImage = ImageView(this).apply {
-                id = View.generateViewId()
-                setImageResource(imageResId)
-                scaleType = ImageView.ScaleType.FIT_CENTER
-                layoutParams = RelativeLayout.LayoutParams(dpToPx(120), dpToPx(120)).apply {
-                    addRule(RelativeLayout.ALIGN_PARENT_START)
-                    addRule(RelativeLayout.CENTER_VERTICAL)
-                }
-            }
-            cardView.addView(deviceImage)
-
-            val textLayout = LinearLayout(this).apply {
-                orientation = LinearLayout.VERTICAL
-                layoutParams = RelativeLayout.LayoutParams(
-                    RelativeLayout.LayoutParams.WRAP_CONTENT,
-                    RelativeLayout.LayoutParams.WRAP_CONTENT
-                ).apply {
-                    addRule(RelativeLayout.END_OF, deviceImage.id)
-                    addRule(RelativeLayout.CENTER_VERTICAL)
-                    marginStart = dpToPx(24)
-                }
-            }
-            cardView.addView(textLayout)
-
-            val nameText = TextView(this).apply {
-                text = name
-                textSize = 20f
-                setTypeface(null, Typeface.BOLD)
-                setTextColor(Color.WHITE)
-            }
-            textLayout.addView(nameText)
-
-            val statusText = TextView(this).apply {
-                text = status
-                textSize = 14f
-                setTextColor(Color.parseColor("#00BFA5"))
-                setPadding(0, dpToPx(8), 0, 0)
-            }
-            textLayout.addView(statusText)
-
-            cardsLayout.addView(cardView)
-            return cardView
-        }
-
-        // Add Cards
-            val sleepBandResId = resources.getIdentifier("sleep_band", "drawable", packageName)
-        val backrestResId = resources.getIdentifier("smart_backrest", "drawable", packageName)
-
-        val sleepBandCard = createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
-        sleepBandCard.setOnClickListener {
-            startActivity(android.content.Intent(this, HeadbandHomeActivity::class.java))
-        }
-
-        val backrestCard = createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
-        backrestCard.setOnClickListener {
-            startActivity(Intent(this, BackrestHomeActivity::class.java))
-        }
-        createDeviceCard("Sleep Band", "Not Connected", if (sleepBandResId != 0) sleepBandResId else android.R.drawable.ic_menu_report_image)
-        createDeviceCard("Smart Backrest", "Not Connected", if (backrestResId != 0) backrestResId else android.R.drawable.ic_menu_report_image)
 
         // Bottom Navigation Bar
         val bottomNav = LinearLayout(this).apply {
@@ -215,7 +153,6 @@ class DeviceDashboardActivity : AppCompatActivity() {
                 layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.MATCH_PARENT, 1f)
                 isClickable = true
                 isFocusable = true
-                
             }
             val icon = ImageView(this).apply {
                 setImageResource(iconResId)
@@ -229,9 +166,9 @@ class DeviceDashboardActivity : AppCompatActivity() {
             return itemLayout
         }
 
-        addNavItem(R.drawable.vector) // First icon
-        val frameIcon = addNavItem(R.drawable.frame) // Second icon
-        val userIcon = addNavItem(R.drawable.user) // Third icon
+        addNavItem(R.drawable.vector)
+        val frameIcon = addNavItem(R.drawable.frame)
+        val userIcon = addNavItem(R.drawable.user)
 
         frameIcon.setOnClickListener {
              startActivity(Intent(this, OrynActivity::class.java))
@@ -246,17 +183,101 @@ class DeviceDashboardActivity : AppCompatActivity() {
         set.clone(rootLayout)
 
         set.connect(headerLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-        
         set.connect(dashboardTitle.id, ConstraintSet.TOP, headerLayout.id, ConstraintSet.BOTTOM, dpToPx(20))
         set.centerHorizontally(dashboardTitle.id, ConstraintSet.PARENT_ID)
-
         set.connect(scrollView.id, ConstraintSet.TOP, dashboardTitle.id, ConstraintSet.BOTTOM, dpToPx(32))
         set.connect(scrollView.id, ConstraintSet.BOTTOM, bottomNav.id, ConstraintSet.TOP)
-        
         set.connect(bottomNav.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
 
         set.applyTo(rootLayout)
         setContentView(rootLayout)
+
+        // Load data
+        lifecycleScope.launch {
+            deviceRepository.allDevices.collect { devices ->
+                if (devices.isEmpty()) {
+                    deviceRepository.initializeSampleDevices()
+                } else {
+                    updateDeviceCards(devices)
+                }
+            }
+        }
+    }
+
+    private fun updateDeviceCards(devices: List<Device>) {
+        cardsLayout.removeAllViews()
+        for (device in devices) {
+            val card = createDeviceCard(device)
+            cardsLayout.addView(card)
+        }
+    }
+
+    private fun createDeviceCard(device: Device): View {
+        val cardView = RelativeLayout(this).apply {
+            setPadding(dpToPx(16), dpToPx(24), dpToPx(16), dpToPx(24))
+            background = GradientDrawable().apply {
+                setColor(Color.parseColor("#051212"))
+                cornerRadius = dpToPx(32).toFloat()
+                setStroke(dpToPx(1), Color.parseColor("#00BFA5"), 10f, 10f)
+            }
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                dpToPx(180)
+            ).apply {
+                setMargins(0, 0, 0, dpToPx(20))
+            }
+            
+            setOnClickListener {
+                val intent = when(device.type) {
+                    DeviceType.SLEEP_BAND -> Intent(this@DeviceDashboardActivity, HeadbandHomeActivity::class.java)
+                    DeviceType.SMART_BACKREST -> Intent(this@DeviceDashboardActivity, BackrestHomeActivity::class.java)
+                }
+                startActivity(intent)
+            }
+        }
+
+        val imageResId = resources.getIdentifier(device.imageResource, "drawable", packageName)
+        val deviceImage = ImageView(this).apply {
+            id = View.generateViewId()
+            setImageResource(if (imageResId != 0) imageResId else android.R.drawable.ic_menu_report_image)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            layoutParams = RelativeLayout.LayoutParams(dpToPx(120), dpToPx(120)).apply {
+                addRule(RelativeLayout.ALIGN_PARENT_START)
+                addRule(RelativeLayout.CENTER_VERTICAL)
+            }
+        }
+        cardView.addView(deviceImage)
+
+        val textLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                addRule(RelativeLayout.END_OF, deviceImage.id)
+                addRule(RelativeLayout.CENTER_VERTICAL)
+                marginStart = dpToPx(24)
+            }
+        }
+        cardView.addView(textLayout)
+
+        val nameText = TextView(this).apply {
+            text = device.name
+            textSize = 20f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.WHITE)
+        }
+        textLayout.addView(nameText)
+
+        val statusText = TextView(this).apply {
+            text = if (device.isConnected) "Connected" else "Not Connected"
+            textSize = 14f
+            setTextColor(if (device.isConnected) Color.GREEN else Color.parseColor("#00BFA5"))
+            setPadding(0, dpToPx(8), 0, 0)
+        }
+        textLayout.addView(statusText)
+
+        return cardView
     }
 
     private fun dpToPx(dp: Int): Int {

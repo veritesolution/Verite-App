@@ -26,4 +26,7 @@ interface DeviceDao {
 
     @Query("UPDATE devices SET isConnected = :isConnected WHERE id = :deviceId")
     suspend fun updateConnectionStatus(deviceId: Int, isConnected: Boolean)
+
+    @Query("SELECT * FROM devices WHERE isConnected = 1 LIMIT 1")
+    suspend fun getConnectedDevice(): Device?
 }
