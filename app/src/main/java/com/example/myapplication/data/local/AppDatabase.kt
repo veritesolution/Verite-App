@@ -13,7 +13,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [RecoveryPlan::class, TodoItem::class, DreamEntry::class, Device::class, PowerOffSettings::class],
-    version = 5,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -14,10 +14,14 @@ class AiAgreementActivity : AppCompatActivity() {
 
         findViewById<Button>(R.id.btnAccept).setOnClickListener {
             Toast.makeText(this, "Plan Accepted! Good luck on your journey.", Toast.LENGTH_LONG).show()
-            // In a real app, we'd set an "Active Plan" flag in DB/Prefs
-            val intent = Intent(this, HeadbandHomeActivity::class.java)
+            
+            val planId = intent.getLongExtra("PLAN_ID", -1L)
+            
+            val intent = Intent(this, DailyProgressActivity::class.java)
+            intent.putExtra("PLAN_ID", planId)
             intent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
             startActivity(intent)
+            finish() // Close Agreement activity so back button doesn't return here
         }
 
         findViewById<Button>(R.id.btnCancel).setOnClickListener {
