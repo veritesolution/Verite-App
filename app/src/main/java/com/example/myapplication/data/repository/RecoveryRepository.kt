@@ -7,8 +7,8 @@ import kotlinx.coroutines.flow.Flow
 class RecoveryRepository(private val recoveryPlanDao: RecoveryPlanDao) {
     val activePlan: Flow<RecoveryPlan?> = recoveryPlanDao.getActivePlan()
 
-    suspend fun saveActivePlan(plan: RecoveryPlan) {
-        recoveryPlanDao.setActivePlan(plan)
+    suspend fun saveActivePlan(plan: RecoveryPlan): Long {
+        return recoveryPlanDao.setActivePlan(plan)
     }
     
     suspend fun deactivateActivePlan() {

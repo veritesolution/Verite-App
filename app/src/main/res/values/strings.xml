@@ -18,4 +18,6 @@
     <string name="licenses">Licenses</string>
     <string name="done">Done</string>
     <string name="my_devices">My Devices</string>
+    <!-- Real Web Client ID for Google Sign-In -->
+    <string name="default_web_client_id">87999401954-dgjsbf7hkq98lseuqungdb5c0n0he9me.apps.googleusercontent.com</string>
 </resources>

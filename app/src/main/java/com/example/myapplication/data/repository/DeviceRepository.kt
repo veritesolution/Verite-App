@@ -33,6 +33,10 @@ class DeviceRepository(private val deviceDao: DeviceDao) {
         return deviceDao.getDeviceById(deviceId)
     }
     
+    suspend fun getConnectedDevice(): Device? {
+        return deviceDao.getConnectedDevice()
+    }
+    
     // Initialize with sample devices
     suspend fun initializeSampleDevices() {
         val sampleDevices = listOf(

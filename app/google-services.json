@@ -1,0 +1,39 @@
+{
+    "project_info": {
+        "project_number": "87999401954",
+        "project_id": "verite-d6926",
+        "storage_bucket": "verite-d6926.firebasestorage.app"
+    },
+    "client": [
+        {
+            "client_info": {
+                "mobilesdk_app_id": "1:87999401954:android:1c815bb716782f26a433bb",
+                "android_client_info": {
+                    "package_name": "com.example.myapplication"
+                }
+            },
+            "oauth_client": [
+                {
+                    "client_id": "87999401954-dgjsbf7hkq98lseuqungdb5c0n0he9me.apps.googleusercontent.com",
+                    "client_type": 3
+                }
+            ],
+            "api_key": [
+                {
+                    "current_key": "AIzaSyCUhWGeJBhNiYfb1AaCgRLS61d5K_DsDgM"
+                }
+            ],
+            "services": {
+                "appinvite_service": {
+                    "other_platform_oauth_client": [
+                        {
+                            "client_id": "87999401954-dgjsbf7hkq98lseuqungdb5c0n0he9me.apps.googleusercontent.com",
+                            "client_type": 3
+                        }
+                    ]
+                }
+            }
+        }
+    ],
+    "configuration_version": "1"
+}

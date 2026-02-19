@@ -21,6 +21,8 @@ import kotlinx.coroutines.launch
 
 class AiPlanActivity : AppCompatActivity() {
 
+    private var currentPlanId: Long = -1L
+
     private val viewModel: AiViewModel by viewModels {
         val database = AppDatabase.getDatabase(applicationContext)
         val recoveryRepository = RecoveryRepository(database.recoveryPlanDao())
@@ -66,7 +68,9 @@ class AiPlanActivity : AppCompatActivity() {
                         loadingText.visibility = View.GONE
                         resultScrollView.visibility = View.VISIBLE
                         btnSave.visibility = View.VISIBLE
+                        btnSave.visibility = View.VISIBLE
                         planContent.text = state.plan
+                        currentPlanId = state.planId
                     }
                     is AiPlanState.Error -> {
                         loadingSpinner.visibility = View.GONE
@@ -80,8 +84,13 @@ class AiPlanActivity : AppCompatActivity() {
         }
 
         btnSave.setOnClickListener {
-            val intent = Intent(this, AiAgreementActivity::class.java)
-            startActivity(intent)
+            if (currentPlanId != -1L) {
+                val intent = Intent(this, AiAgreementActivity::class.java)
+                intent.putExtra("PLAN_ID", currentPlanId)
+                startActivity(intent)
+            } else {
+                Toast.makeText(this, "Please wait for plan to save...", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 }

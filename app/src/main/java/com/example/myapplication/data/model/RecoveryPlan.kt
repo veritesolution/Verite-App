@@ -14,5 +14,8 @@ data class RecoveryPlan(
     val duration: String = "",
     val reasonForStopping: String = "",
     val startDate: Long = System.currentTimeMillis(),
-    val isActive: Boolean = true
+    val isActive: Boolean = true,
+    val currentDay: Int = 1,
+    val dailyFocusMinutes: Int = 135, // Default 2h 15m as shown in design
+    val completedFocusMinutes: Int = 0
 )

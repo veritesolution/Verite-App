@@ -7,6 +7,13 @@ import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.lifecycleScope
+import coil.load
+import coil.transform.CircleCropTransformation
+import com.example.myapplication.data.auth.AuthManager
+import com.example.myapplication.data.local.AppDatabase
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class ProfileActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,9 +25,36 @@ class ProfileActivity : AppCompatActivity() {
             finish()
         }
 
+        val tvName = findViewById<TextView>(R.id.txtUserName)
+        val tvEmail = findViewById<TextView>(R.id.txtUserEmail)
+        val imgProfile = findViewById<ImageView>(R.id.imgProfileLarge)
+
+        // Load User Data
+        lifecycleScope.launchWhenResumed {
+            val db = AppDatabase.getDatabase(applicationContext)
+            db.userDao().getUser().collect { user ->
+                if (user != null) {
+                    tvName.text = user.name
+                    tvEmail.text = user.email
+                    if (!user.profileImagePath.isNullOrEmpty()) {
+                        val file = java.io.File(user.profileImagePath!!)
+                        if (file.exists()) {
+                            imgProfile.load(file) {
+                                transformations(CircleCropTransformation())
+                            }
+                        }
+                    }
+                } else {
+                    tvName.text = "User"
+                    tvEmail.text = "user@example.com"
+                }
+            }
+        }
+
         // Edit Profile
         findViewById<View>(R.id.btnEditProfile).setOnClickListener {
-            Toast.makeText(this, "Edit Profile Clicked", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, EditProfileActivity::class.java)
+            startActivity(intent)
         }
 
         // Setup Menu Items
@@ -33,6 +67,7 @@ class ProfileActivity : AppCompatActivity() {
 
         // Log Out
         findViewById<View>(R.id.btnLogout).setOnClickListener {
+            AuthManager(this).signOut()
             // Navigate to Welcome and clear stack
             val intent = Intent(this, WelcomeActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK

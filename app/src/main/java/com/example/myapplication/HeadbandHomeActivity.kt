@@ -18,6 +18,12 @@ import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.lifecycle.lifecycleScope
+import coil.load
+import coil.transform.CircleCropTransformation
+import com.example.myapplication.data.local.AppDatabase
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class HeadbandHomeActivity : AppCompatActivity() {
 
@@ -63,8 +69,27 @@ class HeadbandHomeActivity : AppCompatActivity() {
             setImageResource(android.R.drawable.ic_menu_myplaces)
             setColorFilter(Color.WHITE)
             layoutParams = ConstraintLayout.LayoutParams(dpToPx(40), dpToPx(40))
+            setOnClickListener {
+                startActivity(android.content.Intent(this@HeadbandHomeActivity, ProfileActivity::class.java))
+            }
         }
         rootLayout.addView(profileIcon)
+
+        // Observe User Profile
+        val database = AppDatabase.getDatabase(this)
+        lifecycleScope.launch {
+            database.userDao().getUser().collect { user ->
+                user?.profileImagePath?.let { path ->
+                    val file = java.io.File(path)
+                    if (file.exists()) {
+                        profileIcon.clearColorFilter()
+                        profileIcon.load(file) {
+                            transformations(CircleCropTransformation())
+                        }
+                    }
+                }
+            }
+        }
 
         // --- Central Headband ---
         val headbandImage = ImageView(this).apply {
@@ -146,8 +171,27 @@ class HeadbandHomeActivity : AppCompatActivity() {
         }
         rootLayout.addView(lineView, 0) // Add at index 0 to be behind everything
 
+        // --- Adaptive Sound Button ---
+        val adaptiveSoundBtn = android.widget.TextView(this).apply {
+            id = View.generateViewId()
+            text = "🎧  Adaptive Sound"
+            textSize = 16f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            gravity = android.view.Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.parseColor("#004D5A"), Color.parseColor("#007A7A"))
+            ).apply { cornerRadius = dpToPx(26).toFloat() }
+            layoutParams = ConstraintLayout.LayoutParams(dpToPx(220), dpToPx(52))
+            setOnClickListener {
+                startActivity(android.content.Intent(this@HeadbandHomeActivity, AdaptiveSoundActivity::class.java))
+            }
+        }
+        rootLayout.addView(adaptiveSoundBtn)
+
         // --- Footer ---
-        val footerText = TextView(this).apply {
+        val footerText = android.widget.TextView(this).apply {
             id = View.generateViewId()
             textSize = 20f
             setTypeface(null, Typeface.BOLD)
@@ -239,8 +283,11 @@ class HeadbandHomeActivity : AppCompatActivity() {
             }
         }
 
-        set.connect(footerText.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(40))
+        set.connect(footerText.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(16))
         set.centerHorizontally(footerText.id, ConstraintSet.PARENT_ID)
+
+        set.connect(adaptiveSoundBtn.id, ConstraintSet.BOTTOM, footerText.id, ConstraintSet.TOP, dpToPx(14))
+        set.centerHorizontally(adaptiveSoundBtn.id, ConstraintSet.PARENT_ID)
 
         set.applyTo(rootLayout)
         setContentView(rootLayout)

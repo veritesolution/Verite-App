@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.app.Activity
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -18,16 +19,56 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.data.auth.AuthManager
+import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.repository.DeviceRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.common.api.ApiException
+import kotlinx.coroutines.launch
 
 class SignInActivity : AppCompatActivity() {
     
     private var isPasswordVisible = false
+    private lateinit var authManager: AuthManager
+
+    // Google Sign In Result Launcher
+    private val googleSignInLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                account?.let {
+                    lifecycleScope.launch {
+                        val authResult = authManager.signInWithGoogle(it)
+                        authResult.onSuccess {
+                            navigateToNextScreen()
+                        }.onFailure { e ->
+                             Toast.makeText(this@SignInActivity, "Google Sign In Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e: ApiException) {
+                Toast.makeText(this, "Google Sign In Error: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        authManager = AuthManager(this)
+
+        // Check if user is already logged in
+        if (authManager.currentUser != null) {
+            navigateToNextScreen()
+            return
+        }
         
         // Create root ConstraintLayout
         val rootLayout = ConstraintLayout(this).apply {
@@ -154,6 +195,9 @@ class SignInActivity : AppCompatActivity() {
             ).apply {
                 marginEnd = dpToPx(8)
             }
+            setOnClickListener {
+                 Toast.makeText(this@SignInActivity, "Facebook Login implementation pending App ID", Toast.LENGTH_SHORT).show()
+            }
         }
         socialButtonsLayout.addView(facebookButton)
         
@@ -180,6 +224,10 @@ class SignInActivity : AppCompatActivity() {
             ).apply {
                 marginStart = dpToPx(8)
             }
+            setOnClickListener {
+                val intent = authManager.getGoogleSignInIntent()
+                googleSignInLauncher.launch(intent)
+            }
         }
         socialButtonsLayout.addView(googleButton)
         
@@ -201,7 +249,6 @@ class SignInActivity : AppCompatActivity() {
         val emailInput = EditText(this).apply {
             id = View.generateViewId()
             hint = "Email/Phone Number"
-            setText("veritesoft@gmail.com")
             textSize = 16f
             setTextColor(Color.WHITE)
             setHintTextColor(Color.parseColor("#AAAAAA"))
@@ -251,7 +298,6 @@ class SignInActivity : AppCompatActivity() {
         val passwordInput = EditText(this).apply {
             id = View.generateViewId()
             hint = "Password"
-            setText(".........")
             textSize = 16f
             setTextColor(Color.WHITE)
             setHintTextColor(Color.parseColor("#AAAAAA"))
@@ -437,8 +483,21 @@ class SignInActivity : AppCompatActivity() {
                 setMargins(dpToPx(16), 0, dpToPx(16), dpToPx(16))
             }
             setOnClickListener {
-                val intent = Intent(this@SignInActivity, BluetoothActivity::class.java)
-                startActivity(intent)
+                val email = emailInput.text.toString().trim()
+                val password = passwordInput.text.toString().trim()
+
+                if (email.isNotEmpty() && password.isNotEmpty()) {
+                    lifecycleScope.launch {
+                        val result = authManager.signIn(email, password)
+                        result.onSuccess {
+                             navigateToNextScreen()
+                        }.onFailure { e ->
+                            Toast.makeText(this@SignInActivity, "Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                } else {
+                     Toast.makeText(this@SignInActivity, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                }
             }
         }
         rootLayout.addView(logInButton)
@@ -448,230 +507,82 @@ class SignInActivity : AppCompatActivity() {
         constraintSet.clone(rootLayout)
         
         // Header
-        constraintSet.connect(
-            headerLayout.id,
-            ConstraintSet.TOP,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.TOP,
-            dpToPx(40)
-        )
-        constraintSet.connect(
-            headerLayout.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            0
-        )
-        constraintSet.connect(
-            headerLayout.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            0
-        )
+        constraintSet.connect(headerLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, dpToPx(40))
+        constraintSet.connect(headerLayout.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, 0)
+        constraintSet.connect(headerLayout.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, 0)
         
         // Sign In title
-        constraintSet.connect(
-            signInTitle.id,
-            ConstraintSet.TOP,
-            headerLayout.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(24)
-        )
-        constraintSet.connect(
-            signInTitle.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
+        constraintSet.connect(signInTitle.id, ConstraintSet.TOP, headerLayout.id, ConstraintSet.BOTTOM, dpToPx(24))
+        constraintSet.connect(signInTitle.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
         
         // Icon
-        constraintSet.connect(
-            iconView.id,
-            ConstraintSet.TOP,
-            signInTitle.id,
-            ConstraintSet.TOP,
-            0
-        )
-        constraintSet.connect(
-            iconView.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(iconView.id, ConstraintSet.TOP, signInTitle.id, ConstraintSet.TOP, 0)
+        constraintSet.connect(iconView.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Social buttons
-        constraintSet.connect(
-            socialButtonsLayout.id,
-            ConstraintSet.TOP,
-            signInTitle.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(24)
-        )
-        constraintSet.connect(
-            socialButtonsLayout.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            socialButtonsLayout.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(socialButtonsLayout.id, ConstraintSet.TOP, signInTitle.id, ConstraintSet.BOTTOM, dpToPx(24))
+        constraintSet.connect(socialButtonsLayout.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
+        constraintSet.connect(socialButtonsLayout.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Or separator
-        constraintSet.connect(
-            orSeparator.id,
-            ConstraintSet.TOP,
-            socialButtonsLayout.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(16)
-        )
+        constraintSet.connect(orSeparator.id, ConstraintSet.TOP, socialButtonsLayout.id, ConstraintSet.BOTTOM, dpToPx(16))
         constraintSet.centerHorizontally(orSeparator.id, ConstraintSet.PARENT_ID)
         
         // Email input
-        constraintSet.connect(
-            emailInput.id,
-            ConstraintSet.TOP,
-            orSeparator.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            emailInput.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            emailInput.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(emailInput.id, ConstraintSet.TOP, orSeparator.id, ConstraintSet.BOTTOM, dpToPx(16))
+        constraintSet.connect(emailInput.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
+        constraintSet.connect(emailInput.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Password container
-        constraintSet.connect(
-            passwordContainer.id,
-            ConstraintSet.TOP,
-            emailInput.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            passwordContainer.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            passwordContainer.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(passwordContainer.id, ConstraintSet.TOP, emailInput.id, ConstraintSet.BOTTOM, dpToPx(16))
+        constraintSet.connect(passwordContainer.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
+        constraintSet.connect(passwordContainer.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Forgot password
-        constraintSet.connect(
-            forgotPasswordText.id,
-            ConstraintSet.TOP,
-            passwordContainer.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(8)
-        )
-        constraintSet.connect(
-            forgotPasswordText.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(forgotPasswordText.id, ConstraintSet.TOP, passwordContainer.id, ConstraintSet.BOTTOM, dpToPx(8))
+        constraintSet.connect(forgotPasswordText.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Description layout
-        constraintSet.connect(
-            descriptionLayout.id,
-            ConstraintSet.TOP,
-            forgotPasswordText.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(32)
-        )
-        constraintSet.connect(
-            descriptionLayout.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            descriptionLayout.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(descriptionLayout.id, ConstraintSet.TOP, forgotPasswordText.id, ConstraintSet.BOTTOM, dpToPx(32))
+        constraintSet.connect(descriptionLayout.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
+        constraintSet.connect(descriptionLayout.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         // Account text
-        constraintSet.connect(
-            accountText.id,
-            ConstraintSet.TOP,
-            descriptionLayout.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(24)
-        )
-        constraintSet.connect(
-            accountText.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
+        constraintSet.connect(accountText.id, ConstraintSet.TOP, descriptionLayout.id, ConstraintSet.BOTTOM, dpToPx(24))
+        constraintSet.connect(accountText.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
         
         // Log In button
-        constraintSet.connect(
-            logInButton.id,
-            ConstraintSet.TOP,
-            accountText.id,
-            ConstraintSet.BOTTOM,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            logInButton.id,
-            ConstraintSet.BOTTOM,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.BOTTOM,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            logInButton.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            dpToPx(16)
-        )
-        constraintSet.connect(
-            logInButton.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            dpToPx(16)
-        )
+        constraintSet.connect(logInButton.id, ConstraintSet.TOP, accountText.id, ConstraintSet.BOTTOM, dpToPx(16))
+        constraintSet.connect(logInButton.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(16))
+        constraintSet.connect(logInButton.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT, dpToPx(16))
+        constraintSet.connect(logInButton.id, ConstraintSet.RIGHT, ConstraintSet.PARENT_ID, ConstraintSet.RIGHT, dpToPx(16))
         
         constraintSet.applyTo(rootLayout)
         
         setContentView(rootLayout)
     }
     
+    private fun navigateToNextScreen() {
+        lifecycleScope.launch {
+            val database = AppDatabase.getDatabase(this@SignInActivity)
+            val repository = DeviceRepository(database.deviceDao())
+            val connectedDevice = repository.getConnectedDevice()
+            
+            val nextActivity = if (connectedDevice != null) {
+                DeviceDashboardActivity::class.java
+            } else {
+                BluetoothActivity::class.java
+            }
+            
+            val intent = Intent(this@SignInActivity, nextActivity)
+            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+            startActivity(intent)
+            finish()
+        }
+    }
+    
     private fun dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }
 }
+

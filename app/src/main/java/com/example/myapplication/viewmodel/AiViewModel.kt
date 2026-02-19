@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 sealed class AiPlanState {
     object Idle : AiPlanState()
     object Loading : AiPlanState()
-    data class Success(val plan: String) : AiPlanState()
+    data class Success(val plan: String, val planId: Long) : AiPlanState()
     data class Error(val message: String) : AiPlanState()
 }
 
@@ -46,7 +46,7 @@ class AiViewModel(
                 result.fold(
                     onSuccess = { plan ->
                         // Save to database
-                        recoveryRepository.saveActivePlan(
+                        val planId = recoveryRepository.saveActivePlan(
                             RecoveryPlan(
                                 addictionType = addictionType,
                                 fullPlanText = plan,
@@ -56,7 +56,7 @@ class AiViewModel(
                                 reasonForStopping = reasonForStopping
                             )
                         )
-                        _uiState.value = AiPlanState.Success(plan)
+                        _uiState.value = AiPlanState.Success(plan, planId)
                     },
                     onFailure = { error ->
                         _uiState.value = AiPlanState.Error(error.localizedMessage ?: "Failed to generate plan")
