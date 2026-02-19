@@ -17,6 +17,7 @@ class DailyProgressActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         val planId = intent.getLongExtra("PLAN_ID", -1L)
+<<<<<<< Updated upstream
         if (planId == -1L) {
             Toast.makeText(this, "Error: No plan ID provided", Toast.LENGTH_LONG).show()
             finish()
@@ -57,6 +58,47 @@ class DailyProgressActivity : ComponentActivity() {
             } catch (e: Exception) {
                 Toast.makeText(this@DailyProgressActivity, "Error loading plan: ${e.message}", Toast.LENGTH_LONG).show()
                 e.printStackTrace()
+=======
+
+        lifecycleScope.launch {
+            val database = AppDatabase.getDatabase(applicationContext)
+            val plan = database.recoveryPlanDao().getPlanById(planId)
+
+            if (plan != null) {
+                setContent {
+                    VeriteTheme {
+                        DailyProgressScreen(
+                            addictionType = plan.addictionType,
+                            currentDay = plan.currentDay,
+                            dailyFocusMinutes = plan.dailyFocusMinutes,
+                            completedFocusMinutes = plan.completedFocusMinutes,
+                            aiSuggestion = TextCleaningUtils.extractSuggestion(
+                                plan.fullPlanText,
+                                plan.currentDay
+                            ),
+                            onBackClick = { finish() },
+                            onViewTaskClick = {
+                                // TODO: Show detailed task view
+                                Toast.makeText(
+                                    this@DailyProgressActivity,
+                                    "View Task clicked",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            },
+                            onStartFocusSession = {
+                                // TODO: Start focus session timer
+                                Toast.makeText(
+                                    this@DailyProgressActivity,
+                                    "Starting Focus Session...",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        )
+                    }
+                }
+            } else {
+                Toast.makeText(this@DailyProgressActivity, "Plan not found", Toast.LENGTH_SHORT).show()
+>>>>>>> Stashed changes
                 finish()
             }
         }

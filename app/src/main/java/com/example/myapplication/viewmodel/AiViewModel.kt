@@ -36,6 +36,7 @@ class AiViewModel(
     ) {
         viewModelScope.launch {
             _uiState.value = AiPlanState.Loading
+<<<<<<< Updated upstream
             aiRepository.generate21DayPlan(
                 addictionType,
                 frequency,
@@ -62,6 +63,31 @@ class AiViewModel(
                         _uiState.value = AiPlanState.Error(error.localizedMessage ?: "Failed to generate plan")
                     }
                 )
+=======
+            try {
+                aiRepository.generate21DayPlan(
+                    addictionType,
+                    frequency,
+                    reasonForAddiction,
+                    duration,
+                    reasonForStopping
+                ).collect { result ->
+                    result.fold(
+                        onSuccess = { plan ->
+                            // Update UI first, saving is done by Activity on button click
+                            // Note: We are NO LONGER saving automatically here to prevent DB locks
+                            _uiState.value = AiPlanState.Success(plan)
+                        },
+                        onFailure = { error ->
+                            android.util.Log.e("AiViewModel", "Plan generation failed", error)
+                            _uiState.value = AiPlanState.Error(error.localizedMessage ?: "Failed to generate plan")
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AiViewModel", "Exception in generatePlan", e)
+                _uiState.value = AiPlanState.Error(e.localizedMessage ?: "Unknown error occurred")
+>>>>>>> Stashed changes
             }
         }
     }

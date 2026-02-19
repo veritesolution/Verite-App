@@ -142,6 +142,8 @@ class AiRepository {
         }
 
         // Final failure if all models failed
-        emit(Result.failure(Exception("AI services are currently busy or unavailable. Please try again in a few minutes.")))
+        val failureMsg = "AI services are currently busy or unavailable. Please try again in a few minutes."
+        println("❌ All models failed. Emitting failure.")
+        emit(Result.failure(Exception(failureMsg)))
     }
 }

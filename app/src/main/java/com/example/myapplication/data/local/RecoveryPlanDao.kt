@@ -15,6 +15,9 @@ interface RecoveryPlanDao {
     @Query("UPDATE recovery_plans SET isActive = 0 WHERE isActive = 1")
     suspend fun deactivateAllPlans()
     
+    @Query("SELECT * FROM recovery_plans WHERE id = :planId LIMIT 1")
+    suspend fun getPlanById(planId: Long): RecoveryPlan?
+    
     @Transaction
     suspend fun setActivePlan(plan: RecoveryPlan): Long {
         deactivateAllPlans()

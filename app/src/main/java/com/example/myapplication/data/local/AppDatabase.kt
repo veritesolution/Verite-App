@@ -13,8 +13,13 @@ import com.example.myapplication.data.model.User
 import androidx.room.TypeConverters
 
 @Database(
+<<<<<<< Updated upstream
     entities = [RecoveryPlan::class, TodoItem::class, DreamEntry::class, Device::class, PowerOffSettings::class, User::class],
     version = 8,
+=======
+    entities = [RecoveryPlan::class, TodoItem::class, DreamEntry::class, Device::class, PowerOffSettings::class],
+    version = 6,
+>>>>>>> Stashed changes
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -177,13 +177,21 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
 
+<<<<<<< Updated upstream
         <activity
+=======
+                <activity
+>>>>>>> Stashed changes
             android:name=".DailyProgressActivity"
             android:exported="false"
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
+<<<<<<< Updated upstream
 
         <activity
+=======
+<activity
+>>>>>>> Stashed changes
             android:name=".BackrestHomeActivity"
             android:exported="false"
             android:screenOrientation="portrait"
@@ -222,3 +230,4 @@
     </application>
 
 </manifest>
+
