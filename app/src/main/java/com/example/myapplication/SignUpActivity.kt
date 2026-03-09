@@ -11,6 +11,7 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.util.Patterns
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -478,6 +479,22 @@ class SignUpActivity : AppCompatActivity() {
                 val password = passwordInput.text.toString().trim()
 
                 if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Toast.makeText(
+                            this@SignUpActivity,
+                            "Please enter a valid email address",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@setOnClickListener
+                    }
+                    if (password.length < 6) {
+                        Toast.makeText(
+                            this@SignUpActivity,
+                            "Password must be at least 6 characters",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@setOnClickListener
+                    }
                     if (termsCheckbox.isChecked) {
                         lifecycleScope.launch {
                             val result = authManager.signUp(email, password, name)
