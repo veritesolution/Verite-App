@@ -1,3 +1,4 @@
+
 @rem
 @rem Copyright 2015 the original author or authors.
 @rem
@@ -92,3 +93,4 @@ exit /b %EXIT_CODE%
 if "%OS%"=="Windows_NT" endlocal
 
 :omega
+

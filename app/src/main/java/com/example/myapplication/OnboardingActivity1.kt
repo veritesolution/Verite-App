@@ -5,6 +5,9 @@ import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -51,10 +54,10 @@ class OnboardingActivity1 : AppCompatActivity() {
             textSize = 24f
             setTextColor(Color.WHITE)
             setBackgroundColor(Color.TRANSPARENT)
-            setPadding(dpToPx(8), dpToPx(8), dpToPx(8), dpToPx(8))
+            setPadding(0, 0, 0, 0)
             layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
+                dpToPx(48),
+                dpToPx(48)
             )
             setOnClickListener {
                 finish()
@@ -62,14 +65,25 @@ class OnboardingActivity1 : AppCompatActivity() {
         }
         headerLayout.addView(backButton)
         
-        // App title "Vérité"
+        // App title "Vérité" with two-tone color
         val titleText = TextView(this).apply {
             id = View.generateViewId()
-            text = "Vérité"
             textSize = 24f
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
+            
+            val spannable = SpannableString("Vérité")
+            spannable.setSpan(
+                ForegroundColorSpan(Color.WHITE),
+                0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            spannable.setSpan(
+                ForegroundColorSpan(Color.parseColor("#00E6B8")),
+                3, 6, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            text = spannable
+            
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -77,6 +91,16 @@ class OnboardingActivity1 : AppCompatActivity() {
             )
         }
         headerLayout.addView(titleText)
+
+        // Dummy balancing view
+        val dummyView = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                dpToPx(48),
+                dpToPx(48)
+            )
+            visibility = View.INVISIBLE
+        }
+        headerLayout.addView(dummyView)
         
         // Sleep mask image
         val sleepMaskImage = ImageView(this).apply {
