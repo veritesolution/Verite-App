@@ -72,8 +72,12 @@ class OnboardingActivity5 : AppCompatActivity() {
             
             val spannable = SpannableString("Vérité")
             spannable.setSpan(
-                ForegroundColorSpan(Color.parseColor("#009688")), // Teal
-                1, 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+                ForegroundColorSpan(Color.WHITE),
+                0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+            spannable.setSpan(
+                ForegroundColorSpan(Color.parseColor("#00E6B8")), // Standard Teal
+                3, 6, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
             )
             
             setTextColor(Color.WHITE)

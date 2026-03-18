@@ -171,8 +171,27 @@ class HeadbandHomeActivity : AppCompatActivity() {
         }
         rootLayout.addView(lineView, 0) // Add at index 0 to be behind everything
 
+        // --- Adaptive Sound Button ---
+        val adaptiveSoundBtn = android.widget.TextView(this).apply {
+            id = View.generateViewId()
+            text = "🎧  Adaptive Sound"
+            textSize = 16f
+            setTypeface(null, Typeface.BOLD)
+            setTextColor(Color.WHITE)
+            gravity = android.view.Gravity.CENTER
+            background = android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                intArrayOf(Color.parseColor("#004D5A"), Color.parseColor("#007A7A"))
+            ).apply { cornerRadius = dpToPx(26).toFloat() }
+            layoutParams = ConstraintLayout.LayoutParams(dpToPx(220), dpToPx(52))
+            setOnClickListener {
+                startActivity(android.content.Intent(this@HeadbandHomeActivity, AdaptiveSoundActivity::class.java))
+            }
+        }
+        rootLayout.addView(adaptiveSoundBtn)
+
         // --- Footer ---
-        val footerText = TextView(this).apply {
+        val footerText = android.widget.TextView(this).apply {
             id = View.generateViewId()
             textSize = 20f
             setTypeface(null, Typeface.BOLD)
@@ -264,8 +283,11 @@ class HeadbandHomeActivity : AppCompatActivity() {
             }
         }
 
-        set.connect(footerText.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(40))
+        set.connect(footerText.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, dpToPx(16))
         set.centerHorizontally(footerText.id, ConstraintSet.PARENT_ID)
+
+        set.connect(adaptiveSoundBtn.id, ConstraintSet.BOTTOM, footerText.id, ConstraintSet.TOP, dpToPx(14))
+        set.centerHorizontally(adaptiveSoundBtn.id, ConstraintSet.PARENT_ID)
 
         set.applyTo(rootLayout)
         setContentView(rootLayout)
