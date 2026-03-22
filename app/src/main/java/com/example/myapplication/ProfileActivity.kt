@@ -113,7 +113,10 @@ class ProfileActivity : AppCompatActivity() {
         setupMenuItem(R.id.menuPrivacy, R.drawable.ic_privacy, "Privacy & Security") {
             startActivity(Intent(this, PrivacyActivity::class.java))
         }
-        
+        setupMenuItem(R.id.menuVoiceAgent, R.drawable.ic_sound, "Voice Agent") {
+            startActivity(Intent(this, VoiceAgentActivity::class.java))
+        }
+
         setupSoundMenu()
 
         // Log Out

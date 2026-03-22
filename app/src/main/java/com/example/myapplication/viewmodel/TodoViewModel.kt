@@ -87,7 +87,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer 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")
+                        .addHeader("Authorization", "Bearer ${com.example.myapplication.BuildConfig.GROQ_API_KEY}")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 

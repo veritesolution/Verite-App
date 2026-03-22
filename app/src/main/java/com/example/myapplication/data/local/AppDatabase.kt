@@ -51,7 +51,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "verite_database"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration() // TODO: Replace with proper Migration objects before next DB version bump
                     .build()
                 INSTANCE = instance
                 instance

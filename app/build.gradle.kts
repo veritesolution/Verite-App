@@ -45,6 +45,11 @@ android {
             "HF_API_KEY",
             "\"${localProperties.getProperty("HF_API_KEY", "")}\""
         )
+        buildConfigField(
+            "String",
+            "ELEVENLABS_API_KEY",
+            "\"${localProperties.getProperty("ELEVENLABS_API_KEY", "")}\""
+        )
     }
 
     buildTypes {

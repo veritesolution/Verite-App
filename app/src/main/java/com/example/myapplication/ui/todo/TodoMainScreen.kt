@@ -40,7 +40,7 @@ fun TodoMainScreen(
                 selectedTask = null
             },
             onDelete = {
-                viewModel.deleteTask(selectedTask!!.id)
+                selectedTask?.let { task -> viewModel.deleteTask(task.id) }
                 selectedTask = null
             },
             onBack = { selectedTask = null }

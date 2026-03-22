@@ -62,6 +62,23 @@ class SettingsManager(context: Context) {
         get() = prefs.getBoolean(KEY_BIOMETRIC_LOGIN, false)
         set(value) = prefs.edit().putBoolean(KEY_BIOMETRIC_LOGIN, value).apply()
 
+    // --- Voice Agent Settings ---
+    var useElevenLabsTts: Boolean
+        get() = prefs.getBoolean(KEY_USE_ELEVENLABS_TTS, false)
+        set(value) = prefs.edit().putBoolean(KEY_USE_ELEVENLABS_TTS, value).apply()
+
+    var selectedVoiceId: String
+        get() = prefs.getString(KEY_SELECTED_VOICE_ID, "CwhRBWXzGAHq8TQ4Fs17") ?: "CwhRBWXzGAHq8TQ4Fs17"
+        set(value) = prefs.edit().putString(KEY_SELECTED_VOICE_ID, value).apply()
+
+    var voiceStability: Float
+        get() = prefs.getFloat(KEY_VOICE_STABILITY, 0.5f)
+        set(value) = prefs.edit().putFloat(KEY_VOICE_STABILITY, value).apply()
+
+    var voiceSimilarity: Float
+        get() = prefs.getFloat(KEY_VOICE_SIMILARITY, 0.75f)
+        set(value) = prefs.edit().putFloat(KEY_VOICE_SIMILARITY, value).apply()
+
     companion object {
         private const val PREFS_NAME = "verite_settings"
         private const val KEY_HABIT_REMINDER_HOUR = "habit_reminder_hour"
@@ -78,5 +95,11 @@ class SettingsManager(context: Context) {
         private const val KEY_DAILY_REMINDERS = "daily_reminders_enabled"
         private const val KEY_SHARE_ANALYTICS = "share_analytics"
         private const val KEY_BIOMETRIC_LOGIN = "biometric_login"
+
+        // Voice Agent Keys
+        private const val KEY_USE_ELEVENLABS_TTS = "use_elevenlabs_tts"
+        private const val KEY_SELECTED_VOICE_ID = "selected_voice_id"
+        private const val KEY_VOICE_STABILITY = "voice_stability"
+        private const val KEY_VOICE_SIMILARITY = "voice_similarity"
     }
 }

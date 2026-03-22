@@ -2,6 +2,7 @@ package com.example.myapplication.ui.dashboard
 
 import android.app.Application
 import androidx.lifecycle.*
+import com.example.myapplication.BuildConfig
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.*
 import com.example.myapplication.data.repository.HabitRepository
@@ -117,7 +118,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer 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")
+                        .addHeader("Authorization", "Bearer ${BuildConfig.GROQ_API_KEY}")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
@@ -217,7 +218,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                 val request = Request.Builder()
                     .url("https://api.groq.com/openai/v1/chat/completions")
-                    .addHeader("Authorization", "Bearer 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")
+                    .addHeader("Authorization", "Bearer ${BuildConfig.GROQ_API_KEY}")
                     .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                     .build()
 
