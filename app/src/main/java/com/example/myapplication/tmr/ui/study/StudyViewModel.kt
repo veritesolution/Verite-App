@@ -5,19 +5,30 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.tmr.data.models.*
 import com.example.myapplication.tmr.data.repository.StudyRepository
-import dagger.hilt.android.lifecycle.HiltViewModel
+import com.example.myapplication.tmr.di.TmrDependencyContainer
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+import androidx.lifecycle.ViewModelProvider
 
 private const val TAG = "StudyViewModel"
 
-@HiltViewModel
-class StudyViewModel @Inject constructor(
+class StudyViewModel(
     private val repository: StudyRepository,
 ) : ViewModel() {
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(StudyViewModel::class.java)) {
+                    return StudyViewModel(TmrDependencyContainer.studyRepository) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    }
 
     // ── Flashcard state ──────────────────────────────────────────────────────
     private val _studyState = MutableStateFlow(StudyUiState())

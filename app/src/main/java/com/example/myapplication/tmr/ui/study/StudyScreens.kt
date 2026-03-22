@@ -23,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.myapplication.tmr.data.models.*
@@ -34,7 +34,7 @@ import com.example.myapplication.tmr.data.models.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StudyHomeScreen(nav: NavController, vm: StudyViewModel = hiltViewModel()) {
+fun StudyHomeScreen(nav: NavController, vm: StudyViewModel = viewModel(factory = StudyViewModel.Factory)) {
     val error by vm.error.collectAsStateWithLifecycle()
 
     Scaffold(
@@ -156,7 +156,7 @@ fun StudyHomeScreen(nav: NavController, vm: StudyViewModel = hiltViewModel()) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun FlashcardScreen(nav: NavController, vm: StudyViewModel = hiltViewModel()) {
+fun FlashcardScreen(nav: NavController, vm: StudyViewModel = viewModel(factory = StudyViewModel.Factory)) {
     val state by vm.studyState.collectAsStateWithLifecycle()
     val complete by vm.studyComplete.collectAsStateWithLifecycle()
 
@@ -340,7 +340,7 @@ private fun StudyCompleteCard(data: StudyCompleteResponse, onDone: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun QuizScreen(nav: NavController, mode: String, vm: StudyViewModel = hiltViewModel()) {
+fun QuizScreen(nav: NavController, mode: String, vm: StudyViewModel = viewModel(factory = StudyViewModel.Factory)) {
     val state by vm.quizState.collectAsStateWithLifecycle()
     val complete by vm.quizComplete.collectAsStateWithLifecycle()
 
@@ -479,7 +479,7 @@ private fun QuizCompleteCard(data: QuizCompleteResponse, onDone: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AudioScreen(nav: NavController, vm: StudyViewModel = hiltViewModel()) {
+fun AudioScreen(nav: NavController, vm: StudyViewModel = viewModel(factory = StudyViewModel.Factory)) {
     val concepts by vm.audioConcepts.collectAsStateWithLifecycle()
     val playing by vm.isPlaying.collectAsStateWithLifecycle()
     val currentConcept by vm.currentPlayingConcept.collectAsStateWithLifecycle()

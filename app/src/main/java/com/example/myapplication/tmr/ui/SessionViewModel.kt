@@ -14,23 +14,33 @@ import com.example.myapplication.tmr.data.models.*
 import com.example.myapplication.tmr.data.network.VeriteWebSocket.ConnectionState
 import com.example.myapplication.tmr.data.repository.VeriteRepository
 import com.example.myapplication.tmr.service.VeriteForegroundService
-import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
+import com.example.myapplication.tmr.di.TmrDependencyContainer
+import androidx.lifecycle.ViewModelProvider
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.ArrayDeque
-import javax.inject.Inject
 
 private const val TAG = "SessionViewModel"
 private const val TICK_HISTORY_SIZE = 120
 
-@HiltViewModel
-class SessionViewModel @Inject constructor(
+class SessionViewModel(
     private val repository: VeriteRepository,
-    @ApplicationContext private val appContext: Context,
+    private val appContext: Context,
 ) : ViewModel() {
+
+    companion object {
+        fun provideFactory(context: Context): ViewModelProvider.Factory = object : ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                if (modelClass.isAssignableFrom(SessionViewModel::class.java)) {
+                    return SessionViewModel(TmrDependencyContainer.veriteRepository, context.applicationContext) as T
+                }
+                throw IllegalArgumentException("Unknown ViewModel class")
+            }
+        }
+    }
 
     private val _sessionState = MutableStateFlow(SessionUiState())
     val sessionUiState: StateFlow<SessionUiState> = _sessionState.asStateFlow()
