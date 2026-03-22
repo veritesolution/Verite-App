@@ -80,6 +80,8 @@ class DreamJournalActivity : AppCompatActivity() {
         }
     }
 
+    /*add a class */
+
     class DreamAdapter(
         private var list: List<DreamEntry>,
         private val onDelete: (DreamEntry) -> Unit
