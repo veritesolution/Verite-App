@@ -6,14 +6,21 @@ class TaskManager:
     def __init__(self):
         self.firebase = FirebaseManager()
 
-    def add_task(self, title, scheduled_time_str, category="General", is_priority=False, auto_migrate=True):
+    def add_task(self, title, scheduled_time_str, category="General", is_priority=False, energy_level="Medium", auto_migrate=True):
         """
         Adds a new task.
         scheduled_time_str format: "YYYY-MM-DD HH:MM"
         """
         try:
             dt = datetime.strptime(scheduled_time_str, "%Y-%m-%d %H:%M")
-            new_task = Task(title=title, scheduled_time=dt, category=category, is_priority=is_priority, auto_migrate=auto_migrate)
+            new_task = Task(
+                title=title, 
+                scheduled_time=dt, 
+                category=category, 
+                is_priority=is_priority, 
+                energy_level=energy_level,
+                auto_migrate=auto_migrate
+            )
             self.firebase.add_task(new_task.to_dict())
             return new_task
         except ValueError as e:
@@ -36,9 +43,17 @@ class TaskManager:
         return round(percentage, 1)
 
     def get_todays_tasks(self):
-        """Returns list of tasks for today."""
+        """Returns list of tasks for today, sorted by priority and time."""
         today_str = datetime.now().strftime("%Y-%m-%d")
-        return self.firebase.get_tasks_for_date(today_str)
+        tasks = self.firebase.get_tasks_for_date(today_str)
+        if not tasks:
+            return []
+        
+        # Smart Sorting:
+        # 1. Priority tasks first
+        # 2. Then by scheduled time
+        tasks.sort(key=lambda x: (not x.get('is_priority', False), x.get('scheduled_time', '')))
+        return tasks
 
     def complete_task_by_title(self, title):
         """Marks a task as complete by its title (case-insensitive checking against today's tasks)."""
