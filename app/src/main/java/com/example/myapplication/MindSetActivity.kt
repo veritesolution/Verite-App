@@ -29,6 +29,7 @@ import com.example.myapplication.utils.VoiceInputHandler
 import com.example.myapplication.utils.VoiceOutputHandler
 import com.example.myapplication.utils.VoiceCommandProcessor
 import com.example.myapplication.utils.FullVoiceCommandProcessor
+import com.example.myapplication.utils.FullVoiceCommandProcessor.FullIntent
 import com.example.myapplication.ml.LlmVoiceProcessor
 import com.example.myapplication.ui.tasks.TaskDetailScreen
 import com.example.myapplication.ui.todo.TodoMainScreen
@@ -109,156 +110,162 @@ class MindSetActivity : ComponentActivity() {
                                 // ── Primary: FullVoiceCommandProcessor handles ALL app features ──
                                 val fullResult = FullVoiceCommandProcessor.process(state.text)
 
-                                if (fullResult.intent != FullVoiceCommandProcessor.FullIntent.UNKNOWN) {
-                                    // Handle the full command result
-                                    val I = FullVoiceCommandProcessor.FullIntent
+                                if (fullResult.intent != FullIntent.UNKNOWN) {
                                     when (fullResult.intent) {
 
                                         // ── TASKS ──
-                                        I.ADD_TASK -> {
+                                        FullIntent.ADD_TASK -> {
                                             val name = fullResult.entityName ?: state.text
                                             viewModel.createTask(name, fullResult.category, fullResult.priority)
                                             voiceOutputHandler.speak("Task added: $name")
                                         }
-                                        I.COMPLETE_TASK -> {
+                                        FullIntent.COMPLETE_TASK -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
                                             )
                                             voiceOutputHandler.speak("Task marked complete")
                                         }
-                                        I.DELETE_TASK -> {
+                                        FullIntent.DELETE_TASK -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
                                             )
                                             voiceOutputHandler.speak("Task removed")
                                         }
+                                        FullIntent.LIST_TASKS -> {
+                                            navController.navigate("todo_main")
+                                            voiceOutputHandler.speak("Here are your tasks")
+                                        }
+
                                         // ── HABITS ──
-                                        I.ADD_HABIT -> {
+                                        FullIntent.ADD_HABIT -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.ADD_HABIT, 0.9f, fullResult.entityName, category = fullResult.category)
                                             )
                                             voiceOutputHandler.speak("Habit added: ${fullResult.entityName}")
                                         }
-                                        I.TOGGLE_HABIT -> {
+                                        FullIntent.TOGGLE_HABIT -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.TOGGLE_HABIT, 0.9f, fullResult.entityName)
                                             )
                                             voiceOutputHandler.speak("Habit updated")
                                         }
-                                        I.QUERY_STREAK -> {
+                                        FullIntent.QUERY_STREAK -> {
                                             navController.navigate("analytics")
                                             voiceOutputHandler.speak("Opening your streak insights")
                                         }
-                                        I.LIST_HABITS -> {
+                                        FullIntent.LIST_HABITS -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Here are your habits")
                                         }
 
                                         // ── SLEEP & SOUND ──
-                                        I.START_SLEEP_SESSION -> {
+                                        FullIntent.START_SLEEP_SESSION -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Starting sleep session")
                                         }
-                                        I.STOP_SLEEP_SESSION -> {
+                                        FullIntent.STOP_SLEEP_SESSION -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Stopping sleep tracking")
                                         }
-                                        I.PLAY_SLEEP_SOUND -> {
+                                        FullIntent.PLAY_SLEEP_SOUND -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Playing sleep sounds")
                                         }
-                                        I.PLAY_FOCUS_SOUND -> {
+                                        FullIntent.PLAY_FOCUS_SOUND -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Playing focus music")
                                         }
-                                        I.PLAY_RELAX_SOUND -> {
+                                        FullIntent.PLAY_RELAX_SOUND -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Playing relaxation music")
                                         }
-                                        I.PLAY_MEDITATE_SOUND -> {
+                                        FullIntent.PLAY_MEDITATE_SOUND -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Playing meditation sounds")
                                         }
-                                        I.STOP_SOUND -> {
+                                        FullIntent.STOP_SOUND -> {
                                             voiceOutputHandler.speak("Stopping audio")
                                         }
 
                                         // ── NAVIGATION ──
-                                        I.NAVIGATE_DASHBOARD -> {
+                                        FullIntent.NAVIGATE_DASHBOARD -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Going to dashboard")
                                         }
-                                        I.NAVIGATE_SLEEP_DATA, I.NAVIGATE_BIOFEEDBACK,
-                                        I.NAVIGATE_REPORTS, I.NAVIGATE_DAILY_PROGRESS,
-                                        I.SHOW_ANALYTICS, I.SHOW_DAILY_PROGRESS -> {
+                                        FullIntent.NAVIGATE_SLEEP_DATA,
+                                        FullIntent.NAVIGATE_BIOFEEDBACK,
+                                        FullIntent.NAVIGATE_REPORTS,
+                                        FullIntent.NAVIGATE_DAILY_PROGRESS,
+                                        FullIntent.SHOW_ANALYTICS,
+                                        FullIntent.SHOW_DAILY_PROGRESS -> {
                                             navController.navigate("analytics")
                                             voiceOutputHandler.speak("Opening insights")
                                         }
-                                        I.NAVIGATE_TODO -> {
+                                        FullIntent.NAVIGATE_TODO -> {
                                             navController.navigate("todo_main")
                                             voiceOutputHandler.speak("Opening to-do list")
                                         }
-                                        I.LIST_TASKS -> {
-                                            navController.navigate("todo_main")
-                                            voiceOutputHandler.speak("Here are your tasks")
-                                        }
-                                        I.NAVIGATE_SETTINGS -> {
+                                        FullIntent.NAVIGATE_SETTINGS -> {
                                             navController.navigate("settings")
                                             voiceOutputHandler.speak("Opening settings")
                                         }
-                                        I.NAVIGATE_PROFILE -> {
+                                        FullIntent.NAVIGATE_PROFILE -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, ProfileActivity::class.java))
                                             voiceOutputHandler.speak("Opening profile")
                                         }
-                                        I.NAVIGATE_SOUND, I.NAVIGATE_ALARM,
-                                        I.NAVIGATE_MORNING_BRIEF, I.NAVIGATE_TMR,
-                                        I.START_BEDTIME_ROUTINE -> {
+                                        FullIntent.NAVIGATE_SOUND,
+                                        FullIntent.NAVIGATE_ALARM,
+                                        FullIntent.NAVIGATE_MORNING_BRIEF,
+                                        FullIntent.NAVIGATE_TMR,
+                                        FullIntent.START_BEDTIME_ROUTINE -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening sleep & sound")
                                         }
-                                        I.NAVIGATE_DREAM_JOURNAL -> {
+                                        FullIntent.NAVIGATE_DREAM_JOURNAL -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening dream journal")
                                         }
-                                        I.NAVIGATE_DEVICES -> {
+                                        FullIntent.NAVIGATE_DEVICES -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Opening devices")
                                         }
-                                        I.VOICE_SETTINGS -> {
+                                        FullIntent.VOICE_SETTINGS -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, VoiceAgentActivity::class.java))
                                             voiceOutputHandler.speak("Opening voice settings")
                                         }
 
                                         // ── BEDTIME ──
-                                        I.ADD_BEDTIME_ITEM -> {
+                                        FullIntent.ADD_BEDTIME_ITEM -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Adding to bedtime routine")
                                         }
-                                        I.TOGGLE_BEDTIME_ITEM -> {
+                                        FullIntent.TOGGLE_BEDTIME_ITEM -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Updating bedtime routine")
                                         }
 
                                         // ── PROACTIVE ──
-                                        I.WHATS_NEXT, I.MORNING_SUMMARY -> {
+                                        FullIntent.WHATS_NEXT,
+                                        FullIntent.MORNING_SUMMARY -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Let me check what's on your plate today")
                                         }
-                                        I.GOODNIGHT -> {
+                                        FullIntent.GOODNIGHT -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Good night! Sleep well.")
                                         }
 
                                         // ── AI / DEVICE ──
-                                        I.ASK_AI_QUESTION, I.START_RECOVERY_PLAN -> {
+                                        FullIntent.ASK_AI_QUESTION,
+                                        FullIntent.START_RECOVERY_PLAN -> {
                                             navController.navigate("analytics")
                                             voiceOutputHandler.speak("Checking your AI insights")
                                         }
-                                        I.SHOW_SAVED_REPORTS -> {
+                                        FullIntent.SHOW_SAVED_REPORTS -> {
                                             navController.navigate("analytics")
                                             voiceOutputHandler.speak("Opening reports")
                                         }
-                                        I.CHECK_BATTERY -> {
+                                        FullIntent.CHECK_BATTERY -> {
                                             voiceOutputHandler.speak("Checking device battery")
                                         }
 
