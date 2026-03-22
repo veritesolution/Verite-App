@@ -61,6 +61,7 @@ fun VoiceAgentSettingsScreen(
         modifier = Modifier
             .fillMaxSize()
             .background(MindSetColors.background)
+            .systemBarsPadding()
             .padding(horizontal = 16.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
         contentPadding = PaddingValues(top = 16.dp, bottom = 80.dp)
