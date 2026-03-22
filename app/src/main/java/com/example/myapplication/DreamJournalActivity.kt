@@ -45,6 +45,8 @@ class DreamJournalActivity : AppCompatActivity() {
         }
     }
 
+    /* add showadddream dialog */
+
     private fun showAddDreamDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_dream, null)
         val etTitle = dialogView.findViewById<EditText>(R.id.etDreamTitle)
