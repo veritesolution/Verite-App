@@ -28,7 +28,7 @@ class EditProfileActivity : AppCompatActivity() {
     private var selectedImageUri: Uri? = null
     private var currentUser: User? = null
 
-    // Image Picker
+    // Image  Picker
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             selectedImageUri = uri
