@@ -18,19 +18,22 @@ import androidx.core.content.ContextCompat
 import java.util.UUID
 
 // ── BLE UUIDs — must match firmware exactly ────────────────────────────────
-private val SERVICE_UUID       = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
-private val SENSOR_DATA_UUID   = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")
-private val LED_CONTROL_UUID   = UUID.fromString("cba1d466-344c-4be3-ab3f-189f80dd7518")
-private val MOTOR_CONTROL_UUID = UUID.fromString("f9279c99-b7b3-4e9e-b0dd-e4e2c95e9ad3")
-private val CCCD_UUID          = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-
-private const val TAG             = "BioWearable"
-private const val DEVICE_NAME     = "BioWerable"
-private const val SCAN_TIMEOUT_MS = 12_000L
-private const val RECONNECT_DELAY = 2_000L
-private const val REQUEST_PERM    = 100
-
 class BioWearableDiagnosticActivity : AppCompatActivity() {
+    
+    companion object {
+        private const val TAG = "BioWearable"
+        private const val DEVICE_NAME = "BioWerable"
+        private const val SCAN_TIMEOUT_MS = 12_000L
+        private const val RECONNECT_DELAY = 2_000L
+        private const val REQUEST_PERM = 100
+
+        private val SERVICE_UUID = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
+        private val SENSOR_DATA_UUID = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")
+        private val LED_CONTROL_UUID = UUID.fromString("cba1d466-344c-4be3-ab3f-189f80dd7518")
+        private val MOTOR_CONTROL_UUID = UUID.fromString("f9279c99-b7b3-4e9e-b0dd-e4e2c95e9ad3")
+        private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+    }
+
 
     // ── Views — Bio-Sensors ────────────────────────────────────────────────
     private lateinit var btnScan        : Button
