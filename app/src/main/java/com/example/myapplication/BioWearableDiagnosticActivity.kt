@@ -209,8 +209,8 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         userDisconnect = false
         bleScanner = bluetoothAdapter.bluetoothLeScanner
 
-        val filter = ScanFilter.Builder().setDeviceName(DEVICE_NAME).build()
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        val filter = createScanFilter()
+        val settings = createScanSettings()
 
         isScanning = true
         btnScan.text = "Stop Scan"
@@ -221,6 +221,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         mainHandler.postDelayed({
             if (isScanning) { stopScan(); setStatus("⏱ Not found — tap Scan to retry") }
         }, SCAN_TIMEOUT_MS)
+    }
+
+    private fun createScanFilter(): ScanFilter {
+        return ScanFilter.Builder().setDeviceName(DEVICE_NAME).build()
+    }
+
+    private fun createScanSettings(): ScanSettings {
+        return ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
     }
 
     @SuppressLint("MissingPermission")
