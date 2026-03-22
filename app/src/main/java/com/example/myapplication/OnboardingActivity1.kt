@@ -35,8 +35,9 @@ class OnboardingActivity1 : AppCompatActivity() {
             )
             setBackgroundColor(Color.BLACK)
         }
-        
-        // Create header with back button and title
+
+
+        /* Create header with back button and title */
         val headerLayout = LinearLayout(this).apply {
             id = View.generateViewId()
             orientation = LinearLayout.HORIZONTAL
