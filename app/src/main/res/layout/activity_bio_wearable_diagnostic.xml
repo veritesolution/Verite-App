@@ -1,0 +1,390 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_premium_page"
+    android:fitsSystemWindows="true">
+
+    <!-- Header -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/headerLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingVertical="16dp"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:layout_marginStart="24dp"
+            android:padding="4dp"
+            android:src="@drawable/ic_arrow_back"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/accent_teal" />
+
+        <TextView
+            android:id="@+id/tvHeaderTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Hardware Diagnostic"
+            android:textColor="@color/white"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvDataRate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="24dp"
+            android:text=""
+            android:textColor="@color/accent_teal"
+            android:textSize="11sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/headerLayout">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="20dp">
+
+            <!-- Connectivity Status -->
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#0D1F1F"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="16dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="🔴 Disconnected"
+                        android:textColor="@color/white"
+                        android:textSize="14sp"
+                        android:gravity="center"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/btnScan"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Scan for BioWearable"
+                            android:textAllCaps="false"
+                            android:backgroundTint="#00BFA5"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/btnDisconnect"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="X"
+                            android:backgroundTint="#FF5252" />
+                    </LinearLayout>
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Bio-Sensors Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="BIO-SENSORS (EEG / EMG / PULSE)"
+                android:textColor="@color/accent_teal"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#0A1614"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- EEG 1 -->
+                    <TextView
+                        android:id="@+id/tvEeg1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="EEG 1: ---"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+                    <ProgressBar
+                        android:id="@+id/pbEeg1"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:max="4095"
+                        android:progressTint="#00BFA5"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- EEG 2 -->
+                    <TextView
+                        android:id="@+id/tvEeg2"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="EEG 2: ---"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+                    <ProgressBar
+                        android:id="@+id/pbEeg2"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:max="4095"
+                        android:progressTint="#00BFA5"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- EMG -->
+                    <TextView
+                        android:id="@+id/tvEmg"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="EMG: ---"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+                    <ProgressBar
+                        android:id="@+id/pbEmg"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:max="4095"
+                        android:progressTint="#00BFA5"
+                        android:layout_marginBottom="12dp" />
+
+                    <!-- Pulse -->
+                    <TextView
+                        android:id="@+id/tvPulse"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Pulse: ---"
+                        android:textColor="@color/white"
+                        android:textSize="13sp" />
+                    <ProgressBar
+                        android:id="@+id/pbPulse"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:max="4095"
+                        android:progressTint="#00BFA5" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- IMU Data Section -->
+            <LinearLayout
+                android:id="@+id/cardImu"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MPU6050 IMU DATA"
+                    android:textColor="@color/accent_teal"
+                    android:textSize="12sp"
+                    android:textStyle="bold"
+                    android:letterSpacing="0.1"
+                    android:layout_marginBottom="8dp" />
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:cardBackgroundColor="#0D1117"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp"
+                    android:layout_marginBottom="24dp">
+
+                    <GridLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:columnCount="2"
+                        android:padding="16dp">
+
+                        <TextView
+                            android:layout_columnWeight="1"
+                            android:text="Accelerometer"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11sp" />
+                        <TextView
+                            android:layout_columnWeight="1"
+                            android:text="Gyroscope"
+                            android:textColor="#88FFFFFF"
+                            android:textSize="11sp" />
+
+                        <TextView
+                            android:id="@+id/tvAccX"
+                            android:layout_columnWeight="1"
+                            android:text="X: ---"
+                            android:textColor="@color/white" />
+                        <TextView
+                            android:id="@+id/tvGyroX"
+                            android:layout_columnWeight="1"
+                            android:text="X: ---"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:id="@+id/tvAccY"
+                            android:layout_columnWeight="1"
+                            android:text="Y: ---"
+                            android:textColor="@color/white" />
+                        <TextView
+                            android:id="@+id/tvGyroY"
+                            android:layout_columnWeight="1"
+                            android:text="Y: ---"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:id="@+id/tvAccZ"
+                            android:layout_columnWeight="1"
+                            android:text="Z: ---"
+                            android:textColor="@color/white" />
+                        <TextView
+                            android:id="@+id/tvGyroZ"
+                            android:layout_columnWeight="1"
+                            android:text="Z: ---"
+                            android:textColor="@color/white" />
+
+                        <TextView
+                            android:id="@+id/tvImuTemp"
+                            android:layout_columnSpan="2"
+                            android:layout_marginTop="8dp"
+                            android:text="🌡 Temp: ---"
+                            android:textColor="@color/accent_teal"
+                            android:gravity="center" />
+                    </GridLayout>
+                </androidx.cardview.widget.CardView>
+            </LinearLayout>
+
+            <!-- Controls Section -->
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="HARDWARE CONTROLS"
+                android:textColor="@color/accent_teal"
+                android:textSize="12sp"
+                android:textStyle="bold"
+                android:letterSpacing="0.1"
+                android:layout_marginBottom="8dp" />
+
+            <androidx.cardview.widget.CardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardBackgroundColor="#101820"
+                app:cardCornerRadius="16dp"
+                app:cardElevation="0dp"
+                android:layout_marginBottom="24dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
+                    <!-- LED Row 1 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button android:id="@+id/btnLedRed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Red" android:backgroundTint="#FF5252" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedGreen" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Green" android:backgroundTint="#4CAF50" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedBlue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Blue" android:backgroundTint="#2196F3" />
+                    </LinearLayout>
+
+                    <!-- LED Row 2 -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="16dp">
+
+                        <Button android:id="@+id/btnLedOff" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="LED OFF" android:textAllCaps="false" android:backgroundTint="#333333" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedCycle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🌈 RGB Cycle" android:textAllCaps="false" android:backgroundTint="#6200EE" />
+                    </LinearLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#22FFFFFF" android:layout_marginBottom="16dp" />
+
+                    <!-- Motor Controls -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginBottom="8dp">
+
+                        <Button android:id="@+id/btnMotorOn" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Motor ON" android:textAllCaps="false" android:backgroundTint="#00BFA5" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnMotorOff" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="OFF" android:backgroundTint="#444444" />
+                    </LinearLayout>
+
+                    <Button android:id="@+id/btnMotorPattern" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="📳 Buzz Pattern (3 pulses)" android:textAllCaps="false" android:backgroundTint="#00796B" />
+                </LinearLayout>
+            </androidx.cardview.widget.CardView>
+
+            <!-- Test All Section -->
+            <Button
+                android:id="@+id/btnTestAll"
+                android:layout_width="match_parent"
+                android:layout_height="60dp"
+                android:text="▶  Run All Diagnostic Tests"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:backgroundTint="#00BFA5"
+                android:layout_marginBottom="16dp" />
+
+            <TextView
+                android:id="@+id/tvTestLog"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/bg_premium_card"
+                android:padding="12dp"
+                android:text="System Initialized.\nScan for a device to begin verification."
+                android:textColor="#00FF00"
+                android:fontFamily="monospace"
+                android:textSize="12sp" />
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

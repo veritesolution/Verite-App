@@ -7,10 +7,10 @@ import androidx.room.PrimaryKey
 data class RecoveryPlan(
     @PrimaryKey(autoGenerate = true)
     val id: Long = 0,
-    val addictionType: String,
+    val ailmentType: String,
     val fullPlanText: String,
     val frequency: String = "",
-    val reasonForAddiction: String = "",
+    val reasonForAilment: String = "",
     val duration: String = "",
     val reasonForStopping: String = "",
     val startDate: Long = System.currentTimeMillis(),

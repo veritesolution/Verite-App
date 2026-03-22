@@ -24,6 +24,4 @@ interface RecoveryPlanDao {
         return insertPlan(plan)
     }
 
-    @Query("SELECT * FROM recovery_plans WHERE id = :planId LIMIT 1")
-    suspend fun getPlanById(planId: Long): RecoveryPlan?
 }

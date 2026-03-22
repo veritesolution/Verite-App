@@ -21,135 +21,128 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.ui.components.VeriteButton
 import com.example.myapplication.ui.components.VeriteTopBar
+import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.*
 
 @Composable
 fun HelpFeedbackScreen(
     onBackClick: () -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .paint(
-                painter = painterResource(id = R.drawable.group_1000006461),
-                contentScale = ContentScale.FillBounds
-            )
-    ) {
+    SkyBackground {
         Scaffold(
             topBar = {
-                VeriteTopBar(onBackClick = onBackClick)
+                VeriteTopBar(onBackClick = onBackClick, onProfileClick = onProfileClick)
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Main Card
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(24.dp),
-                color = CardBackground
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                // Main Card
+                Surface(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(24.dp),
+                    color = NodeBgInactive
                 ) {
-                    Text(
-                        text = stringResource(R.string.help_feedback),
-                        fontSize = 18.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        color = TextPrimary
-                    )
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Menu Items Card
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(16.dp),
-                        color = CardBackgroundDark
+                    Column(
+                        modifier = Modifier.padding(24.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
-                        Column(
-                            modifier = Modifier.padding(16.dp)
+                        Text(
+                            text = stringResource(R.string.help_feedback),
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = TextPrimary
+                        )
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Menu Items Card
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(16.dp),
+                            color = NodeBgInactive
                         ) {
-                            HelpMenuItem(
-                                text = stringResource(R.string.help_center),
-                                onClick = { /* Navigate to help center */ }
-                            )
-                            Divider(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                color = DividerColor
-                            )
-                            
-                            HelpMenuItem(
-                                text = stringResource(R.string.send_feedback),
-                                onClick = { /* Navigate to feedback */ }
-                            )
-                            Divider(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                color = DividerColor
-                            )
-                            
-                            HelpMenuItem(
-                                text = stringResource(R.string.terms_privacy),
-                                onClick = { /* Navigate to terms */ }
-                            )
-                            Divider(
-                                modifier = Modifier.padding(vertical = 8.dp),
-                                color = DividerColor
-                            )
-                            
-                            HelpMenuItem(
-                                text = stringResource(R.string.licenses),
-                                onClick = { /* Navigate to licenses */ }
-                            )
+                            Column(
+                                modifier = Modifier.padding(16.dp)
+                            ) {
+                                HelpMenuItem(
+                                    text = stringResource(R.string.help_center),
+                                    onClick = { /* Navigate to help center */ }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = DividerColor
+                                )
+                                
+                                HelpMenuItem(
+                                    text = stringResource(R.string.send_feedback),
+                                    onClick = { /* Navigate to feedback */ }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = DividerColor
+                                )
+                                
+                                HelpMenuItem(
+                                    text = stringResource(R.string.terms_privacy),
+                                    onClick = { /* Navigate to terms */ }
+                                )
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(vertical = 8.dp),
+                                    color = DividerColor
+                                )
+                                
+                                HelpMenuItem(
+                                    text = stringResource(R.string.licenses),
+                                    onClick = { /* Navigate to licenses */ }
+                                )
+                            }
                         }
+                        
+                        Spacer(modifier = Modifier.height(24.dp))
+                        
+                        // Progress Indicator
+                        LinearProgressIndicator(
+                            progress = { 0.6f },
+                            modifier = Modifier
+                                .width(200.dp)
+                                .height(4.dp),
+                            color = AccentPrimary,
+                            trackColor = DividerColor
+                        )
                     }
-                    
-                    Spacer(modifier = Modifier.height(24.dp))
-                    
-                    // Progress Indicator
-                    LinearProgressIndicator(
-                        progress = 0.6f,
-                        modifier = Modifier
-                            .width(200.dp)
-                            .height(4.dp),
-                        color = TealPrimary,
-                        trackColor = DividerColor
-                    )
                 }
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                // Description Text
+                Text(
+                    text = stringResource(R.string.power_off_description),
+                    fontSize = 14.sp,
+                    color = AccentSecondary,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 20.sp,
+                    modifier = Modifier.padding(horizontal = 16.dp)
+                )
+                
+                Spacer(modifier = Modifier.weight(1f))
+                
+                // Done Button
+                VeriteButton(
+                    text = stringResource(R.string.done),
+                    onClick = onBackClick,
+                    modifier = Modifier.padding(bottom = 32.dp)
+                )
             }
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            // Description Text
-            Text(
-                text = stringResource(R.string.power_off_description),
-                fontSize = 14.sp,
-                color = TealSecondary,
-                textAlign = TextAlign.Center,
-                lineHeight = 20.sp,
-                modifier = Modifier.padding(horizontal = 16.dp)
-            )
-            
-            Spacer(modifier = Modifier.weight(1f))
-            
-            // Done Button
-            VeriteButton(
-                text = stringResource(R.string.done),
-                onClick = onBackClick,
-                modifier = Modifier.padding(bottom = 32.dp)
-            )
         }
     }
-}
 }
 
 @Composable

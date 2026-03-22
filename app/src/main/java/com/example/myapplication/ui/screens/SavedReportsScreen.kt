@@ -69,7 +69,7 @@ fun SavedReportsScreen(
                     ) {
                         Text(
                             text = "No reports saved yet.",
-                            color = TextSecondary,
+                            color = TextMuted,
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
@@ -101,7 +101,7 @@ fun ReportItem(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onClick),
-        color = CardBackground,
+        color = NodeBgInactive,
         shape = RoundedCornerShape(16.dp)
     ) {
         Row(
@@ -111,7 +111,7 @@ fun ReportItem(
             Icon(
                 imageVector = Icons.Default.Description,
                 contentDescription = null,
-                tint = TealPrimary,
+                tint = AccentPrimary,
                 modifier = Modifier.size(32.dp)
             )
             
@@ -127,7 +127,7 @@ fun ReportItem(
                 )
                 Text(
                     text = date,
-                    color = TextSecondary,
+                    color = TextMuted,
                     fontSize = 12.sp
                 )
             }

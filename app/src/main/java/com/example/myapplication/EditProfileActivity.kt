@@ -2,106 +2,83 @@ package com.example.myapplication
 
 import android.net.Uri
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import coil.load
-import coil.transform.CircleCropTransformation
+import coil.compose.AsyncImage
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.User
-import com.google.android.material.textfield.TextInputEditText
-import kotlinx.coroutines.flow.firstOrNull
+import com.example.myapplication.ui.components.TopBar
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileOutputStream
 
-class EditProfileActivity : AppCompatActivity() {
+class EditProfileActivity : ComponentActivity() {
 
-    private lateinit var etName: TextInputEditText
-    private lateinit var etEmail: TextInputEditText
-    private lateinit var imageViewProfile: ImageView
-    private var selectedImageUri: Uri? = null
-    private var currentUser: User? = null
+    private var selectedImageUri by mutableStateOf<Uri?>(null)
 
-    // Image Picker
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             selectedImageUri = uri
-            imageViewProfile.load(uri) {
-                crossfade(true)
-                transformations(CircleCropTransformation())
-            }
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_edit_profile)
-
-        etName = findViewById(R.id.etName)
-        etEmail = findViewById(R.id.etEmail)
-        imageViewProfile = findViewById(R.id.imageViewProfile)
         
-        val btnSave = findViewById<Button>(R.id.btnSave)
-        val btnBack = findViewById<android.view.View>(R.id.btnBack)
-        val tvChangePhoto = findViewById<TextView>(R.id.tvChangePhoto)
-        val profileImageContainer = findViewById<android.view.View>(R.id.profileImageContainer)
-
-        btnBack.setOnClickListener { finish() }
-
-        // Load existing data
-        lifecycleScope.launch {
-            val db = AppDatabase.getDatabase(applicationContext)
-            currentUser = db.userDao().getUser().firstOrNull()
-
-            if (currentUser != null) {
-                etName.setText(currentUser!!.name)
-                etEmail.setText(currentUser!!.email)
-                if (!currentUser!!.profileImagePath.isNullOrEmpty()) {
-                    val file = File(currentUser!!.profileImagePath!!)
-                    if (file.exists()) {
-                        imageViewProfile.load(file) {
-                            transformations(CircleCropTransformation())
+        setContent {
+            VeriteTheme {
+                SkyBackground {
+                    EditProfileScreen(
+                        onBackClick = { finish() },
+                        onPickImage = {
+                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                        },
+                        selectedImageUri = selectedImageUri,
+                        onSave = { name, email, newUri, currentUser ->
+                            saveProfile(name, email, newUri, currentUser)
                         }
-                    }
+                    )
                 }
-            } else {
-                // Initialize default user if none exists
-                 etName.setText("User")
-                 etEmail.setText("user@example.com")
             }
         }
+    }
 
-        // Image Picker implementation
-        val openPicker = {
-            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+    private fun saveProfile(name: String, email: String, newUri: Uri?, currentUser: User?) {
+        if (name.isBlank() || email.isBlank()) {
+            Toast.makeText(this, "Name and Email are required", Toast.LENGTH_SHORT).show()
+            return
         }
         
-        tvChangePhoto.setOnClickListener { openPicker() }
-        profileImageContainer.setOnClickListener { openPicker() }
+        lifecycleScope.launch(Dispatchers.IO) {
+            val db = AppDatabase.getDatabase(applicationContext)
+            var imagePath = currentUser?.profileImagePath
 
-        // Save Logic
-        btnSave.setOnClickListener {
-            val name = etName.text.toString().trim()
-            val email = etEmail.text.toString().trim()
-
-            if (name.isEmpty()) {
-                etName.error = "Name is required"
-                return@setOnClickListener
-            }
-
-            lifecycleScope.launch {
-                val db = AppDatabase.getDatabase(applicationContext)
-                
-                var imagePath = currentUser?.profileImagePath
-
-                // Save image to internal storage if a new one is picked
-                selectedImageUri?.let { uri ->
+            newUri?.let { uri ->
+                try {
                     val inputStream = contentResolver.openInputStream(uri)
                     val fileName = "profile_${System.currentTimeMillis()}.jpg"
                     val file = File(filesDir, fileName)
@@ -111,27 +88,168 @@ class EditProfileActivity : AppCompatActivity() {
                     inputStream?.close()
                     outputStream.close()
                     
-                    // Delete old image if exists
-                    if (!imagePath.isNullOrEmpty()) {
+                    if (!imagePath.isNullOrEmpty() && imagePath != file.absolutePath) {
                         val oldFile = File(imagePath!!)
                         if (oldFile.exists()) oldFile.delete()
                     }
-                    
                     imagePath = file.absolutePath
+                } catch (e: Exception) {
+                    e.printStackTrace()
                 }
+            }
 
-                val updatedUser = User(
-                    id = 1,
-                    name = name,
-                    email = email,
-                    profileImagePath = imagePath,
-                    joinDate = currentUser?.joinDate ?: System.currentTimeMillis()
-                )
+            val updatedUser = User(
+                id = 1, // Updating the singular local user
+                name = name,
+                email = email,
+                profileImagePath = imagePath,
+                joinDate = currentUser?.joinDate ?: System.currentTimeMillis()
+            )
 
-                db.userDao().insertUser(updatedUser)
-                
-                Toast.makeText(this@EditProfileActivity, "Profile Updated!", Toast.LENGTH_SHORT).show()
+            db.userDao().insertUser(updatedUser)
+            
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@EditProfileActivity, "Profile Updated", Toast.LENGTH_SHORT).show()
                 finish()
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun EditProfileScreen(
+    onBackClick: () -> Unit,
+    onPickImage: () -> Unit,
+    selectedImageUri: Uri?,
+    onSave: (String, String, Uri?, User?) -> Unit
+) {
+    val context = LocalContext.current
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var currentUser by remember { mutableStateOf<User?>(null) }
+    var initialLoadDone by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        val db = AppDatabase.getDatabase(context)
+        db.userDao().getUser().collect { user ->
+            if (!initialLoadDone) {
+                currentUser = user
+                if (user != null) {
+                    name = user.name
+                    email = user.email
+                } else {
+                    name = "User"
+                    email = "user@example.com"
+                }
+                initialLoadDone = true
+            }
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxSize()) {
+        TopBar(
+            onBackClick = onBackClick,
+            onProfileClick = { /* No-op on account screen */ }
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+        
+        Text(
+            text = "Edit Profile",
+            color = Color.White,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Profile Picture
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(CircleShape)
+                    .background(Color.DarkGray)
+                    .clickable { onPickImage() },
+                contentAlignment = Alignment.Center
+            ) {
+                val imageModel = selectedImageUri 
+                    ?: currentUser?.profileImagePath?.let { File(it) } 
+                    ?: R.drawable.user
+
+                AsyncImage(
+                    model = imageModel,
+                    contentDescription = "Profile Picture",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(16.dp))
+            Text(
+                text = "Change Photo",
+                color = Color(0xFF00FFB2),
+                fontSize = 16.sp,
+                modifier = Modifier.clickable { onPickImage() }
+            )
+
+            Spacer(modifier = Modifier.height(40.dp))
+
+            // Name Field
+            OutlinedTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = { Text("Full Name", color = Color(0xFFB0BEC5)) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00FFB2),
+                    unfocusedBorderColor = Color(0xFF00FFB2).copy(alpha = 0.5f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00FFB2)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // Email Field
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email Address", color = Color(0xFFB0BEC5)) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = Color(0xFF00FFB2),
+                    unfocusedBorderColor = Color(0xFF00FFB2).copy(alpha = 0.5f),
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White,
+                    cursorColor = Color(0xFF00FFB2)
+                ),
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            Button(
+                onClick = { onSave(name, email, selectedImageUri, currentUser) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00FFB2)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Text(
+                    text = "Save Changes",
+                    color = Color.Black,
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
         }
     }

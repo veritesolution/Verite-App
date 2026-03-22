@@ -5,16 +5,25 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
-import android.view.ViewGroup
-import android.widget.ImageButton
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.switchmaterial.SwitchMaterial
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.model.Task
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
+import com.example.myapplication.TmrFeatureActivity
+import com.example.myapplication.TodoActivity
+import com.example.myapplication.DreamJournalActivity
+import com.example.myapplication.BioFeedbackActivity
+import com.example.myapplication.SleepDataActivity
+import com.example.myapplication.CustomSoundActivity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.launch
 import java.util.*
 
 data class Alarm(
@@ -24,55 +33,128 @@ data class Alarm(
     var isActive: Boolean = true
 ) {
     val timeString: String
-        get() {
-            val h = if (hour > 12) hour - 12 else if (hour == 0) 12 else hour
-            return String.format("%02d:%02d", h, minute)
-        }
+        get() = String.format("%02d:%02d", if (hour > 12) hour - 12 else if (hour == 0) 12 else hour, minute)
     val amPm: String
         get() = if (hour >= 12) "PM" else "AM"
 }
 
 class AlarmActivity : AppCompatActivity() {
 
-    private lateinit var recyclerView: RecyclerView
-    private lateinit var adapter: AlarmAdapter
     private val alarms = mutableListOf<Alarm>()
+    private val database by lazy { AppDatabase.getDatabase(this) }
+    private val taskDao by lazy { database.taskDao() }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_alarm)
 
+        findViewById<ComposeView>(R.id.composeView).setContent {
+            VeriteTheme { SkyBackground { } }
+        }
+
         loadAlarms()
+        setupDashboard()
+        updateTodoPreview()
+        updateNextAlarmDisplay()
 
         findViewById<ImageView>(R.id.backButton).setOnClickListener { finish() }
-
-        recyclerView = findViewById(R.id.alarmRecyclerView)
-        recyclerView.layoutManager = LinearLayoutManager(this)
-        adapter = AlarmAdapter(alarms, { saveAlarms() }, { alarm -> deleteAlarm(alarm) })
-        recyclerView.adapter = adapter
+        findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
+            startActivity(android.content.Intent(this, ProfileActivity::class.java))
+        }
 
         findViewById<View>(R.id.fabAddAlarm).setOnClickListener {
             showTimePicker()
         }
     }
 
-    private fun showTimePicker() {
-        val calendar = Calendar.getInstance()
-        TimePickerDialog(this, { _, hour, minute ->
-            val newAlarm = Alarm(hour = hour, minute = minute)
-            alarms.add(newAlarm)
-            saveAlarms()
-            adapter.notifyItemInserted(alarms.size - 1)
-        }, calendar.get(Calendar.HOUR_OF_DAY), calendar.get(Calendar.MINUTE), false).show()
+    private fun setupDashboard() {
+        findViewById<View>(R.id.boxSleepData).setOnClickListener {
+            startActivity(android.content.Intent(this, SleepDataActivity::class.java))
+        }
+        findViewById<View>(R.id.boxTmrFeature).setOnClickListener {
+            startActivity(android.content.Intent(this, TmrFeatureActivity::class.java))
+        }
+        findViewById<View>(R.id.boxAdaptiveMusic).setOnClickListener {
+            startActivity(android.content.Intent(this, CustomSoundActivity::class.java))
+        }
+        findViewById<View>(R.id.boxTodoList).setOnClickListener {
+            startActivity(android.content.Intent(this, MindSetActivity::class.java))
+        }
+        findViewById<View>(R.id.boxMorningBrief).setOnClickListener {
+            startActivity(android.content.Intent(this, MorningBriefActivity::class.java))
+        }
+        findViewById<View>(R.id.boxBioFeedback).setOnClickListener {
+            startActivity(android.content.Intent(this, BioFeedbackActivity::class.java))
+        }
+        findViewById<View>(R.id.boxAlarmSet).setOnClickListener {
+            // Maybe show a list of all alarms in a dialog or just use the FAB
+            showTimePicker()
+        }
     }
 
-    private fun deleteAlarm(alarm: Alarm) {
-        val index = alarms.indexOf(alarm)
-        if (index != -1) {
-            alarms.removeAt(index)
-            saveAlarms()
-            adapter.notifyItemRemoved(index)
+    private fun updateTodoPreview() {
+        val container = findViewById<LinearLayout>(R.id.todoPreviewContainer)
+        lifecycleScope.launch {
+            taskDao.getAllFlow().collect { tasks ->
+                container.removeAllViews()
+                tasks.take(3).forEach { task ->
+                    val itemView = LayoutInflater.from(this@AlarmActivity)
+                        .inflate(R.layout.item_todo_preview, container, false)
+                    itemView.findViewById<TextView>(R.id.tvTodoTask).text = task.task
+                    container.addView(itemView)
+                }
+            }
         }
+    }
+
+    private fun updateNextAlarmDisplay() {
+        val activeAlarm = alarms.filter { it.isActive }.minByOrNull { 
+            // Simple logic for next alarm in 24h
+            val now = Calendar.getInstance()
+            val alarmTime = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, it.hour)
+                set(Calendar.MINUTE, it.minute)
+                set(Calendar.SECOND, 0)
+            }
+            if (alarmTime.before(now)) alarmTime.add(Calendar.DATE, 1)
+            alarmTime.timeInMillis
+        }
+
+        activeAlarm?.let {
+            val h = if (it.hour > 12) it.hour - 12 else if (it.hour == 0) 12 else it.hour
+            findViewById<TextView>(R.id.tvNextAlarmHour).text = String.format("%02d", h)
+            findViewById<TextView>(R.id.tvNextAlarmMinute).text = String.format("%02d", it.minute)
+        }
+    }
+
+    private fun showTimePicker() {
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
+        val view = layoutInflater.inflate(R.layout.dialog_apple_time_picker, null)
+        dialog.setContentView(view)
+        
+        // Ensure background of bottom sheet is transparent so our custom rounded glass background shows well
+        (view.parent as? View)?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
+
+        val timePicker = view.findViewById<android.widget.TimePicker>(R.id.appleTimePicker)
+        timePicker.setIs24HourView(false)
+
+        val calendar = Calendar.getInstance()
+        timePicker.hour = calendar.get(Calendar.HOUR_OF_DAY)
+        timePicker.minute = calendar.get(Calendar.MINUTE)
+
+        view.findViewById<TextView>(R.id.btnCancel).setOnClickListener {
+            dialog.dismiss()
+        }
+
+        view.findViewById<TextView>(R.id.btnSetAlarm).setOnClickListener {
+            val newAlarm = Alarm(hour = timePicker.hour, minute = timePicker.minute)
+            alarms.add(newAlarm)
+            saveAlarms()
+            updateNextAlarmDisplay()
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun saveAlarms() {
@@ -90,38 +172,5 @@ class AlarmActivity : AppCompatActivity() {
             alarms.clear()
             alarms.addAll(savedAlarms)
         }
-    }
-
-    class AlarmAdapter(
-        private val list: List<Alarm>,
-        private val onUpdate: () -> Unit,
-        private val onDelete: (Alarm) -> Unit
-    ) : RecyclerView.Adapter<AlarmAdapter.ViewHolder>() {
-
-        class ViewHolder(v: View) : RecyclerView.ViewHolder(v) {
-            val tvTime: TextView = v.findViewById(R.id.tvAlarmTime)
-            val tvAmPm: TextView = v.findViewById(R.id.tvAlarmAmPm)
-            val switch: SwitchMaterial = v.findViewById(R.id.switchAlarm)
-            val btnDelete: ImageButton = v.findViewById(R.id.btnDelete)
-        }
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val v = LayoutInflater.from(parent.context).inflate(R.layout.item_alarm, parent, false)
-            return ViewHolder(v)
-        }
-
-        override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val alarm = list[position]
-            holder.tvTime.text = alarm.timeString
-            holder.tvAmPm.text = alarm.amPm
-            holder.switch.isChecked = alarm.isActive
-            holder.switch.setOnCheckedChangeListener { _, isChecked ->
-                alarm.isActive = isChecked
-                onUpdate()
-            }
-            holder.btnDelete.setOnClickListener { onDelete(alarm) }
-        }
-
-        override fun getItemCount() = list.size
     }
 }

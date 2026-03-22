@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Dark teal background matching Verite theme -->
+    <solid android:color="#071A18" />
+    
+    <!-- Subtle teal border for a premium feel -->
+    <stroke 
+        android:width="1dp" 
+        android:color="#1C9C91" />
+    
+    <!-- Large rounded corners for modern aesthetic -->
+    <corners android:radius="24dp" />
+</shape>

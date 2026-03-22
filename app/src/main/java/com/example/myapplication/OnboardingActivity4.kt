@@ -74,28 +74,18 @@ class OnboardingActivity4 : AppCompatActivity() {
         }
         headerLayout.addView(backButton)
 
-        // Title "Vérité" with Teal Accent
+        // Title "Vérité" with branded logo style
         val titleText = TextView(this).apply {
             id = View.generateViewId()
             textSize = 24f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
-            val spannable = SpannableString("Vérité")
-            spannable.setSpan(
-                ForegroundColorSpan(Color.WHITE),
-                0, 3, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                ForegroundColorSpan(Color.parseColor("#00E6B8")), // Teal
-                3, 6, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            text = spannable
-            
             layoutParams = LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f
             )
         }
+        com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(titleText)
         headerLayout.addView(titleText)
 
         // Dummy balancing view

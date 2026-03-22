@@ -39,7 +39,7 @@ fun ReportDetailScreen(
         topBar = {
             VeriteTopBar(onBackClick = onBackClick)
         },
-        containerColor = DarkBackground
+        containerColor = Background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -58,9 +58,9 @@ fun ReportDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f),
-                color = CardBackground.copy(alpha = 0.3f),
+                color = NodeBgInactive.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(24.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, TealPrimary.copy(alpha = 0.3f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, AccentPrimary.copy(alpha = 0.3f))
             ) {
                 Box(
                     modifier = Modifier
@@ -84,7 +84,7 @@ fun ReportDetailScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = CardBackground),
+                colors = ButtonDefaults.buttonColors(containerColor = NodeBgInactive),
                 shape = RoundedCornerShape(30.dp)
             ) {
                 Text(

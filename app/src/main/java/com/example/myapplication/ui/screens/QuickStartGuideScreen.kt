@@ -26,91 +26,84 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.ui.components.VeriteTopBar
+import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.*
 
 @Composable
 fun QuickStartGuideScreen(
     onBackClick: () -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .paint(
-                painter = painterResource(id = R.drawable.group_1000006461),
-                contentScale = ContentScale.FillBounds
-            )
-    ) {
+    SkyBackground {
         Scaffold(
             topBar = {
-                VeriteTopBar(onBackClick = onBackClick)
+                VeriteTopBar(onBackClick = onBackClick, onProfileClick = onProfileClick)
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        Column(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Spacer(modifier = Modifier.height(24.dp))
-            
-            Text(
-                text = "Quick Start Guide",
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Bold,
-                color = TealPrimary
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            GuideStep(
-                number = 1,
-                title = "Connect Your Device",
-                description = "Ensure your Bluetooth is on and tap a device card on the home screen to connect.",
-                icon = Icons.Default.Bluetooth
-            )
-            
-            GuideStep(
-                number = 2,
-                title = "Voice Control",
-                description = "Tap the floating mic icon to use voice commands like 'power off' or 'help'.",
-                icon = Icons.Default.Mic
-            )
-            
-            GuideStep(
-                number = 3,
-                title = "Adjust Comfort",
-                description = "In the device detail screen, you can adjust temperature and vibration modes.",
-                icon = Icons.Default.AutoAwesome
-            )
-            
-            GuideStep(
-                number = 4,
-                title = "Smart Savings",
-                description = "Set an Auto Power Off timer to conserve battery when not in use.",
-                icon = Icons.Default.PowerSettingsNew
-            )
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            
-            Button(
-                onClick = onBackClick,
-                colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
-                shape = RoundedCornerShape(12.dp),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(56.dp)
+            Column(
+                modifier = modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Got it!", color = DarkBackground, fontWeight = FontWeight.Bold)
+                Text(
+                    text = "Quick Start Guide",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = AccentPrimary
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                GuideStep(
+                    number = 1,
+                    title = "Connect Your Device",
+                    description = "Ensure your Bluetooth is on and tap a device card on the home screen to connect.",
+                    icon = Icons.Default.Bluetooth
+                )
+                
+                GuideStep(
+                    number = 2,
+                    title = "Voice Control",
+                    description = "Tap the floating mic icon to use voice commands like 'power off' or 'help'.",
+                    icon = Icons.Default.Mic
+                )
+                
+                GuideStep(
+                    number = 3,
+                    title = "Adjust Comfort",
+                    description = "In the device detail screen, you can adjust temperature and vibration modes.",
+                    icon = Icons.Default.AutoAwesome
+                )
+                
+                GuideStep(
+                    number = 4,
+                    title = "Smart Savings",
+                    description = "Set an Auto Power Off timer to conserve battery when not in use.",
+                    icon = Icons.Default.PowerSettingsNew
+                )
+                
+                Spacer(modifier = Modifier.height(32.dp))
+                
+                Button(
+                    onClick = onBackClick,
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentPrimary),
+                    shape = RoundedCornerShape(12.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp)
+                ) {
+                    Text("Got it!", color = Background, fontWeight = FontWeight.Bold)
+                }
+                
+                Spacer(modifier = Modifier.height(48.dp))
             }
-            
-            Spacer(modifier = Modifier.height(48.dp))
         }
     }
-}
 }
 
 @Composable
@@ -126,7 +119,7 @@ private fun GuideStep(
             .fillMaxWidth()
             .padding(vertical = 12.dp),
         shape = RoundedCornerShape(20.dp),
-        color = CardBackground
+        color = NodeBgInactive
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
@@ -136,13 +129,13 @@ private fun GuideStep(
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(10.dp))
-                    .background(TealPrimary.copy(alpha = 0.15f)),
+                    .background(AccentPrimary.copy(alpha = 0.15f)),
                 contentAlignment = Alignment.Center
             ) {
                 Icon(
                     imageVector = icon,
                     contentDescription = null,
-                    tint = TealPrimary,
+                    tint = AccentPrimary,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -160,7 +153,7 @@ private fun GuideStep(
                 Text(
                     text = description,
                     fontSize = 14.sp,
-                    color = TextSecondary,
+                    color = TextMuted,
                     lineHeight = 20.sp
                 )
             }

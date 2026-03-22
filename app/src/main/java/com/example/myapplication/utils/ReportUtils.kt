@@ -12,27 +12,27 @@ import java.util.Locale
 object ReportUtils {
     private const val TAG = "ReportUtils"
 
-    fun saveAddictionReport(
+    fun saveAilmentReport(
         context: Context,
-        addictionType: String,
+        ailmentType: String,
         frequency: String,
-        reasonForAddiction: String,
+        reasonForAilment: String,
         duration: String,
         reasonForStopping: String
     ): String? {
         val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
-        val fileName = "Addiction_Report_$timestamp.txt"
+        val fileName = "Ailment_Report_$timestamp.txt"
         
         Log.d(TAG, "Starting report save: $fileName")
         
         val content = """
-            VÉRITÉ ADDICTION REPORT
+            VÉRITÉ AILMENT REPORT
             -----------------------
             Date: ${SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()).format(Date())}
             
-            Addiction Type: $addictionType
+            Ailment Type: $ailmentType
             Frequency: $frequency
-            Reason for Addiction: $reasonForAddiction
+            Reason for Ailment: $reasonForAilment
             Duration: $duration
             Reason for Stopping: $reasonForStopping
             

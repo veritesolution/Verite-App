@@ -11,8 +11,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.myapplication.R
-import com.example.myapplication.ui.theme.TealPrimary
-import com.example.myapplication.ui.theme.TextSecondary
+import com.example.myapplication.ui.theme.AccentPrimary
+import com.example.myapplication.ui.theme.TextMuted
 
 @Composable
 fun BottomNavBar(
@@ -36,8 +36,8 @@ fun BottomNavBar(
             selected = selectedItem == 0,
             onClick = { onItemSelected(0) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = TealPrimary,
-                unselectedIconColor = TextSecondary,
+                selectedIconColor = AccentPrimary,
+                unselectedIconColor = TextMuted,
                 indicatorColor = MaterialTheme.colorScheme.background
             )
         )
@@ -53,8 +53,8 @@ fun BottomNavBar(
             selected = selectedItem == 1,
             onClick = { onItemSelected(1) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = TealPrimary,
-                unselectedIconColor = TextSecondary,
+                selectedIconColor = AccentPrimary,
+                unselectedIconColor = TextMuted,
                 indicatorColor = MaterialTheme.colorScheme.background
             )
         )
@@ -70,8 +70,8 @@ fun BottomNavBar(
             selected = selectedItem == 2,
             onClick = { onItemSelected(2) },
             colors = NavigationBarItemDefaults.colors(
-                selectedIconColor = TealPrimary,
-                unselectedIconColor = TextSecondary,
+                selectedIconColor = AccentPrimary,
+                unselectedIconColor = TextMuted,
                 indicatorColor = MaterialTheme.colorScheme.background
             )
         )

@@ -21,41 +21,31 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.components.VeriteTopBar
-import com.example.myapplication.ui.theme.CardBackground
-import com.example.myapplication.ui.theme.DarkBackground
-import com.example.myapplication.ui.theme.TealPrimary
+import com.example.myapplication.ui.theme.AccentPrimary
+import com.example.myapplication.ui.theme.Background
+import com.example.myapplication.ui.theme.NodeBgInactive
+import com.example.myapplication.ui.theme.TextMuted
 import com.example.myapplication.ui.theme.TextPrimary
-import com.example.myapplication.ui.theme.TextSecondary
+import com.example.myapplication.ui.theme.outfitFamily
+import com.example.myapplication.ui.home.SkyBackground
 
 @Composable
 fun TmrFeatureScreen(
     onBackClick: () -> Unit,
-    onNavigateToAddictionCategory: () -> Unit,
+    onNavigateToAilmentCategory: () -> Unit,
     onNavigateToSavedReports: () -> Unit
 ) {
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .paint(
-                painter = painterResource(id = R.drawable.group_1000006461),
-                contentScale = ContentScale.FillBounds
-            )
-    ) {
+    SkyBackground {
         Scaffold(
-            topBar = {
-                VeriteTopBar(onBackClick = onBackClick)
-            },
             containerColor = Color.Transparent
         ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-        Spacer(modifier = Modifier.height(40.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues)
+                    .padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
 
         // TMR Icon/Image Placeholder
         Box(
@@ -63,15 +53,14 @@ fun TmrFeatureScreen(
                 .size(150.dp)
                 .background(
                     brush = Brush.radialGradient(
-                        colors = listOf(TealPrimary.copy(alpha = 0.3f), Color.Transparent)
-                    )
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            // This would be the sleep mask image
-            Surface(
-                modifier = Modifier.size(100.dp),
-                color = TealPrimary.copy(alpha = 0.1f),
+                colors = listOf(AccentPrimary.copy(alpha = 0.3f), Color.Transparent)
+            )
+        )
+    ) {
+        // This would be the sleep mask image
+        Surface(
+            modifier = Modifier.size(100.dp),
+            color = AccentPrimary.copy(alpha = 0.1f),
                 shape = RoundedCornerShape(16.dp)
             ) {
                 // Image placeholder
@@ -80,36 +69,44 @@ fun TmrFeatureScreen(
 
         Text(
             text = "TMR Feature",
-            style = MaterialTheme.typography.headlineSmall.copy(
-                fontWeight = FontWeight.Bold
+            style = MaterialTheme.typography.headlineMedium.copy(
+                fontWeight = FontWeight.Bold,
+                fontFamily = outfitFamily
             ),
-            color = TextPrimary,
+            color = Color.White,
             modifier = Modifier.padding(vertical = 16.dp)
         )
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        Text(
-            text = "Choose goal here",
-            style = MaterialTheme.typography.bodyLarge.copy(
-                fontWeight = FontWeight.SemiBold
-            ),
-            color = TextPrimary,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-        )
+        Surface(
+            color = Color(0xFF0F1B1A), // Dark pill background
+            shape = RoundedCornerShape(24.dp),
+            modifier = Modifier.padding(vertical = 12.dp)
+        ) {
+            Text(
+                text = "Choose goal here",
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Light,
+                    fontFamily = outfitFamily
+                ),
+                color = AccentPrimary,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(30.dp))
 
         GoalCard(
             title = "Learning & Memory",
             onClick = { /* Not implemented yet */ }
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
         GoalCard(
             title = "Bad Addiction & Bad habits",
-            onClick = onNavigateToAddictionCategory
+            onClick = onNavigateToAilmentCategory
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -131,23 +128,25 @@ fun GoalCard(
     Surface(
         modifier = Modifier
             .fillMaxWidth()
-            .height(100.dp)
+            .height(130.dp) // Adjusted to feel more like the "153px" from mockup
             .clickable(onClick = onClick),
-        color = CardBackground,
-        shape = RoundedCornerShape(24.dp)
+        color = Color(0xFF0F1B1A), // Dark card background
+        shape = RoundedCornerShape(35.dp) // Radius-35px
     ) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(24.dp),
+                .padding(horizontal = 32.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             Text(
                 text = title,
-                style = MaterialTheme.typography.bodyLarge.copy(
-                    fontWeight = FontWeight.Medium
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = outfitFamily,
+                    letterSpacing = 0.5.sp
                 ),
-                color = TextPrimary
+                color = Color.White
             )
         }
     }

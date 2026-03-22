@@ -6,6 +6,9 @@ import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.utils.ReportUtils
 
@@ -15,8 +18,18 @@ class SavedReportsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_saved_reports)
 
+        findViewById<ComposeView>(R.id.composeView).setContent {
+            VeriteTheme {
+                SkyBackground { }
+            }
+        }
+
         findViewById<ImageView>(R.id.backButton).setOnClickListener {
             finish()
+        }
+
+        findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
+            startActivity(Intent(this, ProfileActivity::class.java))
         }
 
         val emptyView = findViewById<TextView>(R.id.emptyView)

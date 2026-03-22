@@ -27,10 +27,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
 import com.example.myapplication.data.model.Device
-import com.example.myapplication.ui.theme.CardBackground
-import com.example.myapplication.ui.theme.CardBackgroundDark
+import com.example.myapplication.ui.theme.NodeBgInactive
 import com.example.myapplication.ui.theme.StatusConnected
-import com.example.myapplication.ui.theme.TealPrimary
+import com.example.myapplication.ui.theme.AccentPrimary
 import com.example.myapplication.ui.theme.TextPrimary
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -47,7 +46,7 @@ fun DeviceCard(
             .height(100.dp),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = CardBackgroundDark
+            containerColor = NodeBgInactive
         ),
         elevation = CardDefaults.cardElevation(
             defaultElevation = 0.dp
@@ -64,7 +63,7 @@ fun DeviceCard(
                 modifier = Modifier
                     .size(68.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .background(CardBackground),
+                    .background(NodeBgInactive),
                 contentAlignment = Alignment.Center
             ) {
                 // Placeholder for device image
@@ -94,7 +93,7 @@ fun DeviceCard(
                     else 
                         stringResource(R.string.not_connected),
                     fontSize = 12.sp,
-                    color = if (device.isConnected) StatusConnected else TealPrimary
+                    color = if (device.isConnected) StatusConnected else AccentPrimary
                 )
             }
         }
