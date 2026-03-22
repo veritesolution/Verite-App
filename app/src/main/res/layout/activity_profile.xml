@@ -192,6 +192,12 @@
 
                 <View android:layout_width="match_parent" android:layout_height="10dp"/>
 
+                <!-- Voice Agent -->
+                <include layout="@layout/item_profile_menu"
+                    android:id="@+id/menuVoiceAgent"/>
+
+                <View android:layout_width="match_parent" android:layout_height="10dp"/>
+
                 <!-- Sound -->
                 <include layout="@layout/item_profile_menu"
                     android:id="@+id/menuSound"/>
