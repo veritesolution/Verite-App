@@ -296,23 +296,34 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (status != BluetoothGatt.GATT_SUCCESS) return
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "Service discovery failed with status $status")
+                return
+            }
+            
             val service = gatt.getService(SERVICE_UUID)
             if (service == null) {
+                Log.e(TAG, "BioWearable service (UUID: $SERVICE_UUID) not found on device")
                 runOnUiThread { setStatus("❌ BioWearable service not found") }
                 return
             }
 
-            ledChar   = service.getCharacteristic(LED_CONTROL_UUID)
+            ledChar = service.getCharacteristic(LED_CONTROL_UUID)
             motorChar = service.getCharacteristic(MOTOR_CONTROL_UUID)
+            
+            if (ledChar == null) Log.w(TAG, "LED control characteristic not found")
+            if (motorChar == null) Log.w(TAG, "Motor control characteristic not found")
 
             service.getCharacteristic(SENSOR_DATA_UUID)?.let { char ->
-                gatt.setCharacteristicNotification(char, true)
+                val notificationSet = gatt.setCharacteristicNotification(char, true)
+                if (!notificationSet) Log.e(TAG, "Failed to set notification for sensor data")
+                
                 char.getDescriptor(CCCD_UUID)?.let { desc ->
                     desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    gatt.writeDescriptor(desc)
+                    val descriptorWritten = gatt.writeDescriptor(desc)
+                    if (!descriptorWritten) Log.e(TAG, "Failed to write CCCD descriptor")
                 }
-            }
+            } ?: Log.e(TAG, "Sensor data characteristic not found")
 
             runOnUiThread {
                 setStatus("🟢 Connected — receiving live data")
