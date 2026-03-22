@@ -35,6 +35,16 @@ android {
             "OPENROUTER_API_KEY",
             "\"${localProperties.getProperty("OPENROUTER_API_KEY", "")}\""
         )
+        buildConfigField(
+            "String",
+            "GROQ_API_KEY",
+            "\"${localProperties.getProperty("GROQ_API_KEY", "")}\""
+        )
+        buildConfigField(
+            "String",
+            "HF_API_KEY",
+            "\"${localProperties.getProperty("HF_API_KEY", "")}\""
+        )
     }
 
     buildTypes {

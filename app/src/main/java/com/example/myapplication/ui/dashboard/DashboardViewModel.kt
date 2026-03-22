@@ -116,7 +116,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer YOUR_API_KEY_HERE")
+                        .addHeader("Authorization", "Bearer ${com.example.myapplication.BuildConfig.GROQ_API_KEY}")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
