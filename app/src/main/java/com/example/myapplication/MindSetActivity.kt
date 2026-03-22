@@ -132,11 +132,6 @@ class MindSetActivity : ComponentActivity() {
                                             )
                                             voiceOutputHandler.speak("Task removed")
                                         }
-                                        I.LIST_TASKS -> {
-                                            navController.navigate("todo_main")
-                                            voiceOutputHandler.speak("Here are your tasks")
-                                        }
-
                                         // ── HABITS ──
                                         I.ADD_HABIT -> {
                                             viewModel.executeVoiceCommand(
@@ -199,9 +194,13 @@ class MindSetActivity : ComponentActivity() {
                                             navController.navigate("analytics")
                                             voiceOutputHandler.speak("Opening insights")
                                         }
-                                        I.NAVIGATE_TODO, I.LIST_TASKS -> {
+                                        I.NAVIGATE_TODO -> {
                                             navController.navigate("todo_main")
                                             voiceOutputHandler.speak("Opening to-do list")
+                                        }
+                                        I.LIST_TASKS -> {
+                                            navController.navigate("todo_main")
+                                            voiceOutputHandler.speak("Here are your tasks")
                                         }
                                         I.NAVIGATE_SETTINGS -> {
                                             navController.navigate("settings")
