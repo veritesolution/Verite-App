@@ -26,7 +26,8 @@ class OnboardingActivity1 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Create root ConstraintLayout
+       
+        /* Create root ConstraintLayout */
         val rootLayout = ConstraintLayout(this).apply {
             id = View.generateViewId()
             layoutParams = ViewGroup.LayoutParams(
