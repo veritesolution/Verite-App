@@ -119,10 +119,13 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         userDisconnect = true
+        if (isScanning) stopScan()
+        testRunning = false
+        isCycling = false
         mainHandler.removeCallbacksAndMessages(null)
         disconnect()
+        super.onDestroy()
     }
 
     private fun bindViews() {
