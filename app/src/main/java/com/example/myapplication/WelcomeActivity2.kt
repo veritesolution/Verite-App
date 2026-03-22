@@ -32,12 +32,7 @@ class WelcomeActivity2 : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#1B4D4B"))
         }
         
-        // Add a VideoView to play background_video.mp4 as background
-        val videoView = android.widget.VideoView(this).apply {
-            id = View.generateViewId()
-            layoutParams = ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.MATCH_PARENT
+
             )
         }
         rootLayout.addView(videoView, 0)

@@ -40,6 +40,7 @@ class EditProfileActivity : ComponentActivity() {
 
     private var selectedImageUri by mutableStateOf<Uri?>(null)
 
+    // Image  Picker
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
             selectedImageUri = uri
@@ -49,17 +50,26 @@ class EditProfileActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        setContent {
-            VeriteTheme {
-                SkyBackground {
-                    EditProfileScreen(
-                        onBackClick = { finish() },
-                        onPickImage = {
-                            pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                        },
-                        selectedImageUri = selectedImageUri,
-                        onSave = { name, email, newUri, currentUser ->
-                            saveProfile(name, email, newUri, currentUser)
+        val btnSave = findViewById<Button>(R.id.btnSave)
+        val btnBack = findViewById<android.view.View>(R.id.btnBack)
+        val tvChangePhoto = findViewById<TextView>(R.id.tvChangePhoto)
+        val profileImageContainer = findViewById<android.view.View>(R.id.profileImageContainer)
+
+        btnBack.setOnClickListener { finish() }
+
+        // Load  existing  data
+        lifecycleScope.launch {
+            val db = AppDatabase.getDatabase(applicationContext)
+            currentUser = db.userDao().getUser().firstOrNull()
+
+            if (currentUser != null) {
+                etName.setText(currentUser!!.name)
+                etEmail.setText(currentUser!!.email)
+                if (!currentUser!!.profileImagePath.isNullOrEmpty()) {
+                    val file = File(currentUser!!.profileImagePath!!)
+                    if (file.exists()) {
+                        imageViewProfile.load(file) {
+                            transformations(CircleCropTransformation())
                         }
                     )
                 }
@@ -73,9 +83,23 @@ class EditProfileActivity : ComponentActivity() {
             return
         }
         
-        lifecycleScope.launch(Dispatchers.IO) {
-            val db = AppDatabase.getDatabase(applicationContext)
-            var imagePath = currentUser?.profileImagePath
+        tvChangePhoto.setOnClickListener { openPicker() }
+        profileImageContainer.setOnClickListener { openPicker() }
+
+        /* save loading*/
+        btnSave.setOnClickListener {
+            val name = etName.text.toString().trim()
+            val email = etEmail.text.toString().trim()
+
+            if (name.isEmpty()) {
+                etName.error = "Name is required"
+                return@setOnClickListener
+            }
+
+            lifecycleScope.launch {
+                val db = AppDatabase.getDatabase(applicationContext)
+                
+                var imagePath = currentUser?.profileImagePath
 
             newUri?.let { uri ->
                 try {
@@ -88,7 +112,8 @@ class EditProfileActivity : ComponentActivity() {
                     inputStream?.close()
                     outputStream.close()
                     
-                    if (!imagePath.isNullOrEmpty() && imagePath != file.absolutePath) {
+                    /*Delete old image if exists*/
+                    if (!imagePath.isNullOrEmpty()) {
                         val oldFile = File(imagePath!!)
                         if (oldFile.exists()) oldFile.delete()
                     }
