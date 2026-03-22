@@ -53,9 +53,10 @@ class AiRepository {
         frequency: String,
         reasonForAilment: String,
         duration: String,
-        reasonForStopping: String
+        reasonForStopping: String,
+        emotionContext: String = ""
     ): Flow<Result<String>> = flow {
-        val prompt = """
+        val prompt = """$emotionContext
             You are a world-class recovery specialist and behavioral psychologist. 
             Generate a highly personalized 21-day recovery plan based on the following psychological profile:
             
