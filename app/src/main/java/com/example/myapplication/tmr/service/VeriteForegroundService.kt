@@ -19,7 +19,7 @@ import com.example.myapplication.tmr.data.models.CueInfo
 import com.example.myapplication.tmr.data.models.TickEvent
 import com.example.myapplication.tmr.data.network.VeriteWebSocket
 import com.example.myapplication.tmr.data.repository.VeriteRepository
-import dagger.hilt.android.AndroidEntryPoint
+import com.example.myapplication.tmr.di.TmrDependencyContainer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -30,7 +30,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import javax.inject.Inject
+
 
 private const val TAG = "VeriteService"
 private const val CHANNEL_ID = "verite_tmr_session"
@@ -54,10 +54,10 @@ private const val WAKELOCK_TAG = "VeriteTMR::SessionWakeLock"
  * The ViewModel binds to this service and observes its flows.
  * The service owns the "truth" of the connection during overnight sessions.
  */
-@AndroidEntryPoint
 class VeriteForegroundService : Service() {
 
-    @Inject lateinit var repository: VeriteRepository
+    private val repository: VeriteRepository
+        get() = TmrDependencyContainer.veriteRepository
 
     private val binder = LocalBinder()
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
