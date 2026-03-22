@@ -46,9 +46,23 @@ class WelcomeActivity2 : AppCompatActivity() {
         videoView.setVideoURI(uri)
         videoView.setOnPreparedListener { mp ->
             mp.isLooping = true
-            mp.setVideoScalingMode(android.media.MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+            mp.setVolume(0f, 0f) // Mute audio
+            
+            // Force Center Crop scaling to fill the entire phone screen
+            videoView.post {
+                val videoRatio = mp.videoWidth / mp.videoHeight.toFloat()
+                val screenRatio = videoView.width / videoView.height.toFloat()
+                val scaleX = videoRatio / screenRatio
+                if (scaleX >= 1f) {
+                    videoView.scaleX = scaleX
+                    videoView.scaleY = 1f
+                } else {
+                    videoView.scaleX = 1f
+                    videoView.scaleY = 1f / scaleX
+                }
+            }
+            mp.start()
         }
-        videoView.start()
         
         // "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
@@ -133,6 +147,12 @@ class WelcomeActivity2 : AppCompatActivity() {
             dpToPx(100)
         )
         constraintSet.centerHorizontally(taglineText.id, ConstraintSet.PARENT_ID)
+        
+        // Constrain VideoView to fill parent
+        constraintSet.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
         
         constraintSet.applyTo(rootLayout)
         
