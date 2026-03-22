@@ -48,6 +48,10 @@ import com.example.myapplication.ui.theme.AccentPrimary
 import com.example.myapplication.ui.theme.TextMuted
 import androidx.activity.viewModels
 
+import com.example.myapplication.tmr.data.network.VeriteClient
+import com.example.myapplication.tmr.di.TmrDependencyContainer
+import com.example.myapplication.tmr.ui.VeriteNavGraph
+
 class MindSetActivity : ComponentActivity() {
 
     private lateinit var voiceInputHandler: VoiceInputHandler
@@ -67,6 +71,13 @@ class MindSetActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        VeriteClient.configure(
+            baseUrl = BuildConfig.VERITE_SERVER_URL,
+            apiKey = BuildConfig.VERITE_API_KEY,
+            debug = BuildConfig.DEBUG
+        )
+        TmrDependencyContainer.initialize(this)
 
         try {
             voiceInputHandler = VoiceInputHandler(this)
@@ -216,10 +227,13 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.NAVIGATE_SOUND,
                                         FullIntent.NAVIGATE_ALARM,
                                         FullIntent.NAVIGATE_MORNING_BRIEF,
-                                        FullIntent.NAVIGATE_TMR,
                                         FullIntent.START_BEDTIME_ROUTINE -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening sleep & sound")
+                                        }
+                                        FullIntent.NAVIGATE_TMR -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Opening TMR tools")
                                         }
                                         FullIntent.NAVIGATE_DREAM_JOURNAL -> {
                                             navController.navigate("bedtime")
@@ -370,32 +384,35 @@ class MindSetActivity : ComponentActivity() {
                                 ) 
                             }
                             composable("settings") {
-                                SettingsScreen(
-                                    habitReminderHour = habitReminderHour,
-                                    bedtimeHour = bedtimeHour,
-                                    firebaseSyncEnabled = firebaseSyncEnabled,
-                                    llmFallbackEnabled = llmFallbackEnabled,
-                                    onHabitReminderChange = { settingsViewModel.updateHabitReminderHour(it) },
-                                    onBedtimeChange = { settingsViewModel.updateBedtimeHour(it) },
-                                    onFirebaseSyncToggle = { settingsViewModel.toggleFirebaseSync(it) },
-                                    onLlmFallbackToggle = { settingsViewModel.toggleLlmFallback(it) },
-                                    onExportData = { settingsViewModel.exportData() },
-                                    onImportData = { settingsViewModel.importData() },
-                                    onSeedDemoData = { settingsViewModel.seedDemoData() },
-                                    onClearAllData = { settingsViewModel.clearAllData() },
-                                    wakeWordEnabled = wakeWordEnabled,
-                                    onWakeWordToggle = { enabled ->
-                                        if (enabled && !hasAudioPermission()) {
-                                            requestPermissions()
-                                        } else {
-                                            settingsViewModel.toggleWakeWord(enabled)
-                                            toggleWakeWordService(enabled)
+                                                SettingsScreen(
+                                                    habitReminderHour = habitReminderHour,
+                                                    bedtimeHour = bedtimeHour,
+                                                    firebaseSyncEnabled = firebaseSyncEnabled,
+                                                    llmFallbackEnabled = llmFallbackEnabled,
+                                                    onHabitReminderChange = { settingsViewModel.updateHabitReminderHour(it) },
+                                                    onBedtimeChange = { settingsViewModel.updateBedtimeHour(it) },
+                                                    onFirebaseSyncToggle = { settingsViewModel.toggleFirebaseSync(it) },
+                                                    onLlmFallbackToggle = { settingsViewModel.toggleLlmFallback(it) },
+                                                    onExportData = { settingsViewModel.exportData() },
+                                                    onImportData = { settingsViewModel.importData() },
+                                                    onSeedDemoData = { settingsViewModel.seedDemoData() },
+                                                    onClearAllData = { settingsViewModel.clearAllData() },
+                                                    wakeWordEnabled = wakeWordEnabled,
+                                                    onWakeWordToggle = { enabled ->
+                                                        if (enabled && !hasAudioPermission()) {
+                                                            requestPermissions()
+                                                        } else {
+                                                            settingsViewModel.toggleWakeWord(enabled)
+                                                            toggleWakeWordService(enabled)
+                                                        }
+                                                    },
+                                                    onBack = { navController.popBackStack() }
+                                                )
+                                            }
+                                            composable("tmr_tools") {
+                                                VeriteNavGraph()
+                                            }
                                         }
-                                    },
-                                    onBack = { navController.popBackStack() }
-                                )
-                            }
-                        }
                     }
                 } // End of SkyBackground
             }
