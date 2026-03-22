@@ -1,4 +1,5 @@
 """
+Hello world
 Signal Processor v13.3 — 2-channel F3/F4 (BioAmp EXG Pill + ESP32-S3)
 =======================================================================
 CRITICAL FIXES from code review:
