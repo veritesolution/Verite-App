@@ -13,8 +13,8 @@ import android.os.IBinder
 import android.os.PowerManager
 import android.util.Log
 import androidx.core.app.NotificationCompat
-import com.example.myapplication.tmr.MainActivity
-import com.example.myapplication.tmr.R
+import com.example.myapplication.MindSetActivity
+import com.example.myapplication.R
 import com.example.myapplication.tmr.data.models.CueInfo
 import com.example.myapplication.tmr.data.models.TickEvent
 import com.example.myapplication.tmr.data.network.VeriteWebSocket
@@ -183,7 +183,7 @@ class VeriteForegroundService : Service() {
     }
 
     private fun buildNotification(cueCount: Int): Notification {
-        val tapIntent = Intent(this, MainActivity::class.java).apply {
+        val tapIntent = Intent(this, MindSetActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
         val pendingTap = PendingIntent.getActivity(

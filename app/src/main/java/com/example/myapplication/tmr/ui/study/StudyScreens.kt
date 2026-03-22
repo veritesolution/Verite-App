@@ -27,6 +27,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.myapplication.tmr.data.models.*
+import androidx.compose.foundation.BorderStroke
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Study Home — entry point for study tools
@@ -426,7 +427,7 @@ private fun QuizQuestionView(
                 modifier = Modifier.fillMaxWidth()
                     .clickable(enabled = !showFeedback) { onAnswer(idx) },
                 colors = CardDefaults.outlinedCardColors(containerColor = animBg),
-                border = CardDefaults.outlinedCardBorder().copy(brush = null),
+                border = BorderStroke(1.dp, borderColor),
             ) {
                 Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)) {
