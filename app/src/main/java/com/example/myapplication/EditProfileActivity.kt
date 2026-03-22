@@ -54,7 +54,7 @@ class EditProfileActivity : AppCompatActivity() {
 
         btnBack.setOnClickListener { finish() }
 
-        // Load existing data
+        // Load  existing  data
         lifecycleScope.launch {
             val db = AppDatabase.getDatabase(applicationContext)
             currentUser = db.userDao().getUser().firstOrNull()
