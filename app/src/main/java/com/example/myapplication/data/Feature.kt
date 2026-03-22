@@ -2,6 +2,8 @@ package com.example.myapplication.data
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Memory
+import androidx.compose.material.icons.filled.BarChart
 import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.AutoAwesome
