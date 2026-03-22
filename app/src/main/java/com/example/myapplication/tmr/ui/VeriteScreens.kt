@@ -33,7 +33,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
@@ -52,7 +52,7 @@ import kotlin.math.*
 // ─────────────────────────────────────────────────────────────────────────────
 
 @Composable
-fun VeriteNavGraph(vm: SessionViewModel = hiltViewModel()) {
+fun VeriteNavGraph(vm: SessionViewModel = viewModel(factory = SessionViewModel.provideFactory(LocalContext.current))) {
     val nav = rememberNavController()
     NavHost(nav, startDestination = "home") {
         composable("home")    { HomeScreen(nav, vm) }
