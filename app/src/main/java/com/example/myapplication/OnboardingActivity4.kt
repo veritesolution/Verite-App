@@ -27,6 +27,9 @@ class OnboardingActivity4 : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        // Ensure edge-to-edge display
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
 
         // 1. Root Layout with Full-Page Gradient Background
         val rootLayout = ConstraintLayout(this).apply {
@@ -35,16 +38,41 @@ class OnboardingActivity4 : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            // Dark gradient background (Top to Bottom)
-            background = GradientDrawable(
-                GradientDrawable.Orientation.TOP_BOTTOM,
-                intArrayOf(
-                    Color.parseColor("#1A1A1A"), // Top: Dark Grey
-                    Color.parseColor("#000000")  // Bottom: Black
-                )
-            )
         }
+        
+        // 1. Background Video
+        val videoView = android.widget.VideoView(this).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(0, 0)
+        }
+        rootLayout.addView(videoView, 0)
 
+        val uri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.background_video)
+        videoView.setVideoURI(uri)
+        videoView.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            mp.setVolume(0f, 0f) // Mute audio
+            
+            videoView.post {
+                val videoWidth = mp.videoWidth.toFloat()
+                val videoHeight = mp.videoHeight.toFloat()
+                if (videoWidth == 0f || videoHeight == 0f) return@post
+                
+                val videoRatio = videoWidth / videoHeight
+                val screenRatio = videoView.width.toFloat() / videoView.height.toFloat()
+                
+                val scale = if (videoRatio >= screenRatio) {
+                    videoRatio / screenRatio
+                } else {
+                    screenRatio / videoRatio
+                }
+                
+                videoView.scaleX = scale
+                videoView.scaleY = scale
+            }
+            mp.start()
+        }
+        
         // 2. Header Layout
         val headerLayout = LinearLayout(this).apply {
             id = View.generateViewId()
@@ -249,7 +277,13 @@ class OnboardingActivity4 : AppCompatActivity() {
         // 7. Constraints (Responsive using Guidelines/Chains)
         val set = ConstraintSet()
         set.clone(rootLayout)
-
+        
+        // Video constraints
+        set.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        set.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        set.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        set.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        
         // Header: Top
         set.connect(headerLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, dpToPx(40))
         set.connect(headerLayout.id, ConstraintSet.LEFT, ConstraintSet.PARENT_ID, ConstraintSet.LEFT)
