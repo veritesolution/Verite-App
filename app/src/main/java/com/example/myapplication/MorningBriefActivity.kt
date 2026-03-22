@@ -8,6 +8,7 @@ import com.example.myapplication.ui.morningbrief.MorningBriefScreen
 import com.example.myapplication.ui.morningbrief.MorningBriefViewModel
 import com.example.myapplication.ui.theme.VeriteTheme
 
+
 /*MorningBriefViewModel*/
 
 class MorningBriefActivity : ComponentActivity() {
