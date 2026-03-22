@@ -10,6 +10,7 @@ class Task:
     id: str = field(default_factory=lambda: str(uuid.uuid4()))
     is_completed: bool = False
     is_priority: bool = False
+    energy_level: str = "Medium"  # High, Medium, Low
     category: str = "General"
     description: Optional[str] = None
     auto_migrate: bool = True
@@ -21,6 +22,7 @@ class Task:
             "scheduled_time": self.scheduled_time.isoformat(),
             "is_completed": self.is_completed,
             "is_priority": self.is_priority,
+            "energy_level": self.energy_level,
             "category": self.category,
             "description": self.description,
             "auto_migrate": self.auto_migrate
@@ -34,6 +36,7 @@ class Task:
             scheduled_time=datetime.fromisoformat(data.get("scheduled_time")),
             is_completed=data.get("is_completed", False),
             is_priority=data.get("is_priority", False),
+            energy_level=data.get("energy_level", "Medium"),
             category=data.get("category", "General"),
             description=data.get("description"),
             auto_migrate=data.get("auto_migrate", True)
