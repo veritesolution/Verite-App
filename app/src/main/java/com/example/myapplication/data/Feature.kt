@@ -2,8 +2,7 @@ package com.example.myapplication.data
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Memory
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Mood
 import androidx.compose.material.icons.filled.MonitorHeart
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Alarm
@@ -22,7 +21,7 @@ val featuresList = listOf(
     Feature(1, "Sleep Data", "Real-time sleep analytics", Icons.Default.BarChart, "com.example.myapplication.SleepDataActivity"),
     Feature(2, "Bio Feedback", "Biometric monitoring", Icons.Default.MonitorHeart, "com.example.myapplication.BioFeedbackActivity"),
     Feature(3, "Adaptive Sound", "Focus, Relax, Sleep & Meditate sounds", Icons.Default.AutoAwesome, "com.example.myapplication.AdaptiveSoundActivity"),
-    Feature(6, "Diagnostics", "Hardware sensor validation", Icons.Default.Memory, "com.example.myapplication.BioWearableDiagnosticActivity"),
+    Feature(7, "Mood Tracker", "Log your daily sentiment", Icons.Default.Mood, "com.example.myapplication.MoodTrackingActivity"),
     Feature(4, "Alarm", "Smart wake-up timing", Icons.Default.Alarm, "com.example.myapplication.AlarmActivity"),
     Feature(5, "To-Do List", "Sleep intention setting", Icons.AutoMirrored.Filled.PlaylistAddCheck, "com.example.myapplication.MindSetActivity")
 )
