@@ -8,6 +8,8 @@ import com.example.myapplication.ui.morningbrief.MorningBriefScreen
 import com.example.myapplication.ui.morningbrief.MorningBriefViewModel
 import com.example.myapplication.ui.theme.VeriteTheme
 
+/*MorningBriefViewModel*/
+
 class MorningBriefActivity : ComponentActivity() {
     
     private val viewModel: MorningBriefViewModel by viewModels()
