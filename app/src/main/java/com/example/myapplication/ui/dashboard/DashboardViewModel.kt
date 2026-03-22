@@ -1,6 +1,5 @@
 package com.example.myapplication.ui.dashboard
 
-import com.example.myapplication.Secrets
 import android.app.Application
 import androidx.lifecycle.*
 import com.example.myapplication.data.local.AppDatabase
@@ -117,7 +116,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
+                        .addHeader("Authorization", "Bearer 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")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
@@ -133,7 +132,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                     
                                     if (startIndex != -1 && endIndex != -1 && startIndex <= endIndex) {
                                         val cleanContent = rawContent.substring(startIndex, endIndex + 1)
+                                        Log.d("DashboardViewModel", "Clean AI Response: $cleanContent")
                                         val updatesMap = JSONObject(cleanContent)
+                                        var tasksChanged = false
                                         
                                         val updates = currentPendingTasks.mapNotNull { task ->
                                         if (updatesMap.has(task.id)) {
@@ -144,21 +145,29 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                             val finalPrio = if (newPrio in listOf("High", "Medium", "Low")) newPrio else "Medium"
                                             val finalCat = if (newCat in listOf("Work", "Personal", "Health", "Finance", "Errand")) newCat else "Personal"
                                             
+                                            tasksChanged = true
                                             task.copy(priority = finalPrio, category = finalCat)
                                         } else null
                                     }
                                     
-                                    updates.forEach { updatedTask ->
-                                        taskRepo.update(updatedTask)
-                                    }
-                                    refreshSnapshot()
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(getApplication(), "AI Categorization Complete!", Toast.LENGTH_SHORT).show()
+                                    if (tasksChanged) {
+                                        updates.forEach { updatedTask ->
+                                            taskRepo.update(updatedTask)
+                                        }
+                                        refreshSnapshot()
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(getApplication(), "AI Categorization Complete!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Log.e("DashboardViewModel", "AI returned valid JSON but no matching task IDs found!")
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(getApplication(), "Failed to update categories. Try again.", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
-                                }
-                            } else {
-                                Log.e("DashboardViewModel", "Error fetching prioritization: ${response.code}")
+                            }
+                        } else {
+                            Log.e("DashboardViewModel", "Error fetching prioritization: ${response.code}")
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(getApplication(), "AI Error: HTTP ${response.code}", Toast.LENGTH_SHORT).show()
                                 }

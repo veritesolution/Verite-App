@@ -1,6 +1,5 @@
 package com.example.myapplication.viewmodel
 
-import com.example.myapplication.Secrets
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
@@ -68,9 +67,9 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                         "{ \"id\": \"${it.id}\", \"task\": \"${it.task}\", \"category\": \"${it.category}\" }" 
                     }
                     val prompt = """
-                        You are an AI task prioritizer. Review the following pending tasks and assign a priority level to each (High, Medium, or Low). 
-                        Respond strictly with a JSON object where the keys are the task IDs and the values are the priority string.
-                        Example: {"taskId1": "High", "taskId2": "Low"}
+                        You are an AI task categorizer and prioritizer. Review the following pending tasks and assign a priority level (High, Medium, or Low) and a category (Work, Personal, Health, Finance, Errand) to each task. 
+                        Respond strictly with a JSON object where the keys are the task IDs and the values are objects with "priority" and "category" string properties.
+                        Example: {"taskId1": {"priority": "High", "category": "Work"}, "taskId2": {"priority": "Low", "category": "Personal"}}
                         Tasks:
                         $tasksJson
                     """.trimIndent()
@@ -88,7 +87,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
+                        .addHeader("Authorization", "Bearer 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")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
@@ -104,20 +103,23 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
                                     
                                     if (startIndex != -1 && endIndex != -1 && startIndex <= endIndex) {
                                         val cleanContent = rawContent.substring(startIndex, endIndex + 1)
-                                        val priorityMap = JSONObject(cleanContent)
+                                        val updatesMap = JSONObject(cleanContent)
                                         val updates = currentPendingTasks.mapNotNull { task ->
-                                        if (priorityMap.has(task.id)) {
-                                            val newPrio = priorityMap.getString(task.id)
-                                            val normalized = newPrio.lowercase().replaceFirstChar { it.uppercase() }
-                                            if (normalized in listOf("High", "Medium", "Low")) {
-                                                task.copy(priority = normalized)
-                                            } else null
+                                        if (updatesMap.has(task.id)) {
+                                            val taskUpdate = updatesMap.getJSONObject(task.id)
+                                            val newPrio = if (taskUpdate.has("priority")) taskUpdate.getString("priority").lowercase().replaceFirstChar { it.uppercase() } else task.priority
+                                            val newCat = if (taskUpdate.has("category")) taskUpdate.getString("category").lowercase().replaceFirstChar { it.uppercase() } else task.category
+                                            
+                                            val finalPrio = if (newPrio in listOf("High", "Medium", "Low")) newPrio else "Medium"
+                                            val finalCat = if (newCat in listOf("Work", "Personal", "Health", "Finance", "Errand")) newCat else "Personal"
+                                            
+                                            task.copy(priority = finalPrio, category = finalCat)
                                         } else null
                                     }
                                     updates.forEach { updatedTask ->
                                         repository.update(updatedTask)
                                     }
-                                }
+                                    }
                                 }
                             } else {
                                 Log.e("TodoViewModel", "Error fetching prioritization: ${response.code}")

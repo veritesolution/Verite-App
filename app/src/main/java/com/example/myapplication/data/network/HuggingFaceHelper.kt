@@ -1,6 +1,5 @@
 package com.example.myapplication.data.network
 
-import com.example.myapplication.Secrets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
@@ -12,7 +11,7 @@ import org.json.JSONObject
 
 class HuggingFaceHelper {
     private val client = OkHttpClient()
-    private val apiKey = Secrets.HF_API_KEY
+    private val apiKey = "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"
     private val modelUrl = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
 
     suspend fun generateMorningBrief(name: String, city: String, temp: Double): String? = withContext(Dispatchers.IO) {
