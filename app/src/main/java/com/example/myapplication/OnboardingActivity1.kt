@@ -50,6 +50,7 @@ class OnboardingActivity1 : AppCompatActivity() {
         }
         rootLayout.addView(headerLayout)
         
+        
         // Back arrow button
         val backButton = Button(this).apply {
             id = View.generateViewId()
