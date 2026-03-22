@@ -20,4 +20,13 @@
     <string name="my_devices">My Devices</string>
     <!-- Real Web Client ID for Google Sign-In -->
     <string name="default_web_client_id">87999401954-dgjsbf7hkq98lseuqungdb5c0n0he9me.apps.googleusercontent.com</string>
+
+    <!-- ─── Diagnostic Page ─── -->
+    <string name="title_hardware_diagnostic">Hardware Diagnostic</string>
+    <string name="btn_scan_start">Scan for BioWearable</string>
+    <string name="btn_scan_stop">Stop Scan</string>
+    <string name="label_biosensors">BIO-SENSORS (EEG / EMG / PULSE)</string>
+    <string name="label_imu_data">MPU6050 IMU DATA</string>
+    <string name="label_hardware_controls">HARDWARE CONTROLS</string>
+    <string name="btn_run_all_tests">▶  Run All Diagnostic Tests</string>
 </resources>

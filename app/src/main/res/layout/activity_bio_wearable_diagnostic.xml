@@ -31,7 +31,7 @@
             android:id="@+id/tvHeaderTitle"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Hardware Diagnostic"
+            android:text="@string/title_hardware_diagnostic"
             android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
@@ -70,7 +70,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#0D1F1F"
+                app:cardBackgroundColor="@color/diagnostic_bg_status_card"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 android:layout_marginBottom="16dp">
@@ -101,9 +101,9 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="Scan for BioWearable"
+                            android:text="@string/btn_scan_start"
                             android:textAllCaps="false"
-                            android:backgroundTint="#00BFA5"
+                            android:backgroundTint="@color/diagnostic_teal"
                             android:layout_marginEnd="8dp" />
 
                         <Button
@@ -111,7 +111,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="X"
-                            android:backgroundTint="#FF5252" />
+                            android:backgroundTint="@color/diagnostic_red" />
                     </LinearLayout>
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
@@ -120,7 +120,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="BIO-SENSORS (EEG / EMG / PULSE)"
+                android:text="@string/label_biosensors"
                 android:textColor="@color/accent_teal"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -130,7 +130,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#0A1614"
+                app:cardBackgroundColor="@color/diagnostic_bg_biosensors"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 android:layout_marginBottom="24dp">
@@ -206,7 +206,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="8dp"
                         android:max="4095"
-                        android:progressTint="#00BFA5" />
+                        android:progressTint="@color/diagnostic_teal" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -221,7 +221,7 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="MPU6050 IMU DATA"
+                    android:text="@string/label_imu_data"
                     android:textColor="@color/accent_teal"
                     android:textSize="12sp"
                     android:textStyle="bold"
@@ -231,7 +231,7 @@
                 <androidx.cardview.widget.CardView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    app:cardBackgroundColor="#0D1117"
+                    app:cardBackgroundColor="@color/diagnostic_bg_imu"
                     app:cardCornerRadius="16dp"
                     app:cardElevation="0dp"
                     android:layout_marginBottom="24dp">
@@ -301,7 +301,7 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="HARDWARE CONTROLS"
+                android:text="@string/label_hardware_controls"
                 android:textColor="@color/accent_teal"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -311,7 +311,7 @@
             <androidx.cardview.widget.CardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardBackgroundColor="#101820"
+                app:cardBackgroundColor="@color/diagnostic_bg_controls"
                 app:cardCornerRadius="16dp"
                 app:cardElevation="0dp"
                 android:layout_marginBottom="24dp">
@@ -329,9 +329,9 @@
                         android:orientation="horizontal"
                         android:layout_marginBottom="8dp">
 
-                        <Button android:id="@+id/btnLedRed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Red" android:backgroundTint="#FF5252" android:layout_marginEnd="4dp" />
-                        <Button android:id="@+id/btnLedGreen" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Green" android:backgroundTint="#4CAF50" android:layout_marginEnd="4dp" />
-                        <Button android:id="@+id/btnLedBlue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Blue" android:backgroundTint="#2196F3" />
+                        <Button android:id="@+id/btnLedRed" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Red" android:backgroundTint="@color/diagnostic_red" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedGreen" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Green" android:backgroundTint="@color/diagnostic_led_green" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedBlue" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Blue" android:backgroundTint="@color/diagnostic_led_blue" />
                     </LinearLayout>
 
                     <!-- LED Row 2 -->
@@ -341,8 +341,8 @@
                         android:orientation="horizontal"
                         android:layout_marginBottom="16dp">
 
-                        <Button android:id="@+id/btnLedOff" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="LED OFF" android:textAllCaps="false" android:backgroundTint="#333333" android:layout_marginEnd="4dp" />
-                        <Button android:id="@+id/btnLedCycle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🌈 RGB Cycle" android:textAllCaps="false" android:backgroundTint="#6200EE" />
+                        <Button android:id="@+id/btnLedOff" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="LED OFF" android:textAllCaps="false" android:backgroundTint="@color/diagnostic_led_off" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnLedCycle" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="🌈 RGB Cycle" android:textAllCaps="false" android:backgroundTint="@color/diagnostic_rgb_cycle" />
                     </LinearLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="1dp" android:background="#22FFFFFF" android:layout_marginBottom="16dp" />
@@ -354,11 +354,11 @@
                         android:orientation="horizontal"
                         android:layout_marginBottom="8dp">
 
-                        <Button android:id="@+id/btnMotorOn" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Motor ON" android:textAllCaps="false" android:backgroundTint="#00BFA5" android:layout_marginEnd="4dp" />
+                        <Button android:id="@+id/btnMotorOn" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="Motor ON" android:textAllCaps="false" android:backgroundTint="@color/diagnostic_teal" android:layout_marginEnd="4dp" />
                         <Button android:id="@+id/btnMotorOff" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:text="OFF" android:backgroundTint="#444444" />
                     </LinearLayout>
 
-                    <Button android:id="@+id/btnMotorPattern" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="📳 Buzz Pattern (3 pulses)" android:textAllCaps="false" android:backgroundTint="#00796B" />
+                    <Button android:id="@+id/btnMotorPattern" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="📳 Buzz Pattern (3 pulses)" android:textAllCaps="false" android:backgroundTint="@color/diagnostic_motor_pattern" />
                 </LinearLayout>
             </androidx.cardview.widget.CardView>
 
@@ -370,7 +370,7 @@
                 android:text="▶  Run All Diagnostic Tests"
                 android:textSize="16sp"
                 android:textStyle="bold"
-                android:backgroundTint="#00BFA5"
+                android:backgroundTint="@color/diagnostic_teal"
                 android:layout_marginBottom="16dp" />
 
             <TextView
