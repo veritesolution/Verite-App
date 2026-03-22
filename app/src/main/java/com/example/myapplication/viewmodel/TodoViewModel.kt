@@ -1,5 +1,6 @@
 package com.example.myapplication.viewmodel
 
+import com.example.myapplication.Secrets
 import android.app.Application
 import android.util.Log
 import androidx.lifecycle.*
@@ -87,7 +88,7 @@ class TodoViewModel(application: Application) : AndroidViewModel(application) {
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer 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")
+                        .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 

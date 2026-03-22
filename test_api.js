@@ -1,5 +1,5 @@
 const url = "https://api.groq.com/openai/v1/chat/completions";
-const key = "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";
+const key = "YOUR_API_KEY_HERE";
 
 const prompt = `You are an AI task categorizer and prioritizer. Review the following pending tasks and assign a priority level (High, Medium, or Low) and a category (Work, Personal, Health, Finance, Errand) to each task. 
 Respond strictly with a JSON object where the keys are the task IDs and the values are objects with "priority" and "category" string properties.

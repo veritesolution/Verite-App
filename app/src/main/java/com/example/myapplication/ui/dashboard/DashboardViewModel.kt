@@ -1,5 +1,6 @@
 package com.example.myapplication.ui.dashboard
 
+import com.example.myapplication.Secrets
 import android.app.Application
 import androidx.lifecycle.*
 import com.example.myapplication.data.local.AppDatabase
@@ -116,7 +117,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer ${com.example.myapplication.BuildConfig.GROQ_API_KEY}")
+                        .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
