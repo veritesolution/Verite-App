@@ -11,7 +11,7 @@ import org.json.JSONObject
 
 class HuggingFaceHelper {
     private val client = OkHttpClient()
-    private val apiKey = "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"
+    private val apiKey = com.example.myapplication.BuildConfig.HF_API_KEY
     private val modelUrl = "https://api-inference.huggingface.co/models/HuggingFaceH4/zephyr-7b-beta"
 
     suspend fun generateMorningBrief(name: String, city: String, temp: Double): String? = withContext(Dispatchers.IO) {

@@ -346,7 +346,7 @@ User command: "$input"
 
             val request = Request.Builder()
                 .url("https://api.groq.com/openai/v1/chat/completions")
-                .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
+                .addHeader("Authorization", "Bearer ${com.example.myapplication.BuildConfig.GROQ_API_KEY}")
                 .addHeader("Content-Type", "application/json")
                 .post(requestBody.toString().toRequestBody("application/json".toMediaType()))
                 .build()

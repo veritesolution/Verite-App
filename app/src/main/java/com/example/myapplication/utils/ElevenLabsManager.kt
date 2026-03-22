@@ -64,7 +64,7 @@ class ElevenLabsManager(private val context: Context) {
         val useSpeakerBoost: Boolean = true
     )
 
-    private fun apiKey(): String = com.example.myapplication.Secrets.ELEVENLABS_API_KEY
+    private fun apiKey(): String = com.example.myapplication.BuildConfig.ELEVENLABS_API_KEY
 
     // ── Voice Listing ──────────────────────────────────────────────────
 
