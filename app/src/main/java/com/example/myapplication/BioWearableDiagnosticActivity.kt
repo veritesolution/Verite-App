@@ -12,6 +12,7 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.*
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -600,6 +601,10 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     }
 
     private fun setStatus(msg: String) { tvStatus.text = msg }
+
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
 
     private fun setControlsEnabled(enabled: Boolean) {
         btnDisconnect.isEnabled  = enabled
