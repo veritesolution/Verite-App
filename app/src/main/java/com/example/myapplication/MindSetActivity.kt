@@ -120,13 +120,13 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.ADD_TASK -> {
                                             val name = fullResult.entityName ?: state.text
                                             viewModel.createTask(name, fullResult.category, fullResult.priority)
-                                            voiceOutputHandler.speak("Task added: $name")
+                                            voiceOutputHandler.speak(getString(R.string.voice_task_added, name))
                                         }
                                         FullIntent.COMPLETE_TASK -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
                                             )
-                                            voiceOutputHandler.speak("Task marked complete")
+                                            voiceOutputHandler.speak(getString(R.string.voice_task_complete))
                                         }
                                         FullIntent.DELETE_TASK -> {
                                             viewModel.executeVoiceCommand(
@@ -144,13 +144,13 @@ class MindSetActivity : ComponentActivity() {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.ADD_HABIT, 0.9f, fullResult.entityName, category = fullResult.category)
                                             )
-                                            voiceOutputHandler.speak("Habit added: ${fullResult.entityName}")
+                                            voiceOutputHandler.speak(getString(R.string.voice_habit_added, fullResult.entityName))
                                         }
                                         FullIntent.TOGGLE_HABIT -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.TOGGLE_HABIT, 0.9f, fullResult.entityName)
                                             )
-                                            voiceOutputHandler.speak("Habit updated")
+                                            voiceOutputHandler.speak(getString(R.string.voice_habit_updated))
                                         }
                                         FullIntent.QUERY_STREAK -> {
                                             navController.navigate("analytics")
@@ -202,7 +202,7 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.SHOW_ANALYTICS,
                                         FullIntent.SHOW_DAILY_PROGRESS -> {
                                             navController.navigate("analytics")
-                                            voiceOutputHandler.speak("Opening insights")
+                                            voiceOutputHandler.speak(getString(R.string.voice_opening_insights))
                                         }
                                         FullIntent.NAVIGATE_TODO -> {
                                             navController.navigate("todo_main")
@@ -210,7 +210,7 @@ class MindSetActivity : ComponentActivity() {
                                         }
                                         FullIntent.NAVIGATE_SETTINGS -> {
                                             navController.navigate("settings")
-                                            voiceOutputHandler.speak("Opening settings")
+                                            voiceOutputHandler.speak(getString(R.string.voice_opening_settings))
                                         }
                                         FullIntent.NAVIGATE_PROFILE -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, ProfileActivity::class.java))
@@ -283,7 +283,7 @@ class MindSetActivity : ComponentActivity() {
                                         executeDeviceCommand(deviceResult, navController)
                                         voiceOutputHandler.speak("Done")
                                     } else {
-                                        voiceOutputHandler.speak("Sorry, I didn't understand that. Try saying 'Hey Vérité, add task' or 'play focus music'")
+                                        voiceOutputHandler.speak(getString(R.string.voice_fallback_sorry))
                                     }
                                 }
                             }

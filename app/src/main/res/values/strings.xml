@@ -29,4 +29,13 @@
     <string name="label_imu_data">MPU6050 IMU DATA</string>
     <string name="label_hardware_controls">HARDWARE CONTROLS</string>
     <string name="btn_run_all_tests">▶  Run All Diagnostic Tests</string>
+
+    <!-- ─── Voice Responses ─── -->
+    <string name="voice_task_added">Task added: %1$s</string>
+    <string name="voice_task_complete">Task marked complete</string>
+    <string name="voice_habit_added">Habit added: %1$s</string>
+    <string name="voice_habit_updated">Habit updated</string>
+    <string name="voice_opening_insights">Opening insights</string>
+    <string name="voice_opening_settings">Opening settings</string>
+    <string name="voice_fallback_sorry">Sorry, I didn\'t understand that. Try saying \'Hey Vérité, add task\' or \'play focus music\'</string>
 </resources>
