@@ -12,6 +12,9 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.DreamEntry
+import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -27,7 +30,17 @@ class DreamJournalActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_dream_journal)
 
+        findViewById<ComposeView>(R.id.composeView).setContent {
+            VeriteTheme {
+                SkyBackground { }
+            }
+        }
+
         findViewById<ImageView>(R.id.backButton).setOnClickListener { finish() }
+
+        findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
+            startActivity(android.content.Intent(this, ProfileActivity::class.java))
+        }
 
         recyclerView = findViewById(R.id.dreamRecyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)

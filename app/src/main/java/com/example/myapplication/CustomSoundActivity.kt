@@ -9,15 +9,44 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
 
 class CustomSoundActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // ---------- Root FrameLayout to host Background + Content ----------
+        val rootFrame = FrameLayout(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        // ---------- Compose Background ----------
+        val composeBackground = ComposeView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            setContent {
+                VeriteTheme {
+                    SkyBackground { }
+                }
+            }
+        }
+        rootFrame.addView(composeBackground)
+
+        // ---------- Content ScrollView ----------
         val scrollView = ScrollView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setBackgroundResource(R.drawable.group_1000006461)
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.TRANSPARENT)
         }
 
         val root = LinearLayout(this).apply {
@@ -161,7 +190,7 @@ class CustomSoundActivity : AppCompatActivity() {
         }
         root.addView(generateBtn)
 
-        setContentView(scrollView)
+        setContentView(rootFrame)
     }
 
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()

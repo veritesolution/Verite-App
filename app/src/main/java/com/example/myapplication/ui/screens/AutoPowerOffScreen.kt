@@ -34,6 +34,7 @@ import com.example.myapplication.viewmodel.SettingsViewModel
 fun AutoPowerOffScreen(
     viewModel: SettingsViewModel,
     onBackClick: () -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val settings by viewModel.settings.collectAsState()
@@ -48,7 +49,7 @@ fun AutoPowerOffScreen(
     ) {
         Scaffold(
             topBar = {
-                VeriteTopBar(onBackClick = onBackClick)
+                VeriteTopBar(onBackClick = onBackClick, onProfileClick = onProfileClick)
             },
             containerColor = Color.Transparent
         ) { paddingValues ->
@@ -59,13 +60,11 @@ fun AutoPowerOffScreen(
                 .padding(horizontal = 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.height(32.dp))
-            
             // Main Card
             Surface(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(24.dp),
-                color = CardBackground
+                color = NodeBgInactive
             ) {
                 Column(
                     modifier = Modifier.padding(24.dp),
@@ -84,7 +83,7 @@ fun AutoPowerOffScreen(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(16.dp),
-                        color = CardBackgroundDark
+                        color = NodeBgInactive // Using NodeBgInactive consistently
                     ) {
                         Column(
                             modifier = Modifier.padding(16.dp)
@@ -96,7 +95,7 @@ fun AutoPowerOffScreen(
                                     onClick = { viewModel.updateDuration(duration) }
                                 )
                                 if (duration != PowerOffDuration.values().last()) {
-                                    Divider(
+                                    HorizontalDivider(
                                         modifier = Modifier.padding(vertical = 8.dp),
                                         color = DividerColor
                                     )
@@ -109,12 +108,12 @@ fun AutoPowerOffScreen(
                     
                     // Progress Indicator
                     LinearProgressIndicator(
-                        progress = 0.6f,
+                        progress = { 0.6f },
                         modifier = Modifier
                             .width(200.dp)
                             .height(4.dp)
                             .clip(RoundedCornerShape(2.dp)),
-                        color = TealPrimary,
+                        color = AccentPrimary,
                         trackColor = DividerColor
                     )
                 }
@@ -126,7 +125,7 @@ fun AutoPowerOffScreen(
             Text(
                 text = stringResource(R.string.power_off_description),
                 fontSize = 14.sp,
-                color = TealSecondary,
+                color = AccentSecondary,
                 textAlign = TextAlign.Center,
                 lineHeight = 20.sp,
                 modifier = Modifier.padding(horizontal = 16.dp)

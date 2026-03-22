@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.*
@@ -68,7 +69,7 @@ fun DeviceDetailScreen(
                         )
                         Text(
                             text = "é",
-                            color = TealPrimary,
+                            color = AccentPrimary,
                             fontWeight = FontWeight.Bold,
                             fontSize = 28.sp
                         )
@@ -83,9 +84,9 @@ fun DeviceDetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBackClick) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Back",
-                            tint = TealPrimary
+                            tint = AccentPrimary
                         )
                     }
                 },
@@ -97,7 +98,10 @@ fun DeviceDetailScreen(
                             tint = TextPrimary
                         )
                     }
-                }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                    containerColor = Color.Transparent
+                )
             )
         },
         containerColor = Color.Transparent
@@ -111,17 +115,18 @@ fun DeviceDetailScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             
-            // Backrest Image
+            // Device Image
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(300.dp),
+                    .padding(top = 8.dp, bottom = 24.dp),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.smart_backrest),
-                    contentDescription = "Vérité Backrest",
-                    modifier = Modifier.fillMaxSize()
+                    painter = painterResource(id = R.drawable.headband),
+                    contentDescription = deviceName,
+                    modifier = Modifier.size(200.dp, 140.dp),
+                    contentScale = ContentScale.Fit
                 )
             }
             
@@ -132,24 +137,24 @@ fun DeviceDetailScreen(
             ) {
                 Text(
                     text = "V ",
-                    color = TealPrimary,
+                    color = AccentPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
                 )
                 Text(
                     text = "é",
-                    color = TealPrimary,
+                    color = AccentPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
                 )
                 Text(
                     text = " r i t é ",
-                    color = TealPrimary,
+                    color = AccentPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = "Backrest",
+                    text = " $deviceName",
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
@@ -163,7 +168,7 @@ fun DeviceDetailScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = CardBackgroundDark
+                    color = NodeBgInactive
                 ) {
                     Column(modifier = Modifier.padding(20.dp)) {
                         Row(
@@ -194,9 +199,9 @@ fun DeviceDetailScreen(
                             horizontalArrangement = Arrangement.SpaceEvenly
                         ) {
                             Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color.White.copy(alpha = 0.05f)))
-                            Divider(modifier = Modifier.width(2.dp).fillMaxHeight(), color = Color.White)
+                            VerticalDivider(modifier = Modifier.width(2.dp).fillMaxHeight(), color = Color.White)
                             Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color.White.copy(alpha = 0.05f)))
-                            Divider(modifier = Modifier.width(2.dp).fillMaxHeight(), color = Color.White)
+                            VerticalDivider(modifier = Modifier.width(2.dp).fillMaxHeight(), color = Color.White)
                             Box(modifier = Modifier.weight(1f).fillMaxHeight().background(Color.White.copy(alpha = 0.05f)))
                         }
                     }
@@ -208,7 +213,7 @@ fun DeviceDetailScreen(
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
-                    color = CardBackgroundDark
+                    color = NodeBgInactive
                 ) {
                     Row(
                         modifier = Modifier
@@ -224,7 +229,7 @@ fun DeviceDetailScreen(
                             modifier = Modifier.weight(1f)
                         )
                         
-                        Divider(modifier = Modifier.height(40.dp).width(2.dp), color = Color.White)
+                        VerticalDivider(modifier = Modifier.height(40.dp).width(2.dp), color = Color.White)
                         
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -276,7 +281,7 @@ fun DeviceDetailScreen(
                     Surface(
                         modifier = Modifier.weight(1f).height(80.dp),
                         shape = RoundedCornerShape(24.dp),
-                        color = CardBackgroundDark,
+                        color = NodeBgInactive,
                         onClick = { /* Cooling Flow */ }
                     ) {
                         Row(
@@ -292,7 +297,7 @@ fun DeviceDetailScreen(
                     Surface(
                         modifier = Modifier.weight(1f).height(80.dp),
                         shape = RoundedCornerShape(24.dp),
-                        color = CardBackgroundDark,
+                        color = NodeBgInactive,
                         onClick = { showSettings = true }
                     ) {
                         Row(
@@ -349,7 +354,7 @@ fun DeviceDetailScreen(
                     Button(
                         onClick = { showSettings = false },
                         modifier = Modifier.fillMaxWidth().height(56.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = CardBackground),
+                        colors = ButtonDefaults.buttonColors(containerColor = NodeBgInactive),
                         shape = RoundedCornerShape(12.dp)
                     ) {
                         Text("Save Changes", color = TextPrimary)
@@ -363,192 +368,6 @@ fun DeviceDetailScreen(
 }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun VibrationModeSelector(
-    selectedMode: VibrationMode,
-    onModeSelected: (VibrationMode) -> Unit,
-    expanded: Boolean,
-    onExpandedChange: (Boolean) -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = CardBackground
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onExpandedChange(!expanded) }
-                    .padding(vertical = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(
-                    text = "Vibration Modes",
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = TextPrimary
-                )
-                
-                Icon(
-                    imageVector = if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                    contentDescription = "Expand",
-                    tint = TealPrimary
-                )
-            }
-            
-            if (expanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                Divider(color = DividerColor)
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                VibrationMode.values().forEach { mode ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { 
-                                onModeSelected(mode)
-                                onExpandedChange(false)
-                            }
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = mode.displayName,
-                            fontSize = 15.sp,
-                            color = if (selectedMode == mode) TealPrimary else TextPrimary
-                        )
-                        
-                        if (selectedMode == mode) {
-                            Icon(
-                                imageVector = Icons.Default.Check,
-                                contentDescription = "Selected",
-                                tint = TealPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-            } else {
-                Text(
-                    text = selectedMode.displayName,
-                    fontSize = 14.sp,
-                    color = TealSecondary,
-                    modifier = Modifier.padding(top = 4.dp)
-                )
-            }
-        }
-    }
-}
-
-@Composable
-private fun TemperatureControl(
-    temperature: Int,
-    onIncrement: () -> Unit,
-    onDecrement: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = CardBackgroundDark
-    ) {
-        Row(
-            modifier = Modifier.padding(20.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "Temperature Adjustment",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextPrimary
-            )
-            
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(
-                    onClick = onDecrement,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(CardBackground, RoundedCornerShape(8.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Remove,
-                        contentDescription = "Decrease",
-                        tint = TealSecondary
-                    )
-                }
-                
-                Text(
-                    text = "$temperature",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = TealPrimary
-                )
-                
-                IconButton(
-                    onClick = onIncrement,
-                    modifier = Modifier
-                        .size(40.dp)
-                        .background(CardBackground, RoundedCornerShape(8.dp))
-                ) {
-                    Icon(
-                        imageVector = Icons.Default.Add,
-                        contentDescription = "Increase",
-                        tint = Color(0xFFFF6B9D)
-                    )
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun ActionButton(
-    text: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Surface(
-        modifier = modifier.height(100.dp),
-        shape = RoundedCornerShape(16.dp),
-        color = CardBackgroundDark,
-        onClick = onClick
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = text,
-                tint = TealPrimary,
-                modifier = Modifier.size(32.dp)
-            )
-            
-            Spacer(modifier = Modifier.height(8.dp))
-            
-            Text(
-                text = text,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Medium,
-                color = TextPrimary
-            )
-        }
-    }
-}
-
 @Composable
 private fun SensorToggle(
     label: String,
@@ -559,7 +378,7 @@ private fun SensorToggle(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = CardBackgroundDark
+        color = NodeBgInactive
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
@@ -578,7 +397,7 @@ private fun SensorToggle(
                 onCheckedChange = onCheckedChange,
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color.White,
-                    checkedTrackColor = TealPrimary,
+                    checkedTrackColor = AccentPrimary,
                     uncheckedThumbColor = Color.White,
                     uncheckedTrackColor = DividerColor
                 )
@@ -596,7 +415,7 @@ private fun SettingsNavigationItem(
     Surface(
         modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(16.dp),
-        color = CardBackgroundDark,
+        color = NodeBgInactive,
         onClick = onClick
     ) {
         Row(

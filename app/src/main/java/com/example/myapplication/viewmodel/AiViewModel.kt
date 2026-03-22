@@ -28,40 +28,37 @@ class AiViewModel(
     val uiState: StateFlow<AiPlanState> = _uiState.asStateFlow()
     
     fun generatePlan(
-        addictionType: String,
+        ailmentType: String,
         frequency: String,
-        reasonForAddiction: String,
+        reasonForAilment: String,
         duration: String,
         reasonForStopping: String
     ) {
         viewModelScope.launch {
             _uiState.value = AiPlanState.Loading
-            aiRepository.generate21DayPlan(
-                addictionType,
-                frequency,
-                reasonForAddiction,
-                duration,
-                reasonForStopping
-            ).collect { result ->
-                result.fold(
-                    onSuccess = { plan ->
-                        // Save to database
-                        val planId = recoveryRepository.saveActivePlan(
-                            RecoveryPlan(
-                                addictionType = addictionType,
-                                fullPlanText = plan,
-                                frequency = frequency,
-                                reasonForAddiction = reasonForAddiction,
-                                duration = duration,
-                                reasonForStopping = reasonForStopping
-                            )
-                        )
-                        _uiState.value = AiPlanState.Success(plan, planId)
-                    },
-                    onFailure = { error ->
-                        _uiState.value = AiPlanState.Error(error.localizedMessage ?: "Failed to generate plan")
-                    }
-                )
+            try {
+                aiRepository.generate21DayPlan(
+                    ailmentType,
+                    frequency,
+                    reasonForAilment,
+                    duration,
+                    reasonForStopping
+                ).collect { result ->
+                    result.fold(
+                        onSuccess = { plan ->
+                            // Update UI first, saving is done by Activity on button click
+                            // Note: We are NO LONGER saving automatically here to prevent DB locks
+                            _uiState.value = AiPlanState.Success(plan, -1L) // Using -1L as a placeholder if planId logic is now strictly handled by AiPlanActivity
+                        },
+                        onFailure = { error ->
+                            android.util.Log.e("AiViewModel", "Plan generation failed", error)
+                            _uiState.value = AiPlanState.Error(error.localizedMessage ?: "Failed to generate plan")
+                        }
+                    )
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("AiViewModel", "Exception in generatePlan", e)
+                _uiState.value = AiPlanState.Error(e.localizedMessage ?: "Unknown error occurred")
             }
         }
     }

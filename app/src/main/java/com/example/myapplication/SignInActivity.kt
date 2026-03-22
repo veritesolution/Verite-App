@@ -11,6 +11,7 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.util.Patterns
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -345,6 +346,34 @@ class SignInActivity : AppCompatActivity() {
             ).apply {
                 setMargins(0, 0, dpToPx(16), 0)
             }
+            setOnClickListener {
+                val email = emailInput.text.toString().trim()
+                if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                    Toast.makeText(
+                        this@SignInActivity,
+                        "Enter a valid email above to reset your password",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@setOnClickListener
+                }
+
+                lifecycleScope.launch {
+                    val result = authManager.sendPasswordResetEmail(email)
+                    result.onSuccess {
+                        Toast.makeText(
+                            this@SignInActivity,
+                            "Password reset email sent",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }.onFailure { e ->
+                        Toast.makeText(
+                            this@SignInActivity,
+                            "Reset failed: ${e.message}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                }
+            }
         }
         rootLayout.addView(forgotPasswordText)
         
@@ -487,6 +516,14 @@ class SignInActivity : AppCompatActivity() {
                 val password = passwordInput.text.toString().trim()
 
                 if (email.isNotEmpty() && password.isNotEmpty()) {
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Toast.makeText(
+                            this@SignInActivity,
+                            "Please enter a valid email address",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@setOnClickListener
+                    }
                     lifecycleScope.launch {
                         val result = authManager.signIn(email, password)
                         result.onSuccess {

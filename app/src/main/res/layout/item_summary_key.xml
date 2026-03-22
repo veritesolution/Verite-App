@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="8dp">
+
+    <View
+        android:id="@+id/colorDot"
+        android:layout_width="16dp"
+        android:layout_height="16dp"
+        android:background="@drawable/circle_white_background"
+        android:backgroundTint="#FFFFFF" />
+
+    <TextView
+        android:id="@+id/tvKeyName"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="health"
+        android:textColor="@color/white"
+        android:textSize="14sp" />
+
+</LinearLayout>

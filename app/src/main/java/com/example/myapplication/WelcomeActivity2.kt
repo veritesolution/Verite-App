@@ -57,39 +57,19 @@ class WelcomeActivity2 : AppCompatActivity() {
         }
         rootLayout.addView(welcomingText)
         
-        // "Vérité" TextView with two-tone color
+        // "Vérité" TextView with branded logo style
         val veriteText = TextView(this).apply {
             id = View.generateViewId()
             textSize = 48f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
-            val spannable = SpannableString("Vérité")
-            spannable.setSpan(
-                ForegroundColorSpan(Color.WHITE),
-                0,
-                1,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                ForegroundColorSpan(Color.parseColor("#4DB6AC")),
-                1,
-                2,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                ForegroundColorSpan(Color.WHITE),
-                2,
-                6,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            
-            setText(spannable)
             layoutParams = ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.WRAP_CONTENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
             )
         }
+        com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(veriteText)
         rootLayout.addView(veriteText)
         
         // Tagline TextView with underline

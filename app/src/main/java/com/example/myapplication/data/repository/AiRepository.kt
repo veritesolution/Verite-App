@@ -1,5 +1,7 @@
 package com.example.myapplication.data.repository
 
+import android.util.Log
+import com.example.myapplication.BuildConfig
 import com.example.myapplication.data.model.AiRequest
 import com.example.myapplication.data.model.AiResponse
 import com.example.myapplication.data.model.Message
@@ -11,16 +13,19 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
-import java.io.IOException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 
 class AiRepository {
-    private val apiKey = "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"
+    // API key loaded securely from BuildConfig (set in local.properties)
+    private val apiKey = BuildConfig.OPENROUTER_API_KEY
     
     private val apiService: AiApiService by lazy {
         val logging = HttpLoggingInterceptor().apply {
-            level = HttpLoggingInterceptor.Level.BODY
+            // Only log request/response bodies in debug builds
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
         }
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
@@ -44,9 +49,9 @@ class AiRepository {
     private val RETRY_DELAY = 1500L // milliseconds
 
     fun generate21DayPlan(
-        addictionType: String,
+        ailmentType: String,
         frequency: String,
-        reasonForAddiction: String,
+        reasonForAilment: String,
         duration: String,
         reasonForStopping: String
     ): Flow<Result<String>> = flow {
@@ -60,15 +65,15 @@ class AiRepository {
                - Focus: A psychological grounding or mental shift.
                - Action: A specific, practical task to perform.
             
-            - Addiction Type: $addictionType
+            - Ailment Type: $ailmentType
             - Current Frequency: $frequency
-            - Root Cause: $reasonForAddiction
-            - Addiction Duration: $duration
+            - Root Cause: $reasonForAilment
+            - Ailment Duration: $duration
             - Personal Motivation for Change: $reasonForStopping
             
        
-               - Motivation: A powerful quote or thought related to $addictionType recovery.
-            3. General Practice Tips: 3-5 specific tips for managing cravings for $addictionType.
+               - Motivation: A powerful quote or thought related to $ailmentType recovery.
+            3. General Practice Tips: 3-5 specific tips for managing cravings for $ailmentType.
             
             Ensure the tasks are realistic, progressive, and grounded in cognitive behavioral therapy (CBT) principles.
         """.trimIndent()
@@ -76,7 +81,7 @@ class AiRepository {
         var lastResponse: AiResponse? = null
         var lastError: Exception? = null
 
-        // 🔁 TRY PRIMARY MODEL
+        // Try primary model with retries
         for (attempt in 1..MAX_RETRIES) {
             try {
                 val request = AiRequest(
@@ -101,21 +106,21 @@ class AiRepository {
                 } else {
                     lastResponse = response
                     val errorMsg = response.error?.message ?: "Primary model busy (attempt $attempt)"
-                    println(errorMsg)
+                    if (BuildConfig.DEBUG) Log.d(TAG, errorMsg)
                     if (attempt < MAX_RETRIES) kotlinx.coroutines.delay(RETRY_DELAY)
                 }
             } catch (e: Exception) {
                 lastError = e
-                println("⚠️ Attempt $attempt error: ${e.message}")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Attempt $attempt error: ${e.message}")
                 if (attempt < MAX_RETRIES) kotlinx.coroutines.delay(RETRY_DELAY)
             }
         }
 
-        // 🚀 FALLBACK CHAIN
+        // Fallback chain
         val fallbacks = listOf(SECONDARY_MODEL, TERTIARY_MODEL)
         for (fallback in fallbacks) {
             try {
-                println("⚡ Switching to fallback model: $fallback")
+                if (BuildConfig.DEBUG) Log.d(TAG, "Switching to fallback model: $fallback")
                 val fallbackRequest = AiRequest(
                     model = fallback,
                     messages = listOf(
@@ -137,11 +142,17 @@ class AiRepository {
                     return@flow
                 }
             } catch (e: Exception) {
-                println("⚠️ Fallback $fallback failed: ${e.message}")
+                if (BuildConfig.DEBUG) Log.w(TAG, "Fallback $fallback failed: ${e.message}")
             }
         }
 
         // Final failure if all models failed
-        emit(Result.failure(Exception("AI services are currently busy or unavailable. Please try again in a few minutes.")))
+        val failureMsg = "AI services are currently busy or unavailable. Please try again in a few minutes."
+        if (BuildConfig.DEBUG) Log.e(TAG, "All models failed. Emitting failure.")
+        emit(Result.failure(Exception(failureMsg)))
+    }
+
+    companion object {
+        private const val TAG = "AiRepository"
     }
 }

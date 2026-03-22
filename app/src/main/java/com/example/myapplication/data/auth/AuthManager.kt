@@ -12,6 +12,7 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
+import com.google.firebase.auth.ktx.userProfileChangeRequest
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.tasks.await
@@ -41,6 +42,7 @@ class AuthManager(private val context: Context) {
         return try {
             val result = auth.createUserWithEmailAndPassword(email, pass).await()
             result.user?.let { user ->
+                user.updateProfile(userProfileChangeRequest { displayName = name }).await()
                 syncUserToLocalDb(user, name)
                 Result.success(user)
             } ?: Result.failure(Exception("Sign up failed"))
@@ -94,5 +96,14 @@ class AuthManager(private val context: Context) {
 
     fun signOut() {
         auth.signOut()
+    }
+
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit> {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            Result.success(Unit)
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 }

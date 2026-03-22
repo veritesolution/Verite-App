@@ -11,18 +11,55 @@ import android.view.ViewGroup
 import android.view.animation.LinearInterpolator
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import androidx.lifecycle.lifecycleScope
+import androidx.media3.ui.PlayerControlView
+import com.example.myapplication.data.audio.BinauralAudioManager
+import com.example.myapplication.data.audio.SoundType
+import com.example.myapplication.data.bluetooth.BluetoothLeManager
+import com.example.myapplication.data.logic.StressDetectionEngine
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
+import kotlinx.coroutines.launch
 
 class SleepSoundActivity : AppCompatActivity() {
 
-    private var timer: CountDownTimer? = null
-    private var isRunning = false
+    private var audioManager: BinauralAudioManager? = null
+    private var stressDetectionEngine: StressDetectionEngine? = null
+    private var bluetoothLeManager: BluetoothLeManager? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // ---------- Root FrameLayout to host Background + Content ----------
+        val rootFrame = FrameLayout(this).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        }
+
+        // ---------- Compose Background ----------
+        val composeBackground = ComposeView(this).apply {
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            )
+            setContent {
+                VeriteTheme {
+                    SkyBackground { }
+                }
+            }
+        }
+        rootFrame.addView(composeBackground)
+
+        // ---------- Content ScrollView ----------
         val scrollView = ScrollView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-            setBackgroundResource(R.drawable.group_1000006461)
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            setBackgroundColor(Color.TRANSPARENT)
         }
 
         val root = LinearLayout(this).apply {
@@ -31,6 +68,7 @@ class SleepSoundActivity : AppCompatActivity() {
             setPadding(dpToPx(20), dpToPx(32), dpToPx(20), dpToPx(40))
         }
         scrollView.addView(root)
+        rootFrame.addView(scrollView)
 
         root.addView(ImageView(this).apply {
             setImageResource(android.R.drawable.ic_menu_revert)
@@ -47,6 +85,16 @@ class SleepSoundActivity : AppCompatActivity() {
             gravity = Gravity.CENTER
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                 .apply { setMargins(0, dpToPx(12), 0, dpToPx(4)) }
+        })
+
+        val soundscapeTitle = intent.getStringExtra("SOUNDSCAPE_TITLE") ?: "sunset"
+        root.addView(TextView(this).apply {
+            text = "Selected: $soundscapeTitle"
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            gravity = Gravity.CENTER
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { bottomMargin = dpToPx(8) }
         })
 
         root.addView(TextView(this).apply {
@@ -81,84 +129,71 @@ class SleepSoundActivity : AppCompatActivity() {
             start()
         }
 
-        val timerTv = TextView(this).apply {
-            text = "30:00"
-            textSize = 56f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        }
-        root.addView(timerTv)
-
-        root.addView(TextView(this).apply {
-            text = "Sleep Induction Session"
-            textSize = 13f
-            setTextColor(Color.parseColor("#AAAAFF"))
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(24) }
-        })
-
-        // Vibration row
-        val vibRow = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
+        // Brain wave monitor card
+        val brainCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = GradientDrawable().apply {
+                cornerRadius = dpToPx(18).toFloat()
+                setColor(Color.parseColor("#0D0A2E"))
+            }
+            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
                 .apply { bottomMargin = dpToPx(20) }
         }
-        vibRow.addView(TextView(this).apply {
-            text = "📳 Gentle Vibration:"
+
+        brainCard.addView(TextView(this).apply {
+            text = "🧠 Live Brain Activity Monitor"
             textSize = 14f
-            setTextColor(Color.parseColor("#CCFFFFFF"))
-        })
-        vibRow.addView(Switch(this).apply {
-            isChecked = true
-            thumbTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#7A4AA0"))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { leftMargin = dpToPx(8) }
-        })
-        root.addView(vibRow)
-
-        // Start button
-        val startBtn = TextView(this).apply {
-            text = "▶  Start Sleep Session"
-            textSize = 16f
             setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            background = GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT,
-                intArrayOf(Color.parseColor("#0D0A2E"), Color.parseColor("#2A1A6E"))
-            ).apply { cornerRadius = dpToPx(26).toFloat() }
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(54))
-                .apply { bottomMargin = dpToPx(16) }
-        }
-        root.addView(startBtn)
+            setTextColor(Color.parseColor("#9A70CC"))
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { bottomMargin = dpToPx(12) }
+        })
 
-        startBtn.setOnClickListener {
-            if (!isRunning) {
-                isRunning = true
-                startBtn.text = "⏹  Stop Session"
-                timer = object : CountDownTimer(30 * 60 * 1000L, 1000) {
-                    override fun onTick(ms: Long) {
-                        val m = (ms / 1000) / 60; val s = (ms / 1000) % 60
-                        timerTv.text = String.format("%02d:%02d", m, s)
-                    }
-                    override fun onFinish() {
-                        isRunning = false
-                        startBtn.text = "▶  Start Sleep Session"
-                        timerTv.text = "30:00"
-                        Toast.makeText(this@SleepSoundActivity, "Sweet dreams! Sleep session complete. 🌙", Toast.LENGTH_LONG).show()
-                    }
-                }.start()
-            } else {
-                isRunning = false
-                timer?.cancel()
-                startBtn.text = "▶  Start Sleep Session"
-                timerTv.text = "30:00"
+        // Brain wave indicators
+        val waves = listOf(
+            Triple("Theta", "6.2 Hz", 0.35f),
+            Triple("Alpha", "9.8 Hz", 0.15f),
+            Triple("Beta", "18.4 Hz", 0.08f),
+            Triple("Delta", "1.5 Hz", 0.92f)
+        )
+
+        for ((name, hz, progress) in waves) {
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                    .apply { bottomMargin = dpToPx(8) }
             }
+            val nameTv = TextView(this).apply {
+                text = name; textSize = 13f; setTextColor(Color.WHITE)
+                layoutParams = LinearLayout.LayoutParams(dpToPx(50), LinearLayout.LayoutParams.WRAP_CONTENT)
+            }
+            val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
+                max = 100; this.progress = (progress * 100).toInt()
+                progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#9A70CC"))
+                layoutParams = LinearLayout.LayoutParams(0, dpToPx(8), 1f).apply {
+                    leftMargin = dpToPx(8); rightMargin = dpToPx(8)
+                }
+            }
+            val hzTv = TextView(this).apply {
+                text = hz; textSize = 12f; setTextColor(Color.parseColor("#AAAAFFFF"))
+                layoutParams = LinearLayout.LayoutParams(dpToPx(58), LinearLayout.LayoutParams.WRAP_CONTENT)
+                gravity = Gravity.END
+            }
+
+            // Animate the bars
+            ValueAnimator.ofInt((progress * 100 * 0.8f).toInt(), (progress * 100).toInt()).apply {
+                duration = 2000; repeatCount = ValueAnimator.INFINITE
+                repeatMode = ValueAnimator.REVERSE
+                addUpdateListener { bar.progress = it.animatedValue as Int }
+                start()
+            }
+
+            row.addView(nameTv); row.addView(bar); row.addView(hzTv)
+            brainCard.addView(row)
         }
+        root.addView(brainCard)
 
         // Tips card
         val tipCard = LinearLayout(this).apply {
@@ -169,6 +204,7 @@ class SleepSoundActivity : AppCompatActivity() {
             }
             setPadding(dpToPx(16), dpToPx(14), dpToPx(16), dpToPx(14))
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { bottomMargin = dpToPx(24) }
         }
         val tipTitle = TextView(this).apply {
             text = "🌙 Sleep Tips"
@@ -178,7 +214,7 @@ class SleepSoundActivity : AppCompatActivity() {
         }
         val tips = listOf(
             "• Wear the sleep band before lying down",
-            "• Dim your room & lower the temperature",
+            "• Dim your room \u0026 lower the temperature",
             "• Avoid screens 30 min before bed",
             "• Vibrations gently guide you to sleep"
         )
@@ -192,9 +228,66 @@ class SleepSoundActivity : AppCompatActivity() {
         }
         root.addView(tipCard)
 
-        setContentView(scrollView)
+        // Music Player Controls
+        val playerView = PlayerControlView(this).apply {
+            showTimeoutMs = 0 // Keep controls visible always
+            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+                .apply { bottomMargin = dpToPx(32) }
+        }
+        playerView.setShowNextButton(false)
+        playerView.setShowPreviousButton(false)
+        root.addView(playerView)
+
+        setContentView(rootFrame)
+
+        try {
+            audioManager = BinauralAudioManager.getInstance(this)
+            playerView.player = audioManager?.player
+            audioManager?.playSound(SoundType.SLEEP)
+        } catch (e: Exception) {
+            android.util.Log.e("SleepSound", "Audio init failed: ${e.message}")
+        }
+
+        try {
+            stressDetectionEngine = StressDetectionEngine()
+            bluetoothLeManager = BluetoothLeManager.getInstance(this)
+            observeBioData()
+            observeStress()
+        } catch (e: Exception) {
+            android.util.Log.e("SleepSound", "Bio monitoring init failed: ${e.message}")
+        }
     }
 
-    override fun onDestroy() { super.onDestroy(); timer?.cancel() }
+    private fun observeBioData() {
+        lifecycleScope.launch {
+            try {
+                bluetoothLeManager?.bioDataStream?.collect { data ->
+                    stressDetectionEngine?.analyze(data)
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SleepSound", "Bio data error: ${e.message}")
+            }
+        }
+    }
+
+    private fun observeStress() {
+        lifecycleScope.launch {
+            try {
+                stressDetectionEngine?.currentStress?.collect { state ->
+                    if (audioManager?.player?.isPlaying == true) {
+                        audioManager?.updateAdaptiveVolume(state.score)
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("SleepSound", "Stress monitoring error: ${e.message}")
+            }
+        }
+    }
+
+    override fun onDestroy() { 
+        super.onDestroy()
+        try { audioManager?.stopSound() } catch (_: Exception) {}
+    }
+
     private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
 }

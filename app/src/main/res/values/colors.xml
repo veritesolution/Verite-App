@@ -1,9 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="primary_teal">#009688</color>
-    <color name="accent_teal">#00BFA5</color>
-    <color name="dark_background">#000000</color>
-    <color name="dark_teal">#004d4d</color>
-    <color name="black">#000000</color>
+    <!-- ─── Brand Teal ─── -->
+    <color name="primary_teal">#1C9C91</color>
+    <color name="accent_teal">#1C9C91</color>
+    <color name="accent_bright">#2DD4AA</color>
+    <color name="accent_dark">#0D6B65</color>
+    <color name="sky_teal">#1C9C91</color>
+    <color name="sky_teal_bright">#23BFB3</color>
+    <color name="sky_teal_dark">#0D5C57</color>
+
+    <!-- ─── Backgrounds ─── -->
+    <color name="dark_background">#050F0E</color>
+    <color name="black">#050F0E</color>
+    <color name="sky_bg">#050F0E</color>
+    <color name="sky_bg_mid">#071A18</color>
+    <color name="sky_bg_deep">#030C0B</color>
+    <color name="card_bg">#0A1614</color>
+    <color name="card_bg_elevated">#0D1E1B</color>
+    <color name="card_bg_active">#0F2A26</color>
+    <color name="dark_teal">#0A2E2C</color>
+
+    <!-- ─── Text ─── -->
     <color name="white">#FFFFFF</color>
+    <color name="text_primary">#DCE8E4</color>
+    <color name="text_active">#C8F5E8</color>
+    <color name="text_muted">#A6B4D2CD</color>
+    <color name="text_faint">#66B4D2CD</color>
+    <color name="text_ultra_faint">#40B4D2CD</color>
+    <color name="text_on_dark">#CCFFFFFF</color>
+    <color name="text_hint">#60FFFFFF</color>
+
+    <!-- ─── Borders & Glows ─── -->
+    <color name="border_inactive">#1F1C9C91</color>
+    <color name="border_active">#8C1C9C91</color>
+    <color name="border_subtle">#1A1C9C91</color>
+    <color name="glow_teal">#331C9C91</color>
+    <color name="glow_bright">#332DD4AA</color>
+
+    <!-- ─── Status ─── -->
+    <color name="status_connected">#1C9C91</color>
+    <color name="status_warning">#E6A23C</color>
+    <color name="status_error">#F56C6C</color>
+    <color name="status_success">#2DD4AA</color>
+
+    <!-- ─── Pill / Badge Backgrounds ─── -->
+    <color name="pill_bg_teal">#1A1C9C91</color>
+    <color name="pill_border_teal">#331C9C91</color>
 </resources>
+

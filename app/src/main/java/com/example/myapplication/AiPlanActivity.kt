@@ -8,7 +8,11 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.home.SkyBackground
+import com.example.myapplication.ui.theme.VeriteTheme
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.repository.AiRepository
@@ -32,65 +36,128 @@ class AiPlanActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_ai_plan)
+        try {
+            setContentView(R.layout.activity_ai_plan)
 
-        val addictionType = intent.getStringExtra("ADDICTION_TYPE") ?: ""
-        val frequency = intent.getStringExtra("FREQUENCY") ?: ""
-        val duration = intent.getStringExtra("DURATION") ?: ""
-        val trigger = intent.getStringExtra("TRIGGER") ?: ""
-        val motivation = intent.getStringExtra("MOTIVATION") ?: ""
+            findViewById<ComposeView>(R.id.composeView).setContent {
+                VeriteTheme {
+                    SkyBackground { }
+                }
+            }
 
-        val loadingSpinner = findViewById<ProgressBar>(R.id.loadingSpinner)
-        val loadingText = findViewById<TextView>(R.id.loadingText)
-        val resultScrollView = findViewById<View>(R.id.resultScrollView)
-        val planContent = findViewById<TextView>(R.id.planContent)
-        val btnSave = findViewById<Button>(R.id.btnSave)
+            val ailmentType = intent.getStringExtra("AILMENT_TYPE") ?: ""
+            val frequency = intent.getStringExtra("FREQUENCY") ?: ""
+            val duration = intent.getStringExtra("DURATION") ?: ""
+            val trigger = intent.getStringExtra("TRIGGER") ?: ""
+            val motivation = intent.getStringExtra("MOTIVATION") ?: ""
 
-        findViewById<View>(R.id.backButton).setOnClickListener { finish() }
+            android.util.Log.d("AiPlanActivity", "Starting generation for: $ailmentType")
 
-        // Start Generation
-        if (savedInstanceState == null) {
-            viewModel.generatePlan(addictionType, frequency, trigger, duration, motivation)
-        }
+            val loadingSpinner = findViewById<ProgressBar>(R.id.loadingSpinner)
+            val loadingText = findViewById<TextView>(R.id.loadingText)
+            val resultScrollView = findViewById<View>(R.id.resultScrollView)
+            val planContent = findViewById<TextView>(R.id.planContent)
+            val btnSave = findViewById<Button>(R.id.btnSave)
 
-        lifecycleScope.launch {
-            viewModel.uiState.collect { state ->
-                when (state) {
-                    is AiPlanState.Idle -> { /* Do nothing */ }
-                    is AiPlanState.Loading -> {
-                        loadingSpinner.visibility = View.VISIBLE
-                        loadingText.visibility = View.VISIBLE
-                        resultScrollView.visibility = View.GONE
-                        btnSave.visibility = View.GONE
-                    }
-                    is AiPlanState.Success -> {
-                        loadingSpinner.visibility = View.GONE
-                        loadingText.visibility = View.GONE
-                        resultScrollView.visibility = View.VISIBLE
-                        btnSave.visibility = View.VISIBLE
-                        btnSave.visibility = View.VISIBLE
-                        planContent.text = state.plan
-                        currentPlanId = state.planId
-                    }
-                    is AiPlanState.Error -> {
-                        loadingSpinner.visibility = View.GONE
-                        loadingText.visibility = View.VISIBLE
-                        loadingText.text = "Error: ${state.message}"
-                        loadingText.setTextColor(android.graphics.Color.RED)
-                        Toast.makeText(this@AiPlanActivity, "Plan generation failed", Toast.LENGTH_LONG).show()
+            findViewById<View>(R.id.backButton).setOnClickListener { finish() }
+
+            findViewById<View>(R.id.profileIcon).setOnClickListener {
+                startActivity(Intent(this, ProfileActivity::class.java))
+            }
+
+            // Start Generation
+            if (savedInstanceState == null) {
+                viewModel.generatePlan(ailmentType, frequency, trigger, duration, motivation)
+            }
+
+            lifecycleScope.launch {
+                viewModel.uiState.collect { state ->
+                    when (state) {
+                        is AiPlanState.Idle -> { /* Do nothing */
+                        }
+
+                        is AiPlanState.Loading -> {
+                            loadingSpinner.visibility = View.VISIBLE
+                            loadingText.visibility = View.VISIBLE
+                            resultScrollView.visibility = View.GONE
+                            btnSave.visibility = View.GONE
+                        }
+
+                        is AiPlanState.Success -> {
+                            loadingSpinner.visibility = View.GONE
+                            loadingText.visibility = View.GONE
+                            resultScrollView.visibility = View.VISIBLE
+                            btnSave.visibility = View.VISIBLE
+                            planContent.text = state.plan
+                            currentPlanId = state.planId
+                        }
+
+                        is AiPlanState.Error -> {
+                            loadingSpinner.visibility = View.GONE
+                            loadingText.visibility = View.VISIBLE
+                            loadingText.text = "Error: ${state.message}"
+                            loadingText.setTextColor(android.graphics.Color.RED)
+                            Toast.makeText(
+                                this@AiPlanActivity,
+                                "Plan generation failed",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            android.util.Log.e("AiPlanActivity", "UI Error State: ${state.message}")
+                        }
                     }
                 }
             }
-        }
 
-        btnSave.setOnClickListener {
-            if (currentPlanId != -1L) {
-                val intent = Intent(this, AiAgreementActivity::class.java)
-                intent.putExtra("PLAN_ID", currentPlanId)
-                startActivity(intent)
-            } else {
-                Toast.makeText(this, "Please wait for plan to save...", Toast.LENGTH_SHORT).show()
+            btnSave.setOnClickListener {
+                if (currentPlanId != -1L) {
+                    val intent = Intent(this@AiPlanActivity, AiAgreementActivity::class.java)
+                    intent.putExtra("PLAN_ID", currentPlanId)
+                    startActivity(intent)
+                } else {
+                    lifecycleScope.launch {
+                        try {
+                            val currentState = viewModel.uiState.value
+                            if (currentState is AiPlanState.Success) {
+                                // Save the plan to database
+                                val database = AppDatabase.getDatabase(applicationContext)
+                                val plan = com.example.myapplication.data.model.RecoveryPlan(
+                                    ailmentType = ailmentType,
+                                    fullPlanText = currentState.plan,
+                                    frequency = frequency,
+                                    reasonForAilment = trigger,
+                                    duration = duration,
+                                    reasonForStopping = motivation
+                                )
+                                val planId = database.recoveryPlanDao().insertPlan(plan)
+                                currentPlanId = planId
+
+                                // Navigate to agreement with plan ID
+                                val intent =
+                                    Intent(this@AiPlanActivity, AiAgreementActivity::class.java)
+                                intent.putExtra("PLAN_ID", currentPlanId)
+                                startActivity(intent)
+                            } else {
+                                Toast.makeText(
+                                    this@AiPlanActivity,
+                                    "Please wait for plan to save...",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("AiPlanActivity", "Error saving plan", e)
+                            Toast.makeText(
+                                this@AiPlanActivity,
+                                "Failed to save plan: ${e.message}",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    }
+                }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("AiPlanActivity", "Crash in onCreate", e)
+            Toast.makeText(this, "Error initializing screen: ${e.message}", Toast.LENGTH_LONG).show()
+            finish()
         }
     }
 }

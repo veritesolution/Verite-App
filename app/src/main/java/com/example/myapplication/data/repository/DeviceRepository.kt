@@ -45,7 +45,7 @@ class DeviceRepository(private val deviceDao: DeviceDao) {
                 name = "Sleep Band",
                 type = DeviceType.SLEEP_BAND,
                 isConnected = false,
-                imageResource = "sleep_band"
+                imageResource = "headband"
             ),
             Device(
                 id = 2,
@@ -59,7 +59,7 @@ class DeviceRepository(private val deviceDao: DeviceDao) {
                 name = "Sleep Band",
                 type = DeviceType.SLEEP_BAND,
                 isConnected = false,
-                imageResource = "sleep_band"
+                imageResource = "headband"
             ),
             Device(
                 id = 4,

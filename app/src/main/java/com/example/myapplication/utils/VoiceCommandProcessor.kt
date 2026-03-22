@@ -1,6 +1,94 @@
 package com.example.myapplication.utils
 
+import com.example.myapplication.data.model.Intent
+import com.example.myapplication.data.model.VoiceCommandResult
+import com.example.myapplication.data.model.Priority
+import com.example.myapplication.data.model.Category
+
 object VoiceCommandProcessor {
+
+    fun parse(input: String): VoiceCommandResult {
+        val text = input.lowercase().trim()
+
+        // 1. Add Task
+        if (text.contains("add task") || text.contains("create task") || text.contains("new task")) {
+            val entity = extractEntity(text, listOf("add task", "create task", "new task", "called", "named"))
+            val priority = extractPriority(text)
+            val category = extractCategory(text)
+            return VoiceCommandResult(Intent.ADD_TASK, 0.9f, entity, priority, category)
+        }
+
+        // 2. Complete Task
+        if (text.contains("complete task") || text.contains("finish task") || text.contains("done task")) {
+            val entity = extractEntity(text, listOf("complete task", "finish task", "done task", "called", "named"))
+            return VoiceCommandResult(Intent.COMPLETE_TASK, 0.8f, entity)
+        }
+
+        // 3. Delete Task
+        if (text.contains("delete task") || text.contains("remove task")) {
+            val entity = extractEntity(text, listOf("delete task", "remove task", "called", "named"))
+            return VoiceCommandResult(Intent.DELETE_TASK, 0.8f, entity)
+        }
+
+        // 4. Add Habit
+        if (text.contains("add habit") || text.contains("create habit") || text.contains("new habit")) {
+            val entity = extractEntity(text, listOf("add habit", "create habit", "new habit", "called", "named"))
+            return VoiceCommandResult(Intent.ADD_HABIT, 0.9f, entity)
+        }
+
+        // 5. Toggle Habit
+        if (text.contains("toggle habit") || text.contains("check habit") || text.contains("habit done")) {
+            val entity = extractEntity(text, listOf("toggle habit", "check habit", "habit done", "called", "named"))
+            return VoiceCommandResult(Intent.TOGGLE_HABIT, 0.8f, entity)
+        }
+
+        // 6. Query Streak
+        if (text.contains("streak") || text.contains("how many days")) {
+            val entity = extractEntity(text, listOf("streak", "for", "habit"))
+            return VoiceCommandResult(Intent.QUERY_STREAK, 0.85f, entity)
+        }
+
+        return VoiceCommandResult(Intent.UNKNOWN, 0.0f)
+    }
+
+    fun getSuggestions(): List<String> {
+        return listOf(
+            "Add task 'Read book' high priority",
+            "Complete task 'Drink water'",
+            "Add habit 'Morning run'",
+            "How many days streak for 'Meditation'",
+            "Delete task 'Buy milk'",
+            "Toggle habit 'Reading'"
+        )
+    }
+
+    private fun extractEntity(text: String, keywords: List<String>): String? {
+        var result = text
+        keywords.forEach { kw ->
+            if (result.contains(kw)) {
+                result = result.substringAfter(kw).trim()
+            }
+        }
+        return result.split(" for ", " with ", " in ", " at ").first().trim().takeIf { it.isNotBlank() }
+    }
+
+    private fun extractPriority(text: String): String? {
+        return when {
+            text.contains("high") -> Priority.HIGH.label
+            text.contains("medium") -> Priority.MEDIUM.label
+            text.contains("low") -> Priority.LOW.label
+            else -> null
+        }
+    }
+
+    private fun extractCategory(text: String): String? {
+        Category.entries.forEach { cat ->
+            if (text.contains(cat.label.lowercase())) return cat.label
+        }
+        return null
+    }
+
+    // --- Legacy Verite Device Commands ---
     
     data class CommandResult(
         val action: CommandAction,
@@ -118,16 +206,5 @@ object VoiceCommandProcessor {
             if (i > 0) costs[s2.length] = lastValue
         }
         return costs[s2.length]
-    }
-    
-    fun getSuggestions(): List<String> {
-        return listOf(
-            "Turn on power off",
-            "Open help",
-            "Show my devices",
-            "Set temperature to 25",
-            "Turn on vibration",
-            "Connect device"
-        )
     }
 }

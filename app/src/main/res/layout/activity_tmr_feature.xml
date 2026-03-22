@@ -4,17 +4,25 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000000"
-    android:padding="16dp">
+    android:background="@android:color/transparent"
+    android:padding="16dp"
+    android:fitsSystemWindows="true">
 
-    <!-- Header -->
-    <LinearLayout
+    <androidx.compose.ui.platform.ComposeView
+        android:id="@+id/composeView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- ═══ Premium Header ═══ -->
+    <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/headerLayout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingTop="16dp"
+        android:paddingVertical="12dp"
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
@@ -23,121 +31,240 @@
             android:layout_height="wrap_content"
             android:padding="8dp"
             android:text="←"
-            android:textColor="#00BFA5"
+            android:textColor="@color/accent_teal"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
             android:id="@+id/headerTitle"
-            android:layout_width="0dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center"
+            android:fontFamily="sans-serif-light"
             android:text="Vérité"
-            android:textColor="#FFFFFF"
+            android:textColor="@color/white"
             android:textSize="24sp"
-            android:textStyle="bold" />
+            android:textStyle="bold"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <ImageView
+            android:id="@+id/profileIcon"
             android:layout_width="40dp"
             android:layout_height="40dp"
-            android:src="@android:drawable/ic_menu_myplaces"
-            app:tint="#FFFFFF" />
-    </LinearLayout>
+            android:background="@drawable/profile_icon_bg"
+            android:padding="10dp"
+            android:src="@drawable/ic_account"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/text_muted" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <!-- TMR Icon/Title -->
+    <!-- ═══ TMR Visual ═══ -->
     <ImageView
         android:id="@+id/tmrIcon"
-        android:layout_width="120dp"
+        android:layout_width="160dp"
         android:layout_height="120dp"
-        android:layout_marginTop="40dp"
-        android:background="@drawable/gradient_circle_bg"
-        android:padding="20dp"
-        android:src="@drawable/ic_tmr_brain" 
+        android:layout_marginTop="12dp"
+        android:src="@drawable/headband"
+        android:scaleType="fitCenter"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/headerLayout"
-        app:tint="#00BFA5" />
+        app:layout_constraintTop_toBottomOf="@id/headerLayout" />
 
+    <!-- ═══ Title ═══ -->
     <TextView
         android:id="@+id/tmrTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="14dp"
+        android:fontFamily="sans-serif-light"
+        android:letterSpacing="0.01"
         android:text="TMR Feature"
-        android:textColor="#FFFFFF"
-        android:textSize="24sp"
+        android:textColor="@color/text_primary"
+        android:textSize="26sp"
         android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tmrIcon" />
 
+    <!-- ═══ Goal Label ═══ -->
     <TextView
         android:id="@+id/chooseGoalLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="32dp"
-        android:text="Choose goal here"
-        android:textColor="#FFFFFF"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:layout_marginTop="24dp"
+        android:background="@drawable/bg_premium_pill"
+        android:fontFamily="sans-serif"
+        android:letterSpacing="0.08"
+        android:paddingHorizontal="18dp"
+        android:paddingVertical="8dp"
+        android:text="CHOOSE GOAL"
+        android:textColor="@color/accent_teal"
+        android:textSize="11sp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tmrTitle" />
 
-    <!-- Goal Cards -->
+    <!-- ═══ Goal Cards ═══ -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="20dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintTop_toBottomOf="@id/chooseGoalLabel">
 
-        <TextView
+        <!-- Skill Developing -->
+        <LinearLayout
             android:id="@+id/btnLearning"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/card_background"
-            android:padding="24dp"
-            android:text="Learning &amp; Memory"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:drawableStartCompat="@drawable/ic_learning"
-            android:drawablePadding="16dp"
-            app:drawableTint="#00BFA5"/>
+            android:layout_height="100dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_premium_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp">
 
-        <TextView
-            android:id="@+id/btnAddiction"
+            <View
+                android:layout_width="4dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/accent_teal" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Skill Developing"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Enhance learning retention"
+                    android:textColor="@color/text_faint"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_forward"
+                app:tint="@color/accent_teal" />
+        </LinearLayout>
+
+        <!-- Bad Addiction -->
+        <LinearLayout
+            android:id="@+id/btnAilment"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:background="@drawable/card_background"
-            android:padding="24dp"
-            android:text="Bad Addiction &amp; Bad habits"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:drawableStartCompat="@drawable/ic_addiction"
-            android:drawablePadding="16dp"
-            app:drawableTint="#00BFA5"/>
+            android:layout_height="100dp"
+            android:layout_marginBottom="12dp"
+            android:background="@drawable/bg_premium_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp">
 
-        <TextView
+            <View
+                android:layout_width="4dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/status_warning" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Bad Addiction &amp; Habits"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Break negative patterns"
+                    android:textColor="@color/text_faint"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_forward"
+                app:tint="@color/accent_teal" />
+        </LinearLayout>
+
+        <!-- Study Material -->
+        <LinearLayout
             android:id="@+id/btnSavedReports"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/card_background"
-            android:padding="24dp"
-            android:text="View Saved Reports"
-            android:textColor="#FFFFFF"
-            android:textSize="18sp"
-            android:textStyle="bold"
-            app:drawableStartCompat="@drawable/ic_reports"
-            android:drawablePadding="16dp"
-            app:drawableTint="#00BFA5"/>
+            android:layout_height="100dp"
+            android:background="@drawable/bg_premium_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="24dp">
+
+            <View
+                android:layout_width="4dp"
+                android:layout_height="48dp"
+                android:layout_marginEnd="16dp"
+                android:background="@color/accent_bright" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="sans-serif"
+                    android:text="Study Material"
+                    android:textColor="@color/text_primary"
+                    android:textSize="17sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:fontFamily="sans-serif-light"
+                    android:text="Concepts, flashcards &amp; quizzes"
+                    android:textColor="@color/text_faint"
+                    android:textSize="12sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_arrow_forward"
+                app:tint="@color/accent_teal" />
+        </LinearLayout>
 
     </LinearLayout>
 

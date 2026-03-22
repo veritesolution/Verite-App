@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Send
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -71,7 +71,7 @@ fun VoiceAssistantButton(
                     .background(
                         brush = Brush.radialGradient(
                             colors = listOf(
-                                TealPrimary.copy(alpha = alpha),
+                                AccentPrimary.copy(alpha = alpha),
                                 Color.Transparent
                             )
                         )
@@ -87,9 +87,9 @@ fun VoiceAssistantButton(
                 .background(
                     brush = Brush.linearGradient(
                         colors = if (isListening) {
-                            listOf(TealPrimary, TealSecondary)
+                            listOf(AccentPrimary, AccentSecondary)
                         } else {
-                            listOf(CardBackground, CardBackgroundDark)
+                            listOf(NodeBgInactive, NodeBgInactive)
                         }
                     )
                 ),
@@ -98,7 +98,7 @@ fun VoiceAssistantButton(
             Icon(
                 imageVector = Icons.Default.Mic,
                 contentDescription = "Voice Assistant",
-                tint = if (isListening) Color.White else TealPrimary,
+                tint = if (isListening) Color.White else AccentPrimary,
                 modifier = Modifier.size(28.dp)
             )
         }
@@ -158,7 +158,7 @@ fun VoiceAssistantOverlay(
                         Text(
                             text = "Try these commands:",
                             fontSize = 14.sp,
-                            color = TealSecondary,
+                            color = AccentSecondary,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
                         
@@ -166,7 +166,7 @@ fun VoiceAssistantOverlay(
                             Text(
                                 text = "• $suggestion",
                                 fontSize = 12.sp,
-                                color = TextSecondary,
+                                color = TextMuted,
                                 modifier = Modifier.padding(vertical = 2.dp)
                             )
                         }
@@ -180,7 +180,7 @@ fun VoiceAssistantOverlay(
                             .fillMaxWidth(0.8f)
                             .padding(horizontal = 24.dp),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                        color = CardBackground
+                        color = NodeBgInactive
                     ) {
                         Text(
                             text = recognizedText,
@@ -204,7 +204,7 @@ fun VoiceAssistantOverlay(
                         .fillMaxWidth(0.85f)
                         .padding(top = 16.dp),
                     shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
-                    color = CardBackground
+                    color = NodeBgInactive
                 ) {
                     Row(
                         modifier = Modifier.padding(8.dp),
@@ -216,7 +216,7 @@ fun VoiceAssistantOverlay(
                             placeholder = { 
                                 Text(
                                     "Type command here...",
-                                    color = TextSecondary
+                                    color = TextMuted
                                 ) 
                             },
                             colors = TextFieldDefaults.colors(
@@ -224,7 +224,7 @@ fun VoiceAssistantOverlay(
                                 unfocusedContainerColor = Color.Transparent,
                                 focusedTextColor = TextPrimary,
                                 unfocusedTextColor = TextPrimary,
-                                cursorColor = TealPrimary,
+                                cursorColor = AccentPrimary,
                                 focusedIndicatorColor = Color.Transparent,
                                 unfocusedIndicatorColor = Color.Transparent
                             ),
@@ -241,10 +241,10 @@ fun VoiceAssistantOverlay(
                             },
                             modifier = Modifier
                                 .size(40.dp)
-                                .background(TealPrimary, androidx.compose.foundation.shape.CircleShape)
+                                .background(AccentPrimary, androidx.compose.foundation.shape.CircleShape)
                         ) {
                             Icon(
-                                imageVector = Icons.Default.Send,
+                                imageVector = Icons.AutoMirrored.Filled.Send,
                                 contentDescription = "Send",
                                 tint = Color.White,
                                 modifier = Modifier.size(20.dp)
@@ -291,7 +291,7 @@ private fun VoiceWaveAnimation(
                     .clip(androidx.compose.foundation.shape.RoundedCornerShape(3.dp))
                     .background(
                         brush = Brush.verticalGradient(
-                            colors = listOf(TealPrimary, TealSecondary)
+                            colors = listOf(AccentPrimary, AccentSecondary)
                         )
                     )
             )

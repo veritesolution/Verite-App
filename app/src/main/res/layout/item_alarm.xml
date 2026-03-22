@@ -3,54 +3,89 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="12dp"
-    app:cardBackgroundColor="#1A1A1A"
-    app:cardCornerRadius="16dp"
+    android:layout_marginBottom="16dp"
+    app:cardBackgroundColor="@android:color/transparent"
+    app:cardCornerRadius="24dp"
     app:cardElevation="0dp">
 
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="20dp">
+        android:padding="20dp"
+        android:background="@drawable/sleep_stat_card_bg">
 
-        <LinearLayout
-            android:id="@+id/timeContainer"
+        <TextView
+            android:id="@+id/tvAlarmLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_alignParentStart="true"
-            android:layout_centerVertical="true">
+            android:text="Alarm Set"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_alignParentTop="true"
+            android:layout_alignParentStart="true" />
+
+        <ImageView
+            android:layout_width="16dp"
+            android:layout_height="16dp"
+            android:layout_marginStart="8dp"
+            android:src="@drawable/ic_arrow_back"
+            android:rotation="180"
+            app:tint="#80FFFFFF"
+            android:layout_toEndOf="@id/tvAlarmLabel"
+            android:layout_alignTop="@id/tvAlarmLabel"
+            android:layout_alignBottom="@id/tvAlarmLabel" />
+
+        <LinearLayout
+            android:id="@+id/timeGrid"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/tvAlarmLabel"
+            android:layout_marginTop="16dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
 
             <TextView
-                android:id="@+id/tvAlarmTime"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="07:00"
+                android:id="@+id/tvAlarmHour"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@drawable/alarm_time_box_bg"
+                android:gravity="center"
+                android:text="05"
                 android:textColor="@color/white"
-                android:textSize="32sp"
+                android:textSize="24sp"
                 android:textStyle="bold" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginHorizontal="8dp"
+                android:text=":"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/tvAlarmMinute"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:background="@drawable/alarm_time_box_bg"
+                android:gravity="center"
+                android:text="30"
+                android:textColor="@color/white"
+                android:textSize="24sp"
+                android:textStyle="bold" />
+                
             <TextView
                 android:id="@+id/tvAlarmAmPm"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginStart="12dp"
                 android:text="AM"
-                android:textColor="#80FFFFFF"
+                android:textColor="@color/accent_teal"
                 android:textSize="14sp"
-                android:layout_gravity="bottom"/>
+                android:textStyle="bold" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/tvAlarmDays"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/timeContainer"
-            android:layout_marginTop="4dp"
-            android:text="Mon, Tue, Wed, Thu, Fri"
-            android:textColor="#B3FFFFFF"
-            android:textSize="12sp" />
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/switchAlarm"

@@ -11,6 +11,7 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.util.Patterns
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
@@ -105,34 +106,20 @@ class SignUpActivity : AppCompatActivity() {
         }
         headerLayout.addView(backButton)
         
-        // App title with two-tone color
+        // App title with branded logo style
         val titleText = TextView(this).apply {
             id = View.generateViewId()
             textSize = 24f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
-            val spannable = SpannableString("Vérité")
-            spannable.setSpan(
-                ForegroundColorSpan(Color.WHITE),
-                0,
-                2,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            spannable.setSpan(
-                ForegroundColorSpan(Color.parseColor("#00BFA5")),
-                2,
-                6,
-                Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
-            )
-            
-            setText(spannable)
             layoutParams = LinearLayout.LayoutParams(
                 0,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
                 1f
             )
         }
+        com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(titleText)
         headerLayout.addView(titleText)
         
         // Icon (two pill shapes)
@@ -478,6 +465,22 @@ class SignUpActivity : AppCompatActivity() {
                 val password = passwordInput.text.toString().trim()
 
                 if (name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) {
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Toast.makeText(
+                            this@SignUpActivity,
+                            "Please enter a valid email address",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@setOnClickListener
+                    }
+                    if (password.length < 6) {
+                        Toast.makeText(
+                            this@SignUpActivity,
+                            "Password must be at least 6 characters",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@setOnClickListener
+                    }
                     if (termsCheckbox.isChecked) {
                         lifecycleScope.launch {
                             val result = authManager.signUp(email, password, name)

@@ -7,4 +7,12 @@
         <item name="android:windowBackground">@color/dark_background</item>
         <item name="android:textColor">@android:color/white</item>
     </style>
+
+    <style name="Theme.Verite.TimePicker" parent="Theme.AppCompat">
+        <item name="colorAccent">@color/accent_teal</item>
+        <item name="android:textColorPrimary">@color/white</item>
+        <item name="android:textColorSecondary">#B3FFFFFF</item>
+        <item name="colorControlNormal">@color/white</item>
+        <item name="colorControlActivated">@color/accent_teal</item>
+    </style>
 </resources>

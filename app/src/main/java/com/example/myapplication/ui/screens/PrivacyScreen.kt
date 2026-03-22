@@ -21,6 +21,7 @@ import com.example.myapplication.ui.theme.*
 @Composable
 fun PrivacyScreen(
     onBackClick: () -> Unit,
+    onProfileClick: () -> Unit = {},
     onNavigateToDashboard: () -> Unit
 ) {
     var agreed by remember { mutableStateOf(false) }
@@ -28,9 +29,9 @@ fun PrivacyScreen(
 
     Scaffold(
         topBar = {
-            VeriteTopBar(onBackClick = onBackClick)
+            VeriteTopBar(onBackClick = onBackClick, onProfileClick = onProfileClick)
         },
-        containerColor = DarkBackground
+        containerColor = Background
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -40,15 +41,15 @@ fun PrivacyScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Surface(
-                color = CardBackground.copy(alpha = 0.5f),
+                color = NodeBgInactive.copy(alpha = 0.5f),
                 shape = RoundedCornerShape(16.dp),
                 modifier = Modifier.padding(bottom = 24.dp)
             ) {
                 Text(
-                    text = "Bad Addiction & Bad habits",
+                    text = "Ailments & Recovery",
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.bodyMedium
+                    color = AccentPrimary,
+                    style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold)
                 )
             }
 
@@ -57,9 +58,9 @@ fun PrivacyScreen(
                     .fillMaxWidth()
                     .weight(1f)
                     .padding(vertical = 8.dp),
-                color = CardBackground.copy(alpha = 0.3f),
+                color = NodeBgInactive.copy(alpha = 0.3f),
                 shape = RoundedCornerShape(24.dp),
-                border = androidx.compose.foundation.BorderStroke(1.dp, TealPrimary.copy(alpha = 0.3f))
+                border = androidx.compose.foundation.BorderStroke(1.dp, AccentPrimary.copy(alpha = 0.3f))
             ) {
                 Column(
                     modifier = Modifier
@@ -74,7 +75,7 @@ fun PrivacyScreen(
                     Text(
                         text = "Last Updated: [1.1]",
                         style = MaterialTheme.typography.bodySmall,
-                        color = TextSecondary,
+                        color = TextMuted,
                         modifier = Modifier.padding(vertical = 4.dp)
                     )
                     
@@ -96,7 +97,7 @@ fun PrivacyScreen(
                     Text(
                         text = "When you create or update your profile, we may collect:\n• Name, email address, and profile photo\n• Contact details you choose to share\n• Other optional information (e.g., bio, preferences)",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
+                        color = TextMuted,
                         modifier = Modifier.padding(top = 8.dp)
                     )
 
@@ -110,7 +111,7 @@ fun PrivacyScreen(
                     Text(
                         text = "Your information is used to:\n• Display your profile details to you and, if applicable, to other users\n• Improve our services and personalize your experience\n• Communicate important updates about your account or our products",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = TextSecondary,
+                        color = TextMuted,
                         modifier = Modifier.padding(top = 8.dp)
                     )
                 }
@@ -122,7 +123,7 @@ fun PrivacyScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
-                color = CardBackground,
+                color = NodeBgInactive,
                 shape = RoundedCornerShape(30.dp)
             ) {
                 Row(
@@ -142,9 +143,9 @@ fun PrivacyScreen(
                         checked = agreed,
                         onCheckedChange = { agreed = it },
                         colors = CheckboxDefaults.colors(
-                            checkedColor = TealPrimary,
-                            uncheckedColor = TextSecondary,
-                            checkmarkColor = DarkBackground
+                            checkedColor = AccentPrimary,
+                            uncheckedColor = TextMuted,
+                            checkmarkColor = Background
                         )
                     )
                 }
@@ -158,12 +159,12 @@ fun PrivacyScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = TealPrimary),
+                    colors = ButtonDefaults.buttonColors(containerColor = AccentPrimary),
                     shape = RoundedCornerShape(30.dp)
                 ) {
                     Text(
                         text = "Continue",
-                        color = DarkBackground,
+                        color = Background,
                         fontWeight = FontWeight.Bold
                     )
                 }

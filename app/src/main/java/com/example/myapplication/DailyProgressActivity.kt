@@ -32,7 +32,7 @@ class DailyProgressActivity : ComponentActivity() {
                     setContent {
                         VeriteTheme {
                             DailyProgressScreen(
-                                addictionType = plan.addictionType,
+                                ailmentType = plan.ailmentType,
                                 currentDay = plan.currentDay,
                                 dailyFocusMinutes = plan.dailyFocusMinutes,
                                 completedFocusMinutes = plan.completedFocusMinutes,
@@ -41,6 +41,9 @@ class DailyProgressActivity : ComponentActivity() {
                                     plan.currentDay
                                 ),
                                 onBackClick = { finish() },
+                                onProfileClick = {
+                                    startActivity(android.content.Intent(this@DailyProgressActivity, ProfileActivity::class.java))
+                                },
                                 onViewTaskClick = {
                                     Toast.makeText(this@DailyProgressActivity, "Detailed tasks coming soon!", Toast.LENGTH_SHORT).show()
                                 },

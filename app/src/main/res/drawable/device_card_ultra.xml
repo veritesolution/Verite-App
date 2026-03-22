@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Glowing Cyan Border/Background Layer -->
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="135"
+                android:endColor="#1A00BFA5"
+                android:startColor="#6600BFA5"
+                android:type="linear" />
+            <corners android:radius="28dp" />
+        </shape>
+    </item>
+
+    <!-- Faux Glassmorphic Black Tint Layer Inset by 1dp to show glow edge -->
+    <item
+        android:bottom="1dp"
+        android:left="1dp"
+        android:right="1dp"
+        android:top="1dp">
+        <shape android:shape="rectangle">
+            <!-- Very dark transparent tint, overlapping the cyan for glass effect -->
+            <solid android:color="#F2030F0D" />
+            <corners android:radius="27dp" />
+        </shape>
+    </item>
+
+</layer-list>
