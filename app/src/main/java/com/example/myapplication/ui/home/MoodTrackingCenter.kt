@@ -21,7 +21,6 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.MoodEntry
 import com.example.myapplication.ui.theme.AccentPrimary
-import com.example.myapplication.ui.theme.DarkSlate
 import com.example.myapplication.ui.theme.outfitFamily
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -134,7 +133,7 @@ fun MoodOption(emoji: String, value: Float, onClick: (Float) -> Unit) {
         modifier = Modifier
             .size(38.dp)
             .clip(CircleShape)
-            .background(DarkSlate)
+            .background(Color(0xFF0F1B1A))
             .border(1.dp, AccentPrimary.copy(alpha = 0.4f), CircleShape)
             .clickable { onClick(value) },
         contentAlignment = Alignment.Center
@@ -174,7 +173,7 @@ fun MoodDisplay(mood: MoodEntry?, onClick: () -> Unit) {
             modifier = Modifier
                 .size(64.dp)
                 .clip(CircleShape)
-                .background(DarkSlate)
+                .background(Color(0xFF0F1B1A))
                 .border(2.dp, AccentPrimary.copy(alpha = 0.6f), CircleShape),
             contentAlignment = Alignment.Center
         ) {
