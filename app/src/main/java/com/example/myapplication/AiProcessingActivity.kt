@@ -22,7 +22,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.myapplication.ui.home.HeadbandCenter
+import androidx.compose.material3.Icon
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.AccentPrimary
 import com.example.myapplication.ui.theme.VeriteTheme
@@ -173,7 +175,12 @@ fun AiProcessingScreen(onComplete: () -> Unit) {
             
             // Logo overlay matching Headband home page styling centrally
             if (progressRatio > 0.3f) {
-                HeadbandCenter()
+                Icon(
+                    imageVector = androidx.compose.material.icons.Icons.Default.AutoAwesome,
+                    contentDescription = "AI Processing",
+                    tint = AccentPrimary,
+                    modifier = Modifier.size(120.dp)
+                )
             }
 
             // Header Text Block

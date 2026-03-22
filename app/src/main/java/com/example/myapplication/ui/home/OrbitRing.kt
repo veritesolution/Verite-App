@@ -266,7 +266,7 @@ fun OrbitRing(
         }
 
         // --- Center Illustration ---
-        HeadbandCenter()
+        MoodTrackingCenter()
 
         // --- Feature Nodes ---
         featuresList.forEachIndexed { index, feature ->
