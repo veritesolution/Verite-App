@@ -30,7 +30,6 @@ import com.example.myapplication.utils.VoiceOutputHandler
 import com.example.myapplication.utils.VoiceCommandProcessor
 import com.example.myapplication.utils.FullVoiceCommandProcessor
 import com.example.myapplication.utils.FullVoiceCommandProcessor.FullIntent
-import com.example.myapplication.ml.LlmVoiceProcessor
 import com.example.myapplication.ui.tasks.TaskDetailScreen
 import com.example.myapplication.ui.todo.TodoMainScreen
 import com.example.myapplication.viewmodel.TodoViewModel
@@ -38,7 +37,6 @@ import com.example.myapplication.ui.settings.SettingsViewModel
 import com.example.myapplication.data.model.VoiceCommandResult
 import com.example.myapplication.data.model.Intent
 import com.example.myapplication.data.model.Task
-import android.widget.Toast
 
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
