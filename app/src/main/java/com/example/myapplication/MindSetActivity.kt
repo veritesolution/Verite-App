@@ -51,6 +51,11 @@ class MindSetActivity : ComponentActivity() {
     private lateinit var voiceInputHandler: VoiceInputHandler
     private lateinit var voiceOutputHandler: VoiceOutputHandler
 
+    companion object {
+        private const val TAG = "MindSetActivity"
+        private const val EXTRA_ACTIVATE_VOICE = "ACTIVATE_VOICE"
+    }
+
     private val settingsViewModel: SettingsViewModel by viewModels()
 
     private val requestPermissionLauncher = registerForActivityResult(
@@ -72,7 +77,7 @@ class MindSetActivity : ComponentActivity() {
             voiceInputHandler.initialize()
             voiceOutputHandler.initialize()
         } catch (e: Exception) {
-            Log.e("MindSetActivity", "Error initializing voice handlers", e)
+            Log.e(TAG, "Error initializing voice handlers", e)
         }
 
         handleVoiceIntent(intent)
@@ -406,7 +411,7 @@ class MindSetActivity : ComponentActivity() {
     }
 
     private fun handleVoiceIntent(intent: android.content.Intent?) {
-        if (intent?.getBooleanExtra("ACTIVATE_VOICE", false) == true) {
+        if (intent?.getBooleanExtra(EXTRA_ACTIVATE_VOICE, false) == true) {
             voiceInputHandler.startListening()
         }
     }
@@ -454,7 +459,7 @@ class MindSetActivity : ComponentActivity() {
                 stopService(serviceIntent)
             }
         } catch (e: Exception) {
-            Log.e("MindSetActivity", "Error toggling wake word service", e)
+            Log.e(TAG, "Error toggling wake word service", e)
         }
     }
 
