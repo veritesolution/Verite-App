@@ -34,10 +34,7 @@ class WelcomeActivity2 : AppCompatActivity() {
         // 1. Background Video
         val videoView = android.widget.VideoView(this).apply {
             id = View.generateViewId()
-            layoutParams = ConstraintLayout.LayoutParams(
-                ConstraintLayout.LayoutParams.MATCH_PARENT,
-                ConstraintLayout.LayoutParams.MATCH_PARENT
-            )
+            layoutParams = ConstraintLayout.LayoutParams(0, 0)
         }
         rootLayout.addView(videoView, 0)
 
@@ -47,26 +44,23 @@ class WelcomeActivity2 : AppCompatActivity() {
             mp.isLooping = true
             mp.setVolume(0f, 0f) // Mute audio
             
-            // Bypass letterboxing by resizing the VideoView larger than the screen
+            // Bypass letterboxing by zooming the VideoView symmetrically
             videoView.post {
                 val videoWidth = mp.videoWidth.toFloat()
                 val videoHeight = mp.videoHeight.toFloat()
                 if (videoWidth == 0f || videoHeight == 0f) return@post
                 
-                val videoProportion = videoWidth / videoHeight
-                val screenWidth = rootLayout.width.toFloat()
-                val screenHeight = rootLayout.height.toFloat()
-                val screenProportion = screenWidth / screenHeight
+                val videoRatio = videoWidth / videoHeight
+                val screenRatio = videoView.width.toFloat() / videoView.height.toFloat()
                 
-                val lp = videoView.layoutParams
-                if (videoProportion > screenProportion) {
-                    lp.width = (screenHeight * videoProportion).toInt()
-                    lp.height = screenHeight.toInt()
+                val scale = videoRatio / screenRatio
+                if (scale >= 1f) {
+                    videoView.scaleX = scale
+                    videoView.scaleY = 1f
                 } else {
-                    lp.width = screenWidth.toInt()
-                    lp.height = (screenWidth / videoProportion).toInt()
+                    videoView.scaleX = 1f
+                    videoView.scaleY = 1f / scale
                 }
-                videoView.layoutParams = lp
             }
             mp.start()
         }
