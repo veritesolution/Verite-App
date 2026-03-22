@@ -32,15 +32,23 @@ class WelcomeActivity2 : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#1B4D4B"))
         }
         
-        // Create gradient background
-        val gradientDrawable = android.graphics.drawable.GradientDrawable(
-            android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-            intArrayOf(
-                Color.parseColor("#1B4D4B"),
-                Color.parseColor("#004d4d")
+        // Add a VideoView to play background_video.mp4 as background
+        val videoView = android.widget.VideoView(this).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.MATCH_PARENT
             )
-        )
-        rootLayout.background = gradientDrawable
+        }
+        rootLayout.addView(videoView, 0)
+
+        val uri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.background_video)
+        videoView.setVideoURI(uri)
+        videoView.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            mp.setVideoScalingMode(android.media.MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
+        }
+        videoView.start()
         
         // "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
