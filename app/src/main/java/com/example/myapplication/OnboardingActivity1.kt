@@ -19,6 +19,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 
+/*OnboardingActivity1 class */
+
 class OnboardingActivity1 : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
