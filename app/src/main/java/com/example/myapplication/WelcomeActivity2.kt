@@ -21,6 +21,9 @@ class WelcomeActivity2 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Ensure edge-to-edge display
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         // Create root ConstraintLayout
         val rootLayout = ConstraintLayout(this).apply {
             id = View.generateViewId()
@@ -53,14 +56,14 @@ class WelcomeActivity2 : AppCompatActivity() {
                 val videoRatio = videoWidth / videoHeight
                 val screenRatio = videoView.width.toFloat() / videoView.height.toFloat()
                 
-                val scale = videoRatio / screenRatio
-                if (scale >= 1f) {
-                    videoView.scaleX = scale
-                    videoView.scaleY = 1f
+                val scale = if (videoRatio >= screenRatio) {
+                    videoRatio / screenRatio
                 } else {
-                    videoView.scaleX = 1f
-                    videoView.scaleY = 1f / scale
+                    screenRatio / videoRatio
                 }
+                
+                videoView.scaleX = scale
+                videoView.scaleY = scale
             }
             mp.start()
         }

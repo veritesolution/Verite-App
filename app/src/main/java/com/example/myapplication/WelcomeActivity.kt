@@ -29,6 +29,9 @@ class WelcomeActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Ensure edge-to-edge display
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         authManager = AuthManager(this)
         val database = AppDatabase.getDatabase(this)
         deviceRepository = DeviceRepository(database.deviceDao())
@@ -83,14 +86,14 @@ class WelcomeActivity : AppCompatActivity() {
                 val videoRatio = videoWidth / videoHeight
                 val screenRatio = videoView.width.toFloat() / videoView.height.toFloat()
                 
-                val scale = videoRatio / screenRatio
-                if (scale >= 1f) {
-                    videoView.scaleX = scale
-                    videoView.scaleY = 1f
+                val scale = if (videoRatio >= screenRatio) {
+                    videoRatio / screenRatio
                 } else {
-                    videoView.scaleX = 1f
-                    videoView.scaleY = 1f / scale
+                    screenRatio / videoRatio
                 }
+                
+                videoView.scaleX = scale
+                videoView.scaleY = scale
             }
             mp.start()
         }
