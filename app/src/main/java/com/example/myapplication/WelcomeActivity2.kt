@@ -67,9 +67,9 @@ class WelcomeActivity2 : AppCompatActivity() {
         // "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
             id = View.generateViewId()
-            text = "Welcoming you to"
-            textSize = 18f
-            setTypeface(null, Typeface.NORMAL)
+            text = "Welcoming you\nto"
+            textSize = 32f
+            setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             layoutParams = ConstraintLayout.LayoutParams(
@@ -82,7 +82,7 @@ class WelcomeActivity2 : AppCompatActivity() {
         // "Vérité" TextView with branded logo style
         val veriteText = TextView(this).apply {
             id = View.generateViewId()
-            textSize = 48f
+            textSize = 56f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
@@ -124,7 +124,7 @@ class WelcomeActivity2 : AppCompatActivity() {
             ConstraintSet.TOP,
             ConstraintSet.PARENT_ID,
             ConstraintSet.TOP,
-            dpToPx(200)
+            dpToPx(120)
         )
         constraintSet.centerHorizontally(welcomingText.id, ConstraintSet.PARENT_ID)
         
@@ -134,17 +134,17 @@ class WelcomeActivity2 : AppCompatActivity() {
             ConstraintSet.TOP,
             welcomingText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(40)
+            dpToPx(70)
         )
         constraintSet.centerHorizontally(veriteText.id, ConstraintSet.PARENT_ID)
         
         // Constrain tagline
         constraintSet.connect(
             taglineText.id,
-            ConstraintSet.TOP,
-            veriteText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(100)
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.BOTTOM,
+            dpToPx(120)
         )
         constraintSet.centerHorizontally(taglineText.id, ConstraintSet.PARENT_ID)
         
