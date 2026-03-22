@@ -32,6 +32,13 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         private val LED_CONTROL_UUID = UUID.fromString("cba1d466-344c-4be3-ab3f-189f80dd7518")
         private val MOTOR_CONTROL_UUID = UUID.fromString("f9279c99-b7b3-4e9e-b0dd-e4e2c95e9ad3")
         private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+
+        private const val STATUS_SCANNING = "🔍 Scanning for \"%s\"..."
+        private const val STATUS_FOUND = "📡 Found %s — connecting..."
+        private const val STATUS_CONNECTED = "🟢 Connected — receiving live data"
+        private const val STATUS_DISCONNECTED = "🔴 Disconnected"
+        private const val STATUS_RECONNECTING = "🔄 Connection lost — reconnecting..."
+        private const val STATUS_NOT_FOUND = "⏱ Not found — tap Scan to retry"
     }
 
 
@@ -214,12 +221,12 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
 
         isScanning = true
         btnScan.text = "Stop Scan"
-        setStatus("🔍 Scanning for \"$DEVICE_NAME\"...")
+        setStatus(STATUS_SCANNING.format(DEVICE_NAME))
 
         bleScanner?.startScan(listOf(filter), settings, scanCallback)
 
         mainHandler.postDelayed({
-            if (isScanning) { stopScan(); setStatus("⏱ Not found — tap Scan to retry") }
+            if (isScanning) { stopScan(); setStatus(STATUS_NOT_FOUND) }
         }, SCAN_TIMEOUT_MS)
     }
 
@@ -246,7 +253,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             stopScan()
             lastDevice = result.device
-            setStatus("📡 Found BioWearable — connecting...")
+            setStatus(STATUS_FOUND.format(DEVICE_NAME))
             connectToDevice(result.device)
         }
         override fun onScanFailed(errorCode: Int) {
@@ -266,6 +273,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            Log.d(TAG, "onConnectionStateChange: status=$status, newState=$newState")
             when {
                 newState == BluetoothProfile.STATE_CONNECTED -> {
                     gatt.requestMtu(185)
@@ -275,14 +283,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
                     bluetoothGatt = null; ledChar = null; motorChar = null
 
                     runOnUiThread {
-                        setStatus("🔴 Disconnected")
+                        setStatus(STATUS_DISCONNECTED)
                         setControlsEnabled(false)
                         btnScan.isEnabled = true
                         cardImu.visibility = View.GONE
                     }
 
                     if (!userDisconnect && lastDevice != null) {
-                        runOnUiThread { setStatus("🔄 Connection lost — reconnecting...") }
+                        runOnUiThread { setStatus(STATUS_RECONNECTING) }
                         mainHandler.postDelayed({
                             lastDevice?.let { connectToDevice(it) }
                         }, RECONNECT_DELAY)
@@ -292,6 +300,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            Log.d(TAG, "onMtuChanged: mtu=$mtu, status=$status")
             gatt.discoverServices()
         }
 
@@ -326,10 +335,11 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
             } ?: Log.e(TAG, "Sensor data characteristic not found")
 
             runOnUiThread {
-                setStatus("🟢 Connected — receiving live data")
+                setStatus(STATUS_CONNECTED)
                 setControlsEnabled(true)
                 lastRateTime = System.currentTimeMillis()
                 packetCount = 0
+            }
             }
         }
 
@@ -583,7 +593,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         bluetoothGatt = null
         setControlsEnabled(false)
         btnScan.isEnabled = true
-        setStatus("🔴 Disconnected")
+        setStatus(STATUS_DISCONNECTED)
     }
 
     private fun setStatus(msg: String) { tvStatus.text = msg }
