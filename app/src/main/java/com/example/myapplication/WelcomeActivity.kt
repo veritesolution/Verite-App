@@ -63,22 +63,52 @@ class WelcomeActivity : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#004d4d"))
         }
         
-        // Create gradient background drawable programmatically
-        val gradientDrawable = android.graphics.drawable.GradientDrawable(
-            android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-            intArrayOf(
-                Color.parseColor("#004d4d"),
-                Color.parseColor("#009688")
+        // Add a VideoView to play background_video.mp4 as background
+        val videoView = android.widget.VideoView(this).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(
+                ConstraintLayout.LayoutParams.MATCH_PARENT,
+                ConstraintLayout.LayoutParams.MATCH_PARENT
             )
-        )
-        rootLayout.background = gradientDrawable
+        }
+        rootLayout.addView(videoView, 0)
+
+        val uri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.background_video)
+        videoView.setVideoURI(uri)
+        videoView.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            mp.setVolume(0f, 0f) // Mute audio
+            
+            // Bypass letterboxing by resizing the VideoView larger than the screen
+            videoView.post {
+                val videoWidth = mp.videoWidth.toFloat()
+                val videoHeight = mp.videoHeight.toFloat()
+                if (videoWidth == 0f || videoHeight == 0f) return@post
+                
+                val videoProportion = videoWidth / videoHeight
+                val screenWidth = rootLayout.width.toFloat()
+                val screenHeight = rootLayout.height.toFloat()
+                val screenProportion = screenWidth / screenHeight
+                
+                val lp = videoView.layoutParams
+                if (videoProportion > screenProportion) {
+                    lp.width = (screenHeight * videoProportion).toInt()
+                    lp.height = screenHeight.toInt()
+                } else {
+                    lp.width = screenWidth.toInt()
+                    lp.height = (screenWidth / videoProportion).toInt()
+                }
+                videoView.layoutParams = lp
+            }
+            mp.start()
+        }
         
         // "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
             id = View.generateViewId()
-            text = "Welcoming you to"
-            textSize = 18f
-            setTypeface(null, Typeface.NORMAL)
+            text = "Welcoming you\nto"
+            textSize = 32f
+            setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             layoutParams = ConstraintLayout.LayoutParams(
@@ -91,7 +121,7 @@ class WelcomeActivity : AppCompatActivity() {
         // "Vérité" TextView with branded logo style
         val veriteText = TextView(this).apply {
             id = View.generateViewId()
-            textSize = 48f
+            textSize = 56f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
@@ -109,7 +139,12 @@ class WelcomeActivity : AppCompatActivity() {
             text = "→"
             textSize = 24f
             setTextColor(Color.parseColor("#009688"))
-            setBackgroundColor(Color.BLACK)
+            
+            val circularBackground = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(Color.BLACK)
+            }
+            background = circularBackground
             
             // Make it circular
             val size = dpToPx(64)
@@ -132,7 +167,7 @@ class WelcomeActivity : AppCompatActivity() {
             ConstraintSet.TOP,
             ConstraintSet.PARENT_ID,
             ConstraintSet.TOP,
-            dpToPx(200)
+            dpToPx(120)
         )
         constraintSet.connect(
             welcomingText.id,
@@ -156,7 +191,7 @@ class WelcomeActivity : AppCompatActivity() {
             ConstraintSet.TOP,
             welcomingText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(40)
+            dpToPx(70)
         )
         constraintSet.centerHorizontally(veriteText.id, ConstraintSet.PARENT_ID)
         
@@ -169,6 +204,12 @@ class WelcomeActivity : AppCompatActivity() {
             dpToPx(80)
         )
         constraintSet.centerHorizontally(nextButton.id, ConstraintSet.PARENT_ID)
+        
+        // Constrain VideoView to fill parent
+        constraintSet.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
         
         constraintSet.applyTo(rootLayout)
         

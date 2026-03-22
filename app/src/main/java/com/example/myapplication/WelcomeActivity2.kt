@@ -33,22 +33,46 @@ class WelcomeActivity2 : AppCompatActivity() {
         }
         
 
-        /*Create gradient background*/
-        val gradientDrawable = android.graphics.drawable.GradientDrawable(
-            android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
-            intArrayOf(
-                Color.parseColor("#1B4D4B"),
-                Color.parseColor("#004d4d")
             )
-        )
-        rootLayout.background = gradientDrawable
+        }
+        rootLayout.addView(videoView, 0)
+
+        val uri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.background_video)
+        videoView.setVideoURI(uri)
+        videoView.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            mp.setVolume(0f, 0f) // Mute audio
+            
+            // Bypass letterboxing by resizing the VideoView larger than the screen
+            videoView.post {
+                val videoWidth = mp.videoWidth.toFloat()
+                val videoHeight = mp.videoHeight.toFloat()
+                if (videoWidth == 0f || videoHeight == 0f) return@post
+                
+                val videoProportion = videoWidth / videoHeight
+                val screenWidth = rootLayout.width.toFloat()
+                val screenHeight = rootLayout.height.toFloat()
+                val screenProportion = screenWidth / screenHeight
+                
+                val lp = videoView.layoutParams
+                if (videoProportion > screenProportion) {
+                    lp.width = (screenHeight * videoProportion).toInt()
+                    lp.height = screenHeight.toInt()
+                } else {
+                    lp.width = screenWidth.toInt()
+                    lp.height = (screenWidth / videoProportion).toInt()
+                }
+                videoView.layoutParams = lp
+            }
+            mp.start()
+        }
         
         // "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
             id = View.generateViewId()
-            text = "Welcoming you to"
-            textSize = 18f
-            setTypeface(null, Typeface.NORMAL)
+            text = "Welcoming you\nto"
+            textSize = 32f
+            setTypeface(null, Typeface.BOLD)
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             layoutParams = ConstraintLayout.LayoutParams(
@@ -61,7 +85,7 @@ class WelcomeActivity2 : AppCompatActivity() {
         // "Vérité" TextView with branded logo style
         val veriteText = TextView(this).apply {
             id = View.generateViewId()
-            textSize = 48f
+            textSize = 56f
             setTypeface(null, Typeface.BOLD)
             gravity = Gravity.CENTER
             
@@ -103,7 +127,7 @@ class WelcomeActivity2 : AppCompatActivity() {
             ConstraintSet.TOP,
             ConstraintSet.PARENT_ID,
             ConstraintSet.TOP,
-            dpToPx(200)
+            dpToPx(120)
         )
         constraintSet.centerHorizontally(welcomingText.id, ConstraintSet.PARENT_ID)
         
@@ -113,19 +137,25 @@ class WelcomeActivity2 : AppCompatActivity() {
             ConstraintSet.TOP,
             welcomingText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(40)
+            dpToPx(70)
         )
         constraintSet.centerHorizontally(veriteText.id, ConstraintSet.PARENT_ID)
         
         // Constrain tagline
         constraintSet.connect(
             taglineText.id,
-            ConstraintSet.TOP,
-            veriteText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(100)
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.BOTTOM,
+            dpToPx(120)
         )
         constraintSet.centerHorizontally(taglineText.id, ConstraintSet.PARENT_ID)
+        
+        // Constrain VideoView to fill parent
+        constraintSet.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
         
         constraintSet.applyTo(rootLayout)
         
