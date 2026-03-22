@@ -115,6 +115,11 @@ def main():
                 title = input("Task Title: ")
                 time_str = input("Time (YYYY-MM-DD HH:MM): ")
                 
+                is_priority_input = input("Is this a priority task? (y/N): ").strip().lower()
+                is_priority = is_priority_input == 'y'
+                
+                energy_level = input("Energy Level (High/Medium/Low) [Medium]: ").strip() or "Medium"
+
                 auto_migrate_input = input("Auto-migrate if incomplete? (Y/n): ").strip().lower()
                 auto_migrate = auto_migrate_input != 'n'
 
@@ -123,7 +128,7 @@ def main():
                     time_str = (datetime.now() + timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M")
                     print(f"Using default time: {time_str}")
                     
-                tm.add_task(title, time_str, auto_migrate=auto_migrate)
+                tm.add_task(title, time_str, is_priority=is_priority, energy_level=energy_level, auto_migrate=auto_migrate)
                 
             elif cmd == "list":
                 tasks = tm.get_todays_tasks()
@@ -131,8 +136,9 @@ def main():
                     print("No tasks for today.")
                 for t in tasks:
                     status = "[DONE]" if t['is_completed'] else "[TODO]"
-                    prio = "[PRIORITY]" if t.get('is_priority') else ""
-                    print(f"{status} {t['scheduled_time']} - {t['title']} {prio} (ID: {t['id']})")
+                    prio = "🔥 [PRIORITY]" if t.get('is_priority') else "  "
+                    energy = f"({t.get('energy_level', 'Medium')})"
+                    print(f"{status} {prio} {t['scheduled_time']} - {t['title']} {energy} (ID: {t['id']})")
 
             elif cmd == "complete":
                 tid = input("Task ID to complete: ")
@@ -193,6 +199,32 @@ def main():
                                 return (True, False)
                             return (False, None)
 
+                        # 3. Get Priority
+                        print("[BOT]: Is this a priority task?")
+                        is_priority = get_voice_input_with_retry(
+                            voice_handler, 
+                            "Is this a priority task? (Yes/No)", 
+                            validator=yes_no_validator
+                        )
+                        if is_priority is None: continue
+
+                        # 4. Get Energy Level
+                        def energy_validator(text):
+                            text = text.lower()
+                            for level in ["high", "medium", "low"]:
+                                if level in text:
+                                    return (True, level.capitalize())
+                            return (False, None)
+                        
+                        print("[BOT]: What energy level is required? (High, Medium, Low)")
+                        energy_level = get_voice_input_with_retry(
+                            voice_handler,
+                            "What energy level? (High, Medium, Low)",
+                            validator=energy_validator
+                        )
+                        if not energy_level: continue
+
+                        # 5. Get Auto-migrate
                         print("[BOT]: Auto-migrate if incomplete? (Yes/No)")
                         auto_migrate = get_voice_input_with_retry(
                             voice_handler, 
@@ -201,7 +233,7 @@ def main():
                         )
                         if auto_migrate is None: continue # Cancelled
                         
-                        tm.add_task(title, time_str, auto_migrate=auto_migrate)
+                        tm.add_task(title, time_str, is_priority=is_priority, energy_level=energy_level, auto_migrate=auto_migrate)
                         print(f"[OK] Task '{title}' added!")
 
                     elif cmd_type == "list":
@@ -211,7 +243,9 @@ def main():
                             print("No tasks for today.")
                         for t in tasks:
                             status = "[DONE]" if t['is_completed'] else "[TODO]"
-                            print(f"{status} {t['scheduled_time']} - {t['title']} (ID: {t['id']})")
+                            prio = "🔥" if t.get('is_priority') else "  "
+                            energy = f"({t.get('energy_level', 'Medium')})"
+                            print(f"{status} {prio} {t['scheduled_time']} - {t['title']} {energy} (ID: {t['id']})")
 
                     elif cmd_type == "complete":
                         # Try to complete by title from command first
