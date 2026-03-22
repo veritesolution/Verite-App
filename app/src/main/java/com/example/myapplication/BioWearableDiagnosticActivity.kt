@@ -356,13 +356,23 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     }
 
     private fun parseSensorData(data: ByteArray) {
-        if (data.size < 8) return
+        if (data.size < 8) {
+            Log.w(TAG, "Packet too short: ${data.size} bytes")
+            return
+        }
 
-        fun u16(i: Int) = ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
-        fun s16(i: Int): Short = (((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)).toShort()
+        fun u16(i: Int): Int {
+            if (i + 1 >= data.size) return 0
+            return ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
+        }
+        
+        fun s16(i: Int): Short {
+            if (i + 1 >= data.size) return 0
+            return (((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)).toShort()
+        }
 
-        val eeg1  = u16(0);  val eeg2  = u16(2)
-        val emg   = u16(4);  val pulse = u16(6)
+        val eeg1 = u16(0); val eeg2 = u16(2)
+        val emg = u16(4); val pulse = u16(6)
         latestEeg1 = eeg1; latestEeg2 = eeg2; latestEmg = emg; latestPulse = pulse
 
         val eeg1Volts = eeg1  * 3.1f / 4095f
