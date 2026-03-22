@@ -113,41 +113,19 @@ fun MyDevicesScreen(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Settings Menu
+                // Glass Container for Devices
                 Surface(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
-                    color = NodeBgInactive
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    shape = RoundedCornerShape(31.dp),
+                    color = Color(0xFF2F4949).copy(alpha = 0.30f)
                 ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp)
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(horizontal = 16.dp),
+                        contentPadding = PaddingValues(vertical = 24.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        SettingsMenuItem(
-                            icon = Icons.Default.PowerSettingsNew,
-                            title = "Auto Power Off",
-                            onClick = onNavigateToAutoPowerOff
-                        )
-                        
-                        HorizontalDivider(
-                            modifier = Modifier.padding(vertical = 8.dp),
-                            color = DividerColor
-                        )
-                        
-                        SettingsMenuItem(
-                            icon = Icons.AutoMirrored.Filled.Help,
-                            title = "Help & Feedback",
-                            onClick = onNavigateToHelpFeedback
-                        )
-                    }
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Devices List
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
                     items(devices) { device ->
                         DeviceCard(
                             device = device,
@@ -157,14 +135,15 @@ fun MyDevicesScreen(
                         )
                     }
                     
-                    // Add some spacing at the bottom
-                    item {
-                        Spacer(modifier = Modifier.height(16.dp))
+                            // Add some spacing at the bottom
+                            item {
+                                Spacer(modifier = Modifier.height(16.dp))
+                            }
+                        }
                     }
                 }
             }
         }
-    }
 }
 
 @Composable
