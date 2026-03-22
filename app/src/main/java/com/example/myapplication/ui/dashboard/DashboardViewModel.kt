@@ -1,6 +1,5 @@
 package com.example.myapplication.ui.dashboard
 
-import com.example.myapplication.Secrets
 import android.app.Application
 import androidx.lifecycle.*
 import com.example.myapplication.data.local.AppDatabase
@@ -16,6 +15,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.example.myapplication.utils.TaskClassifier
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -117,7 +117,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
                     val request = Request.Builder()
                         .url("https://api.groq.com/openai/v1/chat/completions")
-                        .addHeader("Authorization", "Bearer ${Secrets.GROQ_API_KEY}")
+                        .addHeader("Authorization", "Bearer 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")
                         .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
                         .build()
 
@@ -133,7 +133,9 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                     
                                     if (startIndex != -1 && endIndex != -1 && startIndex <= endIndex) {
                                         val cleanContent = rawContent.substring(startIndex, endIndex + 1)
+                                        Log.d("DashboardViewModel", "Clean AI Response: $cleanContent")
                                         val updatesMap = JSONObject(cleanContent)
+                                        var tasksChanged = false
                                         
                                         val updates = currentPendingTasks.mapNotNull { task ->
                                         if (updatesMap.has(task.id)) {
@@ -144,21 +146,29 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                             val finalPrio = if (newPrio in listOf("High", "Medium", "Low")) newPrio else "Medium"
                                             val finalCat = if (newCat in listOf("Work", "Personal", "Health", "Finance", "Errand")) newCat else "Personal"
                                             
+                                            tasksChanged = true
                                             task.copy(priority = finalPrio, category = finalCat)
                                         } else null
                                     }
                                     
-                                    updates.forEach { updatedTask ->
-                                        taskRepo.update(updatedTask)
-                                    }
-                                    refreshSnapshot()
-                                    withContext(Dispatchers.Main) {
-                                        Toast.makeText(getApplication(), "AI Categorization Complete!", Toast.LENGTH_SHORT).show()
+                                    if (tasksChanged) {
+                                        updates.forEach { updatedTask ->
+                                            taskRepo.update(updatedTask)
+                                        }
+                                        refreshSnapshot()
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(getApplication(), "AI Categorization Complete!", Toast.LENGTH_SHORT).show()
+                                        }
+                                    } else {
+                                        Log.e("DashboardViewModel", "AI returned valid JSON but no matching task IDs found!")
+                                        withContext(Dispatchers.Main) {
+                                            Toast.makeText(getApplication(), "Failed to update categories. Try again.", Toast.LENGTH_SHORT).show()
+                                        }
                                     }
                                 }
-                                }
-                            } else {
-                                Log.e("DashboardViewModel", "Error fetching prioritization: ${response.code}")
+                            }
+                        } else {
+                            Log.e("DashboardViewModel", "Error fetching prioritization: ${response.code}")
                                 withContext(Dispatchers.Main) {
                                     Toast.makeText(getApplication(), "AI Error: HTTP ${response.code}", Toast.LENGTH_SHORT).show()
                                 }
@@ -177,6 +187,77 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
         }
     }
 
+    /**
+     * Sends a single newly-created task to the AI for a final priority/category
+     * check.  Uses the same Groq endpoint as [autoPrioritizeTasks] but only
+     * touches the one task so we never re-classify tasks the user already edited.
+     */
+    private fun autoPrioritizeSingleTask(taskName: String) {
+        viewModelScope.launch {
+            try {
+                // Find the task we just created by its name
+                val task = taskRepo.search(taskName).firstOrNull { !it.done } ?: return@launch
+
+                val prompt = """
+                    You are a task classifier. Given a single task name, reply ONLY with a JSON object:
+                    {"priority":"<High|Medium|Low>","category":"<Work|Personal|Health|Finance|Errand|Learning|Social>"}
+                    Task: "${task.task}"
+                """.trimIndent()
+
+                val requestBodyJson = JSONObject().apply {
+                    put("model", "llama-3.1-8b-instant")
+                    put("messages", org.json.JSONArray().apply {
+                        put(JSONObject().apply {
+                            put("role", "user")
+                            put("content", prompt)
+                        })
+                    })
+                    put("response_format", JSONObject().apply { put("type", "json_object") })
+                }
+
+                val request = Request.Builder()
+                    .url("https://api.groq.com/openai/v1/chat/completions")
+                    .addHeader("Authorization", "Bearer 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")
+                    .post(requestBodyJson.toString().toRequestBody("application/json".toMediaType()))
+                    .build()
+
+                withContext(Dispatchers.IO) {
+                    client.newCall(request).execute().use { response ->
+                        if (response.isSuccessful) {
+                            val body = response.body?.string() ?: return@use
+                            val json = JSONObject(body)
+                            val rawContent = json.getJSONArray("choices")
+                                .getJSONObject(0).getJSONObject("message").getString("content")
+
+                            val start = rawContent.indexOf("{")
+                            val end   = rawContent.lastIndexOf("}")
+                            if (start == -1 || end == -1) return@use
+
+                            val result = JSONObject(rawContent.substring(start, end + 1))
+
+                            val rawPrio = result.optString("priority")
+                                .replaceFirstChar { it.uppercase() }
+                            val rawCat  = result.optString("category")
+                                .replaceFirstChar { it.uppercase() }
+
+                            val aiPriority = if (rawPrio in TaskClassifier.VALID_PRIORITIES) rawPrio else task.priority
+                            val aiCategory = if (rawCat  in TaskClassifier.VALID_CATEGORIES) rawCat  else task.category
+
+                            // Only update if the AI changed something
+                            if (aiPriority != task.priority || aiCategory != task.category) {
+                                taskRepo.update(task.copy(priority = aiPriority, category = aiCategory))
+                                refreshSnapshot()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.w("DashboardViewModel", "AI single-task classification skipped: ${e.message}")
+                // Silently ignored — local classifier result stays
+            }
+        }
+    }
+
     init {
         refreshAll()
         viewModelScope.launch {
@@ -188,12 +269,19 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
 
     // ── Task CRUD ────────────────────────────────────────────────────────────
 
-    fun createTask(name: String, category: String = "Work", priority: String = "Medium") {
+    fun createTask(name: String, category: String? = null, priority: String? = null) {
         viewModelScope.launch {
-            taskRepo.create(name, category, priority)
+            // 1. Instant offline classification — gives a smart result immediately
+            val local = TaskClassifier.classify(name)
+            val initialCategory = category ?: local.category
+            val initialPriority  = priority  ?: local.priority
+
+            taskRepo.create(name, initialCategory, initialPriority)
             refreshSnapshot()
-            kotlinx.coroutines.delay(500)
-            autoPrioritizeTasks()
+
+            // 2. AI refines in background (only sends this specific new task)
+            kotlinx.coroutines.delay(300)
+            autoPrioritizeSingleTask(name)
         }
     }
 
@@ -264,7 +352,13 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             when (result.intent) {
                 Intent.ADD_TASK -> {
                     val name = result.entityName ?: return@launch
-                    taskRepo.create(name, result.category ?: "Work", result.priority ?: "Medium")
+                    // Use local classifier as fallback when voice AI didn't return values
+                    val local = TaskClassifier.classify(name)
+                    taskRepo.create(
+                        name,
+                        result.category ?: local.category,
+                        result.priority ?: local.priority
+                    )
                 }
                 Intent.COMPLETE_TASK -> {
                     val name = result.entityName ?: return@launch

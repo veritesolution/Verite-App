@@ -32,7 +32,8 @@ class AiViewModel(
         frequency: String,
         reasonForAilment: String,
         duration: String,
-        reasonForStopping: String
+        reasonForStopping: String,
+        emotionContext: String = ""
     ) {
         viewModelScope.launch {
             _uiState.value = AiPlanState.Loading
@@ -42,7 +43,8 @@ class AiViewModel(
                     frequency,
                     reasonForAilment,
                     duration,
-                    reasonForStopping
+                    reasonForStopping,
+                    emotionContext
                 ).collect { result ->
                     result.fold(
                         onSuccess = { plan ->

@@ -1,26 +1,39 @@
 package com.example.myapplication
 
-import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.view.Gravity
-import android.view.ViewGroup
-import android.view.animation.LinearInterpolator
-import android.widget.*
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.ui.PlayerControlView
+import androidx.media3.common.Player
 import com.example.myapplication.data.audio.BinauralAudioManager
 import com.example.myapplication.data.audio.SoundType
 import com.example.myapplication.data.bluetooth.BluetoothLeManager
 import com.example.myapplication.data.logic.StressDetectionEngine
+import com.example.myapplication.ui.components.VeriteTopBar
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class MeditateActivity : AppCompatActivity() {
@@ -31,203 +44,18 @@ class MeditateActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ---------- Root FrameLayout to host Background + Content ----------
-        val rootFrame = FrameLayout(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        // ---------- Compose Background ----------
-        val composeBackground = ComposeView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            setContent {
-                VeriteTheme {
-                    SkyBackground { }
-                }
-            }
-        }
-        rootFrame.addView(composeBackground)
-
-        // ---------- Content ScrollView ----------
-        val scrollView = ScrollView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.TRANSPARENT)
-        }
-
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            setPadding(dpToPx(20), dpToPx(32), dpToPx(20), dpToPx(40))
-        }
-        scrollView.addView(root)
-        rootFrame.addView(scrollView)
-
-        root.addView(ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_menu_revert)
-            setColorFilter(Color.parseColor("#00BFA5"))
-            layoutParams = LinearLayout.LayoutParams(dpToPx(32), dpToPx(32))
-            setOnClickListener { finish() }
-        })
-
-        root.addView(TextView(this).apply {
-            text = "🧘  Meditate Mode"
-            textSize = 26f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { setMargins(0, dpToPx(12), 0, dpToPx(4)) }
-        })
-
+        
         val soundscapeTitle = intent.getStringExtra("SOUNDSCAPE_TITLE") ?: "sunset"
-        root.addView(TextView(this).apply {
-            text = "Selected: $soundscapeTitle"
-            textSize = 14f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(8) }
-        })
 
-        root.addView(TextView(this).apply {
-            text = "Binaural Beats: Theta (4–8 Hz) + Brain Biofeedback"
-            textSize = 13f
-            setTextColor(Color.parseColor("#7040AA"))
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(20) }
-        })
-
-        // Brain wave monitor card
-        val brainCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = GradientDrawable().apply {
-                cornerRadius = dpToPx(18).toFloat()
-                setColor(Color.parseColor("#1A0A2A"))
-            }
-            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(20) }
-        }
-
-        brainCard.addView(TextView(this).apply {
-            text = "🧠 Live Brain Activity Monitor"
-            textSize = 14f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#BB80FF"))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(12) }
-        })
-
-        // Brain wave indicators
-        val waves = listOf(
-            Triple("Theta", "6.2 Hz", 0.72f),
-            Triple("Alpha", "9.8 Hz", 0.45f),
-            Triple("Beta", "18.4 Hz", 0.28f),
-            Triple("Delta", "1.5 Hz", 0.15f)
-        )
-
-        for ((name, hz, progress) in waves) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                    .apply { bottomMargin = dpToPx(8) }
-            }
-            val nameTv = TextView(this).apply {
-                text = name; textSize = 13f; setTextColor(Color.WHITE)
-                layoutParams = LinearLayout.LayoutParams(dpToPx(50), LinearLayout.LayoutParams.WRAP_CONTENT)
-            }
-            val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-                max = 100; this.progress = (progress * 100).toInt()
-                progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#BB80FF"))
-                layoutParams = LinearLayout.LayoutParams(0, dpToPx(8), 1f).apply {
-                    leftMargin = dpToPx(8); rightMargin = dpToPx(8)
-                }
-            }
-            val hzTv = TextView(this).apply {
-                text = hz; textSize = 12f; setTextColor(Color.parseColor("#AAFFFFFF"))
-                layoutParams = LinearLayout.LayoutParams(dpToPx(58), LinearLayout.LayoutParams.WRAP_CONTENT)
-                gravity = Gravity.END
-            }
-
-            // Animate the bars
-            ValueAnimator.ofInt((progress * 100 * 0.8f).toInt(), (progress * 100).toInt()).apply {
-                duration = 2000; repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                addUpdateListener { bar.progress = it.animatedValue as Int }
-                start()
-            }
-
-            row.addView(nameTv); row.addView(bar); row.addView(hzTv)
-            brainCard.addView(row)
-        }
-
-        // Meditation state badge
-        val stateBadge = TextView(this).apply {
-            text = "State: Deep Theta — Excellent Meditation 🟣"
-            textSize = 13f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#BB80FF"))
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                cornerRadius = dpToPx(8).toFloat()
-                setColor(Color.parseColor("#2A0A4A"))
-            }
-            setPadding(dpToPx(12), dpToPx(8), dpToPx(12), dpToPx(8))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { topMargin = dpToPx(12) }
-        }
-        brainCard.addView(stateBadge)
-        root.addView(brainCard)
-
-        // BioFeedback report button
-        val reportBtn = TextView(this).apply {
-            text = "🧬  View Biofeedback Analysis"
-            textSize = 15f
-            setTextColor(Color.parseColor("#BB80FF"))
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                cornerRadius = dpToPx(26).toFloat()
-                setStroke(dpToPx(2), Color.parseColor("#BB80FF"))
-                setColor(Color.parseColor("#1A0A2A"))
-            }
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(52))
-            setOnClickListener {
-                startActivity(Intent(this@MeditateActivity, BioFeedbackActivity::class.java))
-            }
-        }
-        root.addView(reportBtn)
-
-        // Music Player Controls
-        val playerView = PlayerControlView(this).apply {
-            showTimeoutMs = 0 // Keep controls visible always
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(32); topMargin = dpToPx(20) }
-        }
-        playerView.setShowNextButton(false)
-        playerView.setShowPreviousButton(false)
-        root.addView(playerView)
-
-        setContentView(rootFrame)
-
+        // Audio init
         try {
             audioManager = BinauralAudioManager.getInstance(this)
-            playerView.player = audioManager?.player
             audioManager?.playSound(SoundType.MEDITATE)
         } catch (e: Exception) {
             android.util.Log.e("Meditate", "Audio init failed: ${e.message}")
         }
 
+        // Bio monitoring
         try {
             stressDetectionEngine = StressDetectionEngine()
             bluetoothLeManager = BluetoothLeManager.getInstance(this)
@@ -235,6 +63,18 @@ class MeditateActivity : AppCompatActivity() {
             observeStress()
         } catch (e: Exception) {
             android.util.Log.e("Meditate", "Bio monitoring init failed: ${e.message}")
+        }
+
+        setContent {
+            VeriteTheme {
+                SkyBackground {
+                    MeditateSoundScreen(
+                        soundscapeTitle = soundscapeTitle,
+                        onBack = { finish() },
+                        player = audioManager?.player
+                    )
+                }
+            }
         }
     }
 
@@ -264,9 +104,232 @@ class MeditateActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() { 
+    override fun onDestroy() {
         super.onDestroy()
         try { audioManager?.stopSound() } catch (_: Exception) {}
     }
-    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+}
+
+@Composable
+fun MeditateSoundScreen(
+    soundscapeTitle: String,
+    onBack: () -> Unit,
+    player: Player?
+) {
+    var isPlaying by remember { mutableStateOf(player?.isPlaying == true) }
+    val context = LocalContext.current
+
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+        }
+        player?.addListener(listener)
+        onDispose {
+            player?.removeListener(listener)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        VeriteTopBar(
+            onBackClick = onBack,
+            onProfileClick = {
+                context.startActivity(Intent(context, ProfileActivity::class.java))
+            }
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Title Section
+            Text(
+                text = "🧘 Meditate Mode",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Selected: $soundscapeTitle",
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 16.sp
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = "Binaural Beats: Theta (4–8 Hz) + Brain Biofeedback",
+                color = Color(0xFFBB80FF),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(48.dp))
+
+            // Glassmorphic Brain Wave Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = Color(0xFF1A0A2A).copy(alpha = 0.8f) // Deep meditate purple
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Text(
+                        text = "🧠 Live Brain Activity Monitor",
+                        color = Color(0xFFBB80FF),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    BrainWaveRowMeditate(name = "Theta", hzValue = "6.2 Hz", targetProgress = 0.72f)
+                    BrainWaveRowMeditate(name = "Alpha", hzValue = "9.8 Hz", targetProgress = 0.45f)
+                    BrainWaveRowMeditate(name = "Beta", hzValue = "18.4 Hz", targetProgress = 0.28f)
+                    BrainWaveRowMeditate(name = "Delta", hzValue = "1.5 Hz", targetProgress = 0.15f)
+
+                    // Meditation state badge
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 16.dp),
+                        shape = RoundedCornerShape(8.dp),
+                        color = Color(0xFF2A0A4A)
+                    ) {
+                        Text(
+                            text = "State: Deep Theta — Excellent \uD83DFE3",
+                            color = Color(0xFFBB80FF),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 13.sp,
+                            textAlign = TextAlign.Center,
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp)
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Biofeedback report Button
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .clickable {
+                        context.startActivity(Intent(context, BioFeedbackActivity::class.java))
+                    },
+                color = Color(0xFF1A0A2A).copy(alpha = 0.8f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFBB80FF))
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "🧬 View Biofeedback Analysis",
+                        color = Color(0xFFBB80FF),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Premium Media Controls
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF2A0A4A)) // Deep meditate block
+                    .clickable {
+                        if (isPlaying) player?.pause() else player?.play()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFFBB80FF)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+        }
+    }
+}
+
+@Composable
+fun BrainWaveRowMeditate(name: String, hzValue: String, targetProgress: Float) {
+    var currentProgress by remember { mutableFloatStateOf(targetProgress * 0.8f) }
+    
+    LaunchedEffect(targetProgress) {
+        while (true) {
+            currentProgress = targetProgress * (0.8f + (Math.random().toFloat() * 0.2f))
+            delay(500)
+        }
+    }
+    
+    val animatedProgress by animateFloatAsState(
+        targetValue = currentProgress,
+        animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+        label = "progressAnim"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = name,
+            color = Color.White,
+            fontSize = 14.sp,
+            modifier = Modifier.width(55.dp)
+        )
+        
+        LinearProgressIndicator(
+            progress = animatedProgress,
+            modifier = Modifier
+                .weight(1f)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = Color(0xFFBB80FF), // Meditate accent color
+            trackColor = Color.White.copy(alpha = 0.1f)
+        )
+        
+        Text(
+            text = hzValue,
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 13.sp,
+            modifier = Modifier.width(60.dp),
+            textAlign = TextAlign.End
+        )
+    }
 }

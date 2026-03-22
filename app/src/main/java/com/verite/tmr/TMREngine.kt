@@ -213,11 +213,12 @@ class TMREngine(
     //  EXTRACT CONCEPTS — Same prompt as notebook Cell 5
     // ═════════════════════════════════════════════════════════════════
 
-    suspend fun extractConcepts(text: String, maxConcepts: Int = 10): List<Concept> {
+    suspend fun extractConcepts(text: String, maxConcepts: Int = 10, emotionContext: String = ""): List<Concept> {
         val contentType = detectContentType(text)
         val textInput = text.take(200_000)
 
-        val prompt = """You are an expert educator. Document type: $contentType.
+        val prompt = """$emotionContext
+You are an expert educator. Document type: $contentType.
 Extract the $maxConcepts most important concepts for study and memory retention.
 Extract MEANINGFUL concepts — key ideas, principles, terms, relationships.
 NOT generic single words.
@@ -256,11 +257,12 @@ JSON:"""
     //  GENERATE FLASHCARDS — Same prompt as notebook Cell 5
     // ═════════════════════════════════════════════════════════════════
 
-    suspend fun generateFlashcards(concepts: List<Concept>): List<Flashcard> {
+    suspend fun generateFlashcards(concepts: List<Concept>, emotionContext: String = ""): List<Flashcard> {
         if (concepts.isEmpty()) return emptyList()
 
         val conceptsJson = gson.toJson(concepts.take(12))
-        val prompt = """Create Anki flashcards. Varied types: basic, cloze, application.
+        val prompt = """$emotionContext
+Create Anki flashcards. Varied types: basic, cloze, application.
 Return ONLY JSON array:
 [{"type":"basic|cloze|application","front":"question","back":"answer","hint":"optional","tags":["t1"]}]
 
@@ -297,11 +299,12 @@ JSON:"""
     //  GENERATE QUIZ — Same prompt as notebook Cell 5
     // ═════════════════════════════════════════════════════════════════
 
-    suspend fun generateQuiz(concepts: List<Concept>, numQuestions: Int = 5): Quiz {
+    suspend fun generateQuiz(concepts: List<Concept>, numQuestions: Int = 5, emotionContext: String = ""): Quiz {
         if (concepts.isEmpty()) return Quiz()
 
         val conceptsJson = gson.toJson(concepts.take(12))
-        val prompt = """Create $numQuestions-question MCQ quiz. 4 options, one correct. Varied types.
+        val prompt = """$emotionContext
+Create $numQuestions-question MCQ quiz. 4 options, one correct. Varied types.
 Return ONLY JSON:
 {"title":"Quiz Title","questions":[{"type":"multiple_choice","question":"text","options":["A. x","B. y","C. z","D. w"],"correct_answer":0,"explanation":"why"}]}
 
@@ -480,19 +483,19 @@ JSON:"""
         val sourceChars: Int
     )
 
-    suspend fun runFullPipeline(text: String): TMRResult {
+    suspend fun runFullPipeline(text: String, emotionContext: String = ""): TMRResult {
         Log.d(TAG, "🚀 Starting TMR pipeline (${text.length} chars)")
 
         // Step 1: Extract concepts
-        val concepts = extractConcepts(text)
+        val concepts = extractConcepts(text, emotionContext = emotionContext)
         Log.d(TAG, "📊 ${concepts.size} concepts extracted")
 
         // Step 2: Generate flashcards
-        val flashcards = generateFlashcards(concepts)
+        val flashcards = generateFlashcards(concepts, emotionContext = emotionContext)
         Log.d(TAG, "🃏 ${flashcards.size} flashcards generated")
 
         // Step 3: Generate quiz
-        val quiz = generateQuiz(concepts)
+        val quiz = generateQuiz(concepts, emotionContext = emotionContext)
         Log.d(TAG, "❓ ${quiz.questions.size} quiz questions generated")
 
         // FIX: Previously crashed if only "fallback" was in providers list
