@@ -111,7 +111,7 @@ class EditProfileActivity : AppCompatActivity() {
                     inputStream?.close()
                     outputStream.close()
                     
-                    // Delete old image if exists
+                    /*Delete old image if exists*/
                     if (!imagePath.isNullOrEmpty()) {
                         val oldFile = File(imagePath!!)
                         if (oldFile.exists()) oldFile.delete()
