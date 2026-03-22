@@ -78,18 +78,26 @@ class WelcomeActivity : AppCompatActivity() {
             mp.isLooping = true
             mp.setVolume(0f, 0f) // Mute audio
             
-            // Force Center Crop scaling to fill the entire phone screen
+            // Bypass letterboxing by resizing the VideoView larger than the screen
             videoView.post {
-                val videoRatio = mp.videoWidth / mp.videoHeight.toFloat()
-                val screenRatio = videoView.width / videoView.height.toFloat()
-                val scaleX = videoRatio / screenRatio
-                if (scaleX >= 1f) {
-                    videoView.scaleX = scaleX
-                    videoView.scaleY = 1f
+                val videoWidth = mp.videoWidth.toFloat()
+                val videoHeight = mp.videoHeight.toFloat()
+                if (videoWidth == 0f || videoHeight == 0f) return@post
+                
+                val videoProportion = videoWidth / videoHeight
+                val screenWidth = rootLayout.width.toFloat()
+                val screenHeight = rootLayout.height.toFloat()
+                val screenProportion = screenWidth / screenHeight
+                
+                val lp = videoView.layoutParams
+                if (videoProportion > screenProportion) {
+                    lp.width = (screenHeight * videoProportion).toInt()
+                    lp.height = screenHeight.toInt()
                 } else {
-                    videoView.scaleX = 1f
-                    videoView.scaleY = 1f / scaleX
+                    lp.width = screenWidth.toInt()
+                    lp.height = (screenWidth / videoProportion).toInt()
                 }
+                videoView.layoutParams = lp
             }
             mp.start()
         }
@@ -130,7 +138,12 @@ class WelcomeActivity : AppCompatActivity() {
             text = "→"
             textSize = 24f
             setTextColor(Color.parseColor("#009688"))
-            setBackgroundColor(Color.BLACK)
+            
+            val circularBackground = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.OVAL
+                setColor(Color.BLACK)
+            }
+            background = circularBackground
             
             // Make it circular
             val size = dpToPx(64)
