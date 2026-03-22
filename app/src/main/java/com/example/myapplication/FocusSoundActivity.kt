@@ -140,20 +140,13 @@ fun FocusSoundScreen(
     ) {
         Spacer(modifier = Modifier.height(16.dp))
         
-        // Top Bar
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Back",
-                tint = Color(0xFF00BFA5),
-                modifier = Modifier
-                    .size(28.dp)
-                    .clickable { onBack() }
-            )
-        }
+        val context = androidx.compose.ui.platform.LocalContext.current
+        com.example.myapplication.ui.components.VeriteTopBar(
+            onBackClick = onBack,
+            onProfileClick = {
+                context.startActivity(android.content.Intent(context, com.example.myapplication.ProfileActivity::class.java))
+            }
+        )
 
         Spacer(modifier = Modifier.height(32.dp))
 

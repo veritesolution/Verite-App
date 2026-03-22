@@ -1,26 +1,43 @@
 package com.example.myapplication
 
-import android.animation.ValueAnimator
 import android.content.Intent
-import android.graphics.Color
-import android.graphics.Typeface
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
-import android.os.CountDownTimer
-import android.view.Gravity
-import android.view.ViewGroup
-import android.view.animation.LinearInterpolator
-import android.widget.*
+import android.widget.Toast
+import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
-import androidx.media3.ui.PlayerControlView
+import androidx.media3.common.Player
 import com.example.myapplication.data.audio.BinauralAudioManager
 import com.example.myapplication.data.audio.SoundType
 import com.example.myapplication.data.bluetooth.BluetoothLeManager
 import com.example.myapplication.data.logic.StressDetectionEngine
+import com.example.myapplication.ui.components.VeriteTopBar
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 class RelaxSoundActivity : AppCompatActivity() {
@@ -31,226 +48,19 @@ class RelaxSoundActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // ---------- Root FrameLayout to host Background + Content ----------
-        val rootFrame = FrameLayout(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-        }
-
-        // ---------- Compose Background ----------
-        val composeBackground = ComposeView(this).apply {
-            layoutParams = FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT
-            )
-            setContent {
-                VeriteTheme {
-                    SkyBackground { }
-                }
-            }
-        }
-        rootFrame.addView(composeBackground)
-
-        // ---------- Content ScrollView ----------
-        val scrollView = ScrollView(this).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            setBackgroundColor(Color.TRANSPARENT)
-        }
-
-        val root = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-            setPadding(dpToPx(20), dpToPx(32), dpToPx(20), dpToPx(40))
-        }
-        scrollView.addView(root)
-        rootFrame.addView(scrollView)
-
-        val backBtn = ImageView(this).apply {
-            setImageResource(android.R.drawable.ic_menu_revert)
-            setColorFilter(Color.parseColor("#00BFA5"))
-            layoutParams = LinearLayout.LayoutParams(dpToPx(32), dpToPx(32))
-            setOnClickListener { finish() }
-        }
-        root.addView(backBtn)
-
-        root.addView(TextView(this).apply {
-            text = "🌊  Relax Mode"
-            textSize = 26f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { setMargins(0, dpToPx(12), 0, dpToPx(4)) }
-        })
-
+        
         val soundscapeTitle = intent.getStringExtra("SOUNDSCAPE_TITLE") ?: "sunset"
-        root.addView(TextView(this).apply {
-            text = "Selected: $soundscapeTitle"
-            textSize = 14f
-            setTextColor(Color.WHITE)
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(8) }
-        })
 
-        root.addView(TextView(this).apply {
-            text = "Binaural Beats: Alpha (8–12 Hz) + Gentle Vibration"
-            textSize = 13f
-            setTextColor(Color.parseColor("#1A6B40"))
-            gravity = Gravity.CENTER
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(20) }
-        })
-
-        // Breathing circle
-        val breatheCircle = TextView(this).apply {
-            text = "Breathe In…"
-            textSize = 18f
-            setTextColor(Color.WHITE)
-            setTypeface(null, Typeface.BOLD)
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.OVAL
-                colors = intArrayOf(Color.parseColor("#0A2A1A"), Color.parseColor("#1A6B40"))
-                gradientType = GradientDrawable.RADIAL_GRADIENT
-                gradientRadius = dpToPx(80).toFloat()
-            }
-            layoutParams = LinearLayout.LayoutParams(dpToPx(180), dpToPx(180)).apply {
-                gravity = Gravity.CENTER_HORIZONTAL
-                bottomMargin = dpToPx(20)
-            }
-        }
-        val breatheWrap = FrameLayout(this).apply {
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-            addView(breatheCircle)
-        }
-        root.addView(breatheWrap)
-
-        // Breathing animation
-        ValueAnimator.ofFloat(1f, 1.15f, 1f).apply {
-            duration = 4000
-            repeatCount = ValueAnimator.INFINITE
-            interpolator = LinearInterpolator()
-            addUpdateListener { anim ->
-                val scale = anim.animatedValue as Float
-                breatheCircle.scaleX = scale
-                breatheCircle.scaleY = scale
-                val progress = anim.animatedFraction
-                breatheCircle.text = if (progress < 0.5f) "Breathe In…" else "Breathe Out…"
-            }
-            start()
-        }
-
-        // Brain wave monitor card
-        val brainCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = GradientDrawable().apply {
-                cornerRadius = dpToPx(18).toFloat()
-                setColor(Color.parseColor("#0A1614"))
-            }
-            setPadding(dpToPx(16), dpToPx(16), dpToPx(16), dpToPx(16))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(24) }
-        }
-
-        brainCard.addView(TextView(this).apply {
-            text = "🧠 Live Brain Activity Monitor"
-            textSize = 14f
-            setTypeface(null, Typeface.BOLD)
-            setTextColor(Color.parseColor("#1A6B40"))
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(12) }
-        })
-
-        // Brain wave indicators
-        val waves = listOf(
-            Triple("Theta", "6.2 Hz", 0.42f),
-            Triple("Alpha", "9.8 Hz", 0.85f),
-            Triple("Beta", "18.4 Hz", 0.18f),
-            Triple("Delta", "1.5 Hz", 0.25f)
-        )
-
-        for ((name, hz, progress) in waves) {
-            val row = LinearLayout(this).apply {
-                orientation = LinearLayout.HORIZONTAL
-                gravity = Gravity.CENTER_VERTICAL
-                layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                    .apply { bottomMargin = dpToPx(8) }
-            }
-            val nameTv = TextView(this).apply {
-                text = name; textSize = 13f; setTextColor(Color.WHITE)
-                layoutParams = LinearLayout.LayoutParams(dpToPx(50), LinearLayout.LayoutParams.WRAP_CONTENT)
-            }
-            val bar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal).apply {
-                max = 100; this.progress = (progress * 100).toInt()
-                progressTintList = android.content.res.ColorStateList.valueOf(Color.parseColor("#1A6B40"))
-                layoutParams = LinearLayout.LayoutParams(0, dpToPx(8), 1f).apply {
-                    leftMargin = dpToPx(8); rightMargin = dpToPx(8)
-                }
-            }
-            val hzTv = TextView(this).apply {
-                text = hz; textSize = 12f; setTextColor(Color.parseColor("#AAAAFFFF"))
-                layoutParams = LinearLayout.LayoutParams(dpToPx(58), LinearLayout.LayoutParams.WRAP_CONTENT)
-                gravity = Gravity.END
-            }
-
-            // Animate the bars
-            ValueAnimator.ofInt((progress * 100 * 0.8f).toInt(), (progress * 100).toInt()).apply {
-                duration = 2000; repeatCount = ValueAnimator.INFINITE
-                repeatMode = ValueAnimator.REVERSE
-                addUpdateListener { bar.progress = it.animatedValue as Int }
-                start()
-            }
-
-            row.addView(nameTv); row.addView(bar); row.addView(hzTv)
-            brainCard.addView(row)
-        }
-        root.addView(brainCard)
-        // Stress Report button
-        val reportBtn = TextView(this).apply {
-            text = "📊  View Stress Report"
-            textSize = 15f
-            setTextColor(Color.parseColor("#1A6B40"))
-            gravity = Gravity.CENTER
-            background = GradientDrawable().apply {
-                cornerRadius = dpToPx(26).toFloat()
-                setStroke(dpToPx(2), Color.parseColor("#1A6B40"))
-                setColor(Color.parseColor("#0A1F0A"))
-            }
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(52))
-            setOnClickListener {
-                startActivity(Intent(this@RelaxSoundActivity, RelaxReportActivity::class.java))
-            }
-        }
-        root.addView(reportBtn)
-
-        // Music Player Controls
-        val playerView = PlayerControlView(this).apply {
-            showTimeoutMs = 0 // Keep controls visible always
-            layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-                .apply { bottomMargin = dpToPx(32); topMargin = dpToPx(20) }
-        }
-        playerView.setShowNextButton(false)
-        playerView.setShowPreviousButton(false)
-        root.addView(playerView)
-
-        setContentView(rootFrame)
-
+        // Audio init
         try {
             audioManager = BinauralAudioManager.getInstance(this)
-            playerView.player = audioManager?.player
             audioManager?.playSound(SoundType.RELAX)
         } catch (e: Exception) {
             android.util.Log.e("RelaxSound", "Audio init failed: ${e.message}")
             Toast.makeText(this, "Audio playback unavailable", Toast.LENGTH_SHORT).show()
         }
 
+        // Bio monitoring
         try {
             stressDetectionEngine = StressDetectionEngine()
             bluetoothLeManager = BluetoothLeManager.getInstance(this)
@@ -258,6 +68,18 @@ class RelaxSoundActivity : AppCompatActivity() {
             observeStress()
         } catch (e: Exception) {
             android.util.Log.e("RelaxSound", "Bio monitoring init failed: ${e.message}")
+        }
+
+        setContent {
+            VeriteTheme {
+                SkyBackground {
+                    RelaxSoundScreen(
+                        soundscapeTitle = soundscapeTitle,
+                        onBack = { finish() },
+                        player = audioManager?.player
+                    )
+                }
+            }
         }
     }
 
@@ -287,10 +109,263 @@ class RelaxSoundActivity : AppCompatActivity() {
         }
     }
 
-    override fun onDestroy() { 
+    override fun onDestroy() {
         super.onDestroy()
         try { audioManager?.stopSound() } catch (_: Exception) {}
     }
+}
 
-    private fun dpToPx(dp: Int): Int = (dp * resources.displayMetrics.density).toInt()
+@Composable
+fun RelaxSoundScreen(
+    soundscapeTitle: String,
+    onBack: () -> Unit,
+    player: Player?
+) {
+    var isPlaying by remember { mutableStateOf(player?.isPlaying == true) }
+    val context = LocalContext.current
+
+    DisposableEffect(player) {
+        val listener = object : Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+        }
+        player?.addListener(listener)
+        onDispose {
+            player?.removeListener(listener)
+        }
+    }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .statusBarsPadding()
+            .navigationBarsPadding(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Spacer(modifier = Modifier.height(16.dp))
+        
+        VeriteTopBar(
+            onBackClick = onBack,
+            onProfileClick = {
+                context.startActivity(Intent(context, ProfileActivity::class.java))
+            }
+        )
+
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // Title Section
+            Text(
+                text = "🌊 Relax Mode",
+                color = Color.White,
+                fontSize = 32.sp,
+                fontWeight = FontWeight.Bold
+            )
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            Text(
+                text = "Selected: $soundscapeTitle",
+                color = Color.White.copy(alpha = 0.8f),
+                fontSize = 16.sp
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            Text(
+                text = "Binaural Beats: Alpha (8–12 Hz) + Gentle Vibration",
+                color = Color(0xFF1A6B40),
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Breathing Animation
+            BreathingCircle()
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Glassmorphic Brain Wave Card
+            Surface(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                color = Color.White.copy(alpha = 0.05f)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp)
+                ) {
+                    Text(
+                        text = "🧠 Live Brain Activity Monitor",
+                        color = Color(0xFF1A6B40),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                    
+                    Spacer(modifier = Modifier.height(20.dp))
+                    
+                    BrainWaveRowRelax(name = "Theta", hzValue = "6.2 Hz", targetProgress = 0.42f)
+                    BrainWaveRowRelax(name = "Alpha", hzValue = "9.8 Hz", targetProgress = 0.85f)
+                    BrainWaveRowRelax(name = "Beta", hzValue = "18.4 Hz", targetProgress = 0.18f)
+                    BrainWaveRowRelax(name = "Delta", hzValue = "1.5 Hz", targetProgress = 0.25f)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            // View Stress Report Button
+            Surface(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp)
+                    .clip(RoundedCornerShape(28.dp))
+                    .clickable {
+                        context.startActivity(Intent(context, RelaxReportActivity::class.java))
+                    },
+                color = Color(0xFF0A1F0A).copy(alpha = 0.8f),
+                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF1A6B40))
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    Text(
+                        text = "📊 View Stress Report",
+                        color = Color(0xFF1A6B40),
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Premium Media Controls
+            Box(
+                modifier = Modifier
+                    .size(80.dp)
+                    .clip(CircleShape)
+                    .background(Color(0xFF0D2533)) // Soft dark teal
+                    .clickable {
+                        if (isPlaying) player?.pause() else player?.play()
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(64.dp)
+                        .clip(CircleShape)
+                        .background(Color(0xFF1A6B40)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = if (isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                        contentDescription = if (isPlaying) "Pause" else "Play",
+                        tint = Color.White,
+                        modifier = Modifier.size(36.dp)
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(48.dp))
+        }
+    }
+}
+
+@Composable
+fun BreathingCircle() {
+    val infiniteTransition = rememberInfiniteTransition(label = "breathe")
+    val scale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.15f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(4000, easing = LinearEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "BreatheAnim"
+    )
+
+    var text by remember { mutableStateOf("Breathe In…") }
+    LaunchedEffect(Unit) {
+        while(true) {
+            text = "Breathe In…"
+            delay(4000)
+            text = "Breathe Out…"
+            delay(4000)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(160.dp)
+            .scale(scale)
+            .clip(CircleShape)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(Color(0xFF0A2A1A), Color(0xFF1A6B40))
+                )
+            ),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 18.sp
+        )
+    }
+}
+
+@Composable
+fun BrainWaveRowRelax(name: String, hzValue: String, targetProgress: Float) {
+    var currentProgress by remember { mutableFloatStateOf(targetProgress * 0.8f) }
+    
+    LaunchedEffect(targetProgress) {
+        while (true) {
+            currentProgress = targetProgress * (0.8f + (Math.random().toFloat() * 0.2f))
+            delay(500)
+        }
+    }
+    
+    val animatedProgress by animateFloatAsState(
+        targetValue = currentProgress,
+        animationSpec = tween(durationMillis = 500, easing = LinearEasing),
+        label = "progressAnim"
+    )
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = name,
+            color = Color.White,
+            fontSize = 14.sp,
+            modifier = Modifier.width(55.dp)
+        )
+        
+        LinearProgressIndicator(
+            progress = animatedProgress,
+            modifier = Modifier
+                .weight(1f)
+                .height(8.dp)
+                .clip(RoundedCornerShape(4.dp)),
+            color = Color(0xFF1A6B40),
+            trackColor = Color.White.copy(alpha = 0.1f)
+        )
+        
+        Text(
+            text = hzValue,
+            color = Color.White.copy(alpha = 0.6f),
+            fontSize = 13.sp,
+            modifier = Modifier.width(60.dp),
+            textAlign = TextAlign.End
+        )
+    }
 }
