@@ -340,11 +340,11 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
                 lastRateTime = System.currentTimeMillis()
                 packetCount = 0
             }
-            }
         }
 
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
+            Log.v(TAG, "onCharacteristicChanged: uuid=${characteristic.uuid}")
             if (characteristic.uuid == SENSOR_DATA_UUID) {
                 parseSensorData(characteristic.value)
             }
