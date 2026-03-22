@@ -116,6 +116,12 @@ fun DeviceDetailScreen(
         ) {
             
             // Device Image
+            val imageRes = if (deviceName.contains("Backrest", ignoreCase = true)) {
+                R.drawable.smart_backrest
+            } else {
+                R.drawable.headband
+            }
+            
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -123,7 +129,7 @@ fun DeviceDetailScreen(
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.headband),
+                    painter = painterResource(id = imageRes),
                     contentDescription = deviceName,
                     modifier = Modifier.size(200.dp, 140.dp),
                     contentScale = ContentScale.Fit
@@ -131,13 +137,15 @@ fun DeviceDetailScreen(
             }
             
             // Device Name Label
+            val cleanName = deviceName.removePrefix("Vérité ").removePrefix("Verite ").trim()
+            
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.Center
             ) {
                 Text(
-                    text = "V ",
-                    color = AccentPrimary,
+                    text = "V",
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
                 )
@@ -148,13 +156,19 @@ fun DeviceDetailScreen(
                     fontSize = 24.sp
                 )
                 Text(
-                    text = " r i t é ",
+                    text = "rit",
+                    color = TextPrimary,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 24.sp
+                )
+                Text(
+                    text = "é ",
                     color = AccentPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
                 )
                 Text(
-                    text = " $deviceName",
+                    text = " $cleanName",
                     color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     fontSize = 24.sp
