@@ -11,7 +11,6 @@ import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
-import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
@@ -59,10 +58,10 @@ class WelcomeActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.parseColor("#004d4d"))
+            setBackgroundColor(Color.BLACK)
         }
         
-        // Add a VideoView to play background_video.mp4 as background
+        // 1. Background Video
         val videoView = android.widget.VideoView(this).apply {
             id = View.generateViewId()
             layoutParams = ConstraintLayout.LayoutParams(
@@ -102,12 +101,24 @@ class WelcomeActivity : AppCompatActivity() {
             mp.start()
         }
         
-        // "Welcoming you to" TextView
+        // 2. Glass Box
+        val glassBox = View(this).apply {
+            id = View.generateViewId()
+            background = android.graphics.drawable.GradientDrawable().apply {
+                shape = android.graphics.drawable.GradientDrawable.RECTANGLE
+                cornerRadius = dpToPx(31).toFloat()
+                setColor(Color.argb(89, 47, 73, 73)) // rgba(47, 73, 73, 0.35)
+            }
+            layoutParams = ConstraintLayout.LayoutParams(0, 0)
+        }
+        rootLayout.addView(glassBox)
+
+        // 3. "Welcoming you to" TextView
         val welcomingText = TextView(this).apply {
             id = View.generateViewId()
             text = "Welcoming you\nto"
             textSize = 32f
-            setTypeface(null, Typeface.BOLD)
+            setTypeface(Typeface.create("sans-serif", Typeface.BOLD))
             setTextColor(Color.WHITE)
             gravity = Gravity.CENTER
             layoutParams = ConstraintLayout.LayoutParams(
@@ -117,22 +128,32 @@ class WelcomeActivity : AppCompatActivity() {
         }
         rootLayout.addView(welcomingText)
         
-        // "Vérité" TextView with branded logo style
+        // 4. "Vérité" TextView
         val veriteText = TextView(this).apply {
             id = View.generateViewId()
-            textSize = 56f
-            setTypeface(null, Typeface.BOLD)
+            textSize = 48f
+            setTypeface(Typeface.create("sans-serif", Typeface.BOLD))
             gravity = Gravity.CENTER
+            
+            val text = "Vérité"
+            val spannable = SpannableString(text)
+            val tealColor = Color.parseColor("#1C9C91")
+            
+            spannable.setSpan(ForegroundColorSpan(Color.WHITE), 0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ForegroundColorSpan(tealColor), 1, 2, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ForegroundColorSpan(Color.WHITE), 2, 5, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            spannable.setSpan(ForegroundColorSpan(tealColor), 5, 6, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            
+            setText(spannable)
             
             layoutParams = ConstraintLayout.LayoutParams(
                 ConstraintLayout.LayoutParams.WRAP_CONTENT,
                 ConstraintLayout.LayoutParams.WRAP_CONTENT
             )
         }
-        com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(veriteText)
         rootLayout.addView(veriteText)
         
-        // Circular arrow button
+        // 5. Circular arrow button
         val nextButton = Button(this).apply {
             id = View.generateViewId()
             text = "→"
@@ -160,27 +181,28 @@ class WelcomeActivity : AppCompatActivity() {
         val constraintSet = ConstraintSet()
         constraintSet.clone(rootLayout)
         
+        // Constrain VideoView to fill parent
+        constraintSet.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        constraintSet.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        constraintSet.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        constraintSet.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
+        
+        // Constrain Glass Box (with margins mimicking left: 35px, top: 69px)
+        val horizontalMargin = dpToPx(24)
+        val topMargin = dpToPx(48)
+        val bottomMargin = dpToPx(48)
+        constraintSet.connect(glassBox.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, topMargin)
+        constraintSet.connect(glassBox.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM, bottomMargin)
+        constraintSet.connect(glassBox.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START, horizontalMargin)
+        constraintSet.connect(glassBox.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END, horizontalMargin)
+
         // Constrain "Welcoming you to" text
         constraintSet.connect(
             welcomingText.id,
             ConstraintSet.TOP,
             ConstraintSet.PARENT_ID,
             ConstraintSet.TOP,
-            dpToPx(120)
-        )
-        constraintSet.connect(
-            welcomingText.id,
-            ConstraintSet.LEFT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.LEFT,
-            0
-        )
-        constraintSet.connect(
-            welcomingText.id,
-            ConstraintSet.RIGHT,
-            ConstraintSet.PARENT_ID,
-            ConstraintSet.RIGHT,
-            0
+            dpToPx(90)
         )
         constraintSet.centerHorizontally(welcomingText.id, ConstraintSet.PARENT_ID)
         
@@ -188,27 +210,26 @@ class WelcomeActivity : AppCompatActivity() {
         constraintSet.connect(
             veriteText.id,
             ConstraintSet.TOP,
-            welcomingText.id,
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.TOP
+        )
+        constraintSet.connect(
+            veriteText.id,
             ConstraintSet.BOTTOM,
-            dpToPx(70)
+            ConstraintSet.PARENT_ID,
+            ConstraintSet.BOTTOM
         )
         constraintSet.centerHorizontally(veriteText.id, ConstraintSet.PARENT_ID)
         
-        // Constrain circular button
+        // Constrain circular button inside glass box near bottom
         constraintSet.connect(
             nextButton.id,
             ConstraintSet.BOTTOM,
-            ConstraintSet.PARENT_ID,
+            glassBox.id,
             ConstraintSet.BOTTOM,
-            dpToPx(80)
+            dpToPx(40)
         )
         constraintSet.centerHorizontally(nextButton.id, ConstraintSet.PARENT_ID)
-        
-        // Constrain VideoView to fill parent
-        constraintSet.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
-        constraintSet.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
-        constraintSet.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
-        constraintSet.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
         
         constraintSet.applyTo(rootLayout)
         
