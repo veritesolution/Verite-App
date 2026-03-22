@@ -32,7 +32,8 @@ class WelcomeActivity2 : AppCompatActivity() {
             setBackgroundColor(Color.parseColor("#1B4D4B"))
         }
         
-        // Create gradient background
+
+        /*Create gradient background*/
         val gradientDrawable = android.graphics.drawable.GradientDrawable(
             android.graphics.drawable.GradientDrawable.Orientation.TL_BR,
             intArrayOf(
