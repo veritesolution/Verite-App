@@ -351,10 +351,10 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         val emg   = u16(4);  val pulse = u16(6)
         latestEeg1 = eeg1; latestEeg2 = eeg2; latestEmg = emg; latestPulse = pulse
 
-        val v1 = eeg1  * 3.1f / 4095f
-        val v2 = eeg2  * 3.1f / 4095f
-        val v3 = emg   * 3.1f / 4095f
-        val v4 = pulse * 3.1f / 4095f
+        val eeg1Volts = eeg1  * 3.1f / 4095f
+        val eeg2Volts = eeg2  * 3.1f / 4095f
+        val emgVolts  = emg   * 3.1f / 4095f
+        val pulseVolts = pulse * 3.1f / 4095f
 
         val imuPresent = data.size >= 22
         var accX = 0f; var accY = 0f; var accZ = 0f
@@ -372,10 +372,10 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         packetCount++
 
         runOnUiThread {
-            tvEeg1.text  = "EEG 1:  $eeg1  (%.2fV)".format(v1)
-            tvEeg2.text  = "EEG 2:  $eeg2  (%.2fV)".format(v2)
-            tvEmg.text   = "EMG:    $emg  (%.2fV)".format(v3)
-            tvPulse.text = "Pulse:  $pulse  (%.2fV)".format(v4)
+            tvEeg1.text  = "EEG 1:  $eeg1  (%.2fV)".format(eeg1Volts)
+            tvEeg2.text  = "EEG 2:  $eeg2  (%.2fV)".format(eeg2Volts)
+            tvEmg.text   = "EMG:    $emg  (%.2fV)".format(emgVolts)
+            tvPulse.text = "Pulse:  $pulse  (%.2fV)".format(pulseVolts)
             pbEeg1.progress  = eeg1
             pbEeg2.progress  = eeg2
             pbEmg.progress   = emg
