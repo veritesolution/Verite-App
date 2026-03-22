@@ -239,6 +239,9 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         bleScanner = null
     }
 
+    /**
+     * Callback for Bluetooth LE scan results.
+     */
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             stopScan()
@@ -257,6 +260,9 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         bluetoothGatt = device.connectGatt(this, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
     }
 
+    /**
+     * Core GATT callback handling connection states, service discovery, and notifications.
+     */
     @SuppressLint("MissingPermission")
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
