@@ -1,0 +1,4 @@
+SpeechRecognition
+pyaudio
+firebase-admin
+schedule

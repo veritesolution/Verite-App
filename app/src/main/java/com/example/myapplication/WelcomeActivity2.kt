@@ -31,10 +31,7 @@ class WelcomeActivity2 : AppCompatActivity() {
             setBackgroundColor(Color.BLACK)
         }
         
-        // 1. Background Video
-        val videoView = android.widget.VideoView(this).apply {
-            id = View.generateViewId()
-            layoutParams = ConstraintLayout.LayoutParams(0, 0)
+
         }
         rootLayout.addView(videoView, 0)
 

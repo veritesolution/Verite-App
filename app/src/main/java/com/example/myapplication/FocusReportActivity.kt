@@ -56,7 +56,7 @@ class FocusReportActivity : AppCompatActivity() {
                 .apply { setMargins(0, dpToPx(20), 0, dpToPx(8)) }
         })
 
-        // Bar Chart View
+        /*Bar Chart View*/
         val barData = listOf(
             Pair("Mon", 0.4f), Pair("Tue", 0.6f), Pair("Wed", 0.85f),
             Pair("Thu", 0.5f), Pair("Fri", 0.75f), Pair("Sat", 0.9f), Pair("Sun", 0.65f)
