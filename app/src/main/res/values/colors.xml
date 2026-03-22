@@ -46,5 +46,18 @@
     <!-- ─── Pill / Badge Backgrounds ─── -->
     <color name="pill_bg_teal">#1A1C9C91</color>
     <color name="pill_border_teal">#331C9C91</color>
+
+    <!-- ─── Diagnostic Page Specific ─── -->
+    <color name="diagnostic_bg_status_card">#0D1F1F</color>
+    <color name="diagnostic_teal">#00BFA5</color>
+    <color name="diagnostic_red">#FF5252</color>
+    <color name="diagnostic_bg_biosensors">#0A1614</color>
+    <color name="diagnostic_bg_imu">#0D1117</color>
+    <color name="diagnostic_bg_controls">#101820</color>
+    <color name="diagnostic_led_green">#4CAF50</color>
+    <color name="diagnostic_led_blue">#2196F3</color>
+    <color name="diagnostic_led_off">#333333</color>
+    <color name="diagnostic_rgb_cycle">#6200EE</color>
+    <color name="diagnostic_motor_pattern">#00796B</color>
 </resources>
 

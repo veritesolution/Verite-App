@@ -220,7 +220,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         val settings = createScanSettings()
 
         isScanning = true
-        btnScan.text = "Stop Scan"
+        btnScan.text = getString(R.string.btn_scan_stop)
         setStatus(STATUS_SCANNING.format(DEVICE_NAME))
 
         bleScanner?.startScan(listOf(filter), settings, scanCallback)
@@ -241,7 +241,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     @SuppressLint("MissingPermission")
     private fun stopScan() {
         isScanning = false
-        btnScan.text = "Scan for BioWearable"
+        btnScan.text = getString(R.string.btn_scan_start)
         bleScanner?.stopScan(scanCallback)
         bleScanner = null
     }
