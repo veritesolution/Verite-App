@@ -50,6 +50,16 @@ android {
             "ELEVENLABS_API_KEY",
             "\"${localProperties.getProperty("ELEVENLABS_API_KEY", "")}\""
         )
+        buildConfigField(
+            "String",
+            "VERITE_SERVER_URL",
+            "\"${localProperties.getProperty("VERITE_SERVER_URL", "http://10.0.2.2:8000")}\""
+        )
+        buildConfigField(
+            "String",
+            "VERITE_API_KEY",
+            "\"${localProperties.getProperty("VERITE_API_KEY", "dev-verite-tmr-key-2024")}\""
+        )
     }
 
     buildTypes {
