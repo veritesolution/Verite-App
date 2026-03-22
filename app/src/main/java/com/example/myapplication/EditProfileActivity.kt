@@ -85,7 +85,7 @@ class EditProfileActivity : AppCompatActivity() {
         tvChangePhoto.setOnClickListener { openPicker() }
         profileImageContainer.setOnClickListener { openPicker() }
 
-        // Save Logic
+        /* save loading*/
         btnSave.setOnClickListener {
             val name = etName.text.toString().trim()
             val email = etEmail.text.toString().trim()
