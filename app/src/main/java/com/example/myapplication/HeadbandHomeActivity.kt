@@ -25,7 +25,7 @@ class HeadbandHomeActivity : AppCompatActivity() {
                             3 -> AdaptiveSoundActivity::class.java
                             4 -> AlarmActivity::class.java
                             5 -> MindSetActivity::class.java
-                            6 -> BioWearableDiagnosticActivity::class.java
+                            7 -> MoodTrackingActivity::class.java
                             else -> null
                         }
                         destinationClass?.let {
