@@ -17,15 +17,15 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.util.UUID
 
-// ── BLE UUIDs — must match firmware exactly ────────────────────────────────
+// ── BLE UUIDs — must match BioWearable firmware exactly ─────────────────────
 private val SERVICE_UUID       = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
-private val SENSOR_DATA_UUID   = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")
-private val LED_CONTROL_UUID   = UUID.fromString("cba1d466-344c-4be3-ab3f-189f80dd7518")
-private val MOTOR_CONTROL_UUID = UUID.fromString("f9279c99-b7b3-4e9e-b0dd-e4e2c95e9ad3")
+private val SENSOR_DATA_UUID   = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")   // NOTIFY 24-byte raw @ 250 Hz
+private val COMMANDS_UUID      = UUID.fromString("12345678-1234-5678-1234-56789abcdef0")     // WRITE ASCII commands
+private val DSP_RESULTS_UUID   = UUID.fromString("abcd1234-ab12-cd34-ef56-abcdef012345")    // NOTIFY 32-byte processed @ 2 Hz
 private val CCCD_UUID          = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
 
 private const val TAG             = "BioWearable"
-private const val DEVICE_NAME     = "BioWerable"
+private const val DEVICE_NAME     = "BioWearable"
 private const val SCAN_TIMEOUT_MS = 12_000L
 private const val RECONNECT_DELAY = 2_000L
 private const val REQUEST_PERM    = 100
@@ -75,9 +75,9 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     private val bluetoothAdapter by lazy { bluetoothManager.adapter }
     private var bleScanner    : BluetoothLeScanner?           = null
     private var bluetoothGatt : BluetoothGatt?                = null
-    private var ledChar       : BluetoothGattCharacteristic?  = null
-    private var motorChar     : BluetoothGattCharacteristic?  = null
+    private var commandChar   : BluetoothGattCharacteristic?  = null  // RX char for ASCII commands
     private var lastDevice    : BluetoothDevice?              = null
+    private val pendingDescriptorWrites = mutableListOf<BluetoothGattCharacteristic>()
 
     private val mainHandler    = Handler(Looper.getMainLooper())
     private var isScanning     = false
@@ -163,14 +163,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
             disconnect()
         }
 
-        btnLedRed.setOnClickListener   { sendLed(255, 0, 0)   }
-        btnLedGreen.setOnClickListener { sendLed(0, 255, 0)   }
-        btnLedBlue.setOnClickListener  { sendLed(0, 0, 255)   }
-        btnLedOff.setOnClickListener   { sendLed(0, 0, 0)     }
+        btnLedRed.setOnClickListener   { sendCommand("R") }
+        btnLedGreen.setOnClickListener { sendCommand("G") }
+        btnLedBlue.setOnClickListener  { sendCommand("B") }
+        btnLedOff.setOnClickListener   { sendCommand("O") }   // All outputs off
         btnLedCycle.setOnClickListener { runRgbCycle() }
 
-        btnMotorOn.setOnClickListener  { sendMotor(true)  }
-        btnMotorOff.setOnClickListener { sendMotor(false) }
+        btnMotorOn.setOnClickListener  { sendCommand("M") }   // Motor ON
+        btnMotorOff.setOnClickListener { sendCommand("X") }   // Motor OFF
         btnMotorPattern.setOnClickListener { runMotorPattern() }
 
         btnTestAll.setOnClickListener { runAllTests() }
@@ -255,7 +255,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
                 }
                 newState == BluetoothProfile.STATE_DISCONNECTED -> {
                     gatt.close()
-                    bluetoothGatt = null; ledChar = null; motorChar = null
+                    bluetoothGatt = null; commandChar = null
 
                     runOnUiThread {
                         setStatus("🔴 Disconnected")
@@ -286,16 +286,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
                 return
             }
 
-            ledChar   = service.getCharacteristic(LED_CONTROL_UUID)
-            motorChar = service.getCharacteristic(MOTOR_CONTROL_UUID)
+            // Store the command characteristic for sending LED/motor commands
+            commandChar = service.getCharacteristic(COMMANDS_UUID)
 
-            service.getCharacteristic(SENSOR_DATA_UUID)?.let { char ->
-                gatt.setCharacteristicNotification(char, true)
-                char.getDescriptor(CCCD_UUID)?.let { desc ->
-                    desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
-                    gatt.writeDescriptor(desc)
-                }
-            }
+            // Subscribe to NOTIFY characteristics sequentially (BLE handles one at a time)
+            pendingDescriptorWrites.clear()
+            service.getCharacteristic(DSP_RESULTS_UUID)?.let { pendingDescriptorWrites.add(it) }
+            service.getCharacteristic(SENSOR_DATA_UUID)?.let { pendingDescriptorWrites.add(it) }
+            enableNextNotification(gatt)
 
             runOnUiThread {
                 setStatus("🟢 Connected — receiving live data")
@@ -306,40 +304,73 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         }
 
         @Suppress("DEPRECATION")
+        private fun enableNextNotification(gatt: BluetoothGatt) {
+            if (pendingDescriptorWrites.isEmpty()) return
+            val char = pendingDescriptorWrites.removeAt(0)
+            gatt.setCharacteristicNotification(char, true)
+            char.getDescriptor(CCCD_UUID)?.let { desc ->
+                desc.value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE
+                gatt.writeDescriptor(desc)
+            }
+        }
+
+        override fun onDescriptorWrite(gatt: BluetoothGatt, descriptor: BluetoothGattDescriptor, status: Int) {
+            enableNextNotification(gatt)
+        }
+
+        @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            if (characteristic.uuid == SENSOR_DATA_UUID) {
-                parseSensorData(characteristic.value)
+            when (characteristic.uuid) {
+                SENSOR_DATA_UUID -> parseSensorData(characteristic.value)
+                DSP_RESULTS_UUID -> parseProcessedData(characteristic.value)
             }
         }
     }
 
+    /**
+     * Parse 24-byte SensorPacket (little-endian) from BioWearable firmware:
+     *   offset 0:  uint16 seq
+     *   offset 2:  uint16 eeg1
+     *   offset 4:  uint16 eeg2
+     *   offset 6:  uint16 emg
+     *   offset 8:  uint16 pulse
+     *   offset 10: int16  ax (accel X, divide by 16384 for g)
+     *   offset 12: int16  ay
+     *   offset 14: int16  az
+     *   offset 16: int16  gx (gyro X, divide by 131 for dps)
+     *   offset 18: int16  gy
+     *   offset 20: int16  gz
+     *   offset 22: int16  temp (divide by 340 + 36.53 for Celsius)
+     */
     private fun parseSensorData(data: ByteArray) {
-        if (data.size < 8) return
+        if (data.size < 24) return
 
         fun u16(i: Int) = ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
-        fun s16(i: Int): Short = (((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)).toShort()
+        fun s16(i: Int): Int {
+            val v = ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
+            return if (v >= 0x8000) v - 0x10000 else v
+        }
 
-        val eeg1  = u16(0);  val eeg2  = u16(2)
-        val emg   = u16(4);  val pulse = u16(6)
+        // val seq = u16(0)  // Sequence counter
+        val eeg1  = u16(2);  val eeg2  = u16(4)
+        val emg   = u16(6);  val pulse = u16(8)
         latestEeg1 = eeg1; latestEeg2 = eeg2; latestEmg = emg; latestPulse = pulse
 
-        val v1 = eeg1  * 3.1f / 4095f
-        val v2 = eeg2  * 3.1f / 4095f
-        val v3 = emg   * 3.1f / 4095f
-        val v4 = pulse * 3.1f / 4095f
+        val v1 = eeg1  * 3.3f / 4095f
+        val v2 = eeg2  * 3.3f / 4095f
+        val v3 = emg   * 3.3f / 4095f
+        val v4 = pulse * 3.3f / 4095f
 
-        val imuPresent = data.size >= 22
-        var accX = 0f; var accY = 0f; var accZ = 0f
-        var gyrX = 0f; var gyrY = 0f; var gyrZ = 0f
-        var temp = 0f
-
-        if (imuPresent) {
-            accX = s16(8)  / 100f;  accY = s16(10) / 100f;  accZ = s16(12) / 100f
-            gyrX = s16(14) / 100f;  gyrY = s16(16) / 100f;  gyrZ = s16(18) / 100f
-            temp = s16(20) / 100f
-            latestAccX = accX; latestAccY = accY; latestAccZ = accZ
-            hasImu = true
-        }
+        // IMU data is always present in the 24-byte packet
+        val accX = s16(10) / 16384.0f  // Convert to g
+        val accY = s16(12) / 16384.0f
+        val accZ = s16(14) / 16384.0f
+        val gyrX = s16(16) / 131.0f    // Convert to degrees/second
+        val gyrY = s16(18) / 131.0f
+        val gyrZ = s16(20) / 131.0f
+        val temp = s16(22) / 340.0f + 36.53f  // Convert to Celsius
+        latestAccX = accX; latestAccY = accY; latestAccZ = accZ
+        hasImu = true
 
         packetCount++
 
@@ -353,17 +384,30 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
             pbEmg.progress   = emg
             pbPulse.progress = pulse
 
-            if (imuPresent) {
-                cardImu.visibility = View.VISIBLE
-                tvAccX.text    = "X: %+.2f".format(accX)
-                tvAccY.text    = "Y: %+.2f".format(accY)
-                tvAccZ.text    = "Z: %+.2f".format(accZ)
-                tvGyroX.text   = "X: %+.1f".format(gyrX)
-                tvGyroY.text   = "Y: %+.1f".format(gyrY)
-                tvGyroZ.text   = "Z: %+.1f".format(gyrZ)
-                tvImuTemp.text = "🌡 Temp: %.1f°C".format(temp)
-            }
+            cardImu.visibility = View.VISIBLE
+            tvAccX.text    = "X: %+.3fg".format(accX)
+            tvAccY.text    = "Y: %+.3fg".format(accY)
+            tvAccZ.text    = "Z: %+.3fg".format(accZ)
+            tvGyroX.text   = "X: %+.1f dps".format(gyrX)
+            tvGyroY.text   = "Y: %+.1f dps".format(gyrY)
+            tvGyroZ.text   = "Z: %+.1f dps".format(gyrZ)
+            tvImuTemp.text = "Temp: %.1f C".format(temp)
         }
+    }
+
+    /**
+     * Parse 32-byte ProcessedPacket from firmware DSP (2 Hz).
+     * Currently logged for diagnostic purposes.
+     */
+    private fun parseProcessedData(data: ByteArray) {
+        if (data.size < 32) return
+        // ProcessedPacket is received but this diagnostic screen focuses on raw data.
+        // The processed data is consumed via BluetoothLeManager.bioDataStream for app features.
+        val bpm = data[19].toInt() and 0xFF
+        val rmssd = data[20].toInt() and 0xFF
+        val alpha = data[2].toInt() and 0xFF
+        val beta = data[3].toInt() and 0xFF
+        Log.d(TAG, "DSP: BPM=$bpm RMSSD=$rmssd Alpha=$alpha% Beta=$beta%")
     }
 
     private fun startDataRateUpdater() {
@@ -384,46 +428,46 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         })
     }
 
+    /**
+     * Send ASCII command to BioWearable via the RX characteristic.
+     * Firmware commands: R=red, G=green, B=blue, W=white, M=motor on, X=motor off, O=all off
+     */
+    @SuppressLint("MissingPermission")
     @Suppress("DEPRECATION")
-    private fun sendLed(r: Int, g: Int, b: Int) {
+    private fun sendCommand(cmd: String) {
         val gatt = bluetoothGatt ?: return
-        val char = ledChar       ?: return
-        char.value = byteArrayOf(r.toByte(), g.toByte(), b.toByte())
+        val char = commandChar   ?: return
+        char.value = cmd.toByteArray(Charsets.US_ASCII)
         gatt.writeCharacteristic(char)
-    }
-
-    @Suppress("DEPRECATION")
-    private fun sendMotor(on: Boolean) {
-        val gatt = bluetoothGatt ?: return
-        val char = motorChar     ?: return
-        char.value = byteArrayOf(if (on) 0x01 else 0x00)
-        gatt.writeCharacteristic(char)
+        Log.d(TAG, "Sent command: $cmd")
     }
 
     private fun runRgbCycle() {
         if (isCycling) return
         isCycling = true
-        btnLedCycle.text = "🌈  Cycling..."
+        btnLedCycle.text = "Cycling..."
         btnLedCycle.isEnabled = false
 
-        data class C(val n: String, val r: Int, val g: Int, val b: Int)
-        val colors = listOf(C("White", 255, 255, 255), C("Red", 255, 0, 0), C("Green", 0, 255, 0), C("Blue", 0, 0, 255), C("Yellow", 255, 200, 0), C("Cyan", 0, 255, 255), C("Magenta", 255, 0, 200))
+        // Firmware toggles individual LEDs: R, G, B, W=all on, O=all off
+        data class C(val n: String, val cmd: String)
+        val colors = listOf(C("White", "W"), C("Red", "R"), C("Green", "G"), C("Blue", "B"))
 
         var i = 0
         val step = object : Runnable {
             override fun run() {
                 if (i < colors.size && bluetoothGatt != null) {
                     val c = colors[i]
-                    setStatus("🌈 ${c.n}")
-                    sendLed(c.r, c.g, c.b)
+                    setStatus("${c.n}")
+                    sendCommand("O") // Reset first
+                    mainHandler.postDelayed({ sendCommand(c.cmd) }, 50)
                     i++
-                    mainHandler.postDelayed(this, 500)
+                    mainHandler.postDelayed(this, 600)
                 } else {
-                    sendLed(0, 0, 0)
+                    sendCommand("O")
                     isCycling = false
-                    btnLedCycle.text = "🌈  RGB Colour Cycle"
+                    btnLedCycle.text = "RGB Colour Cycle"
                     btnLedCycle.isEnabled = true
-                    setStatus("🟢 Connected — receiving live data")
+                    setStatus("Connected - receiving live data")
                 }
             }
         }
@@ -432,16 +476,17 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
 
     private fun runMotorPattern() {
         btnMotorPattern.isEnabled = false
-        btnMotorPattern.text = "📳  Buzzing..."
-        val steps = listOf(Pair(true, 1500), Pair(false, 350), Pair(true, 300), Pair(false, 350), Pair(true, 300), Pair(false, 0))
+        btnMotorPattern.text = "Buzzing..."
+        // M=motor on, X=motor off via firmware
+        val steps = listOf(Pair("M", 1500L), Pair("X", 350L), Pair("M", 300L), Pair("X", 350L), Pair("M", 300L), Pair("X", 0L))
         var cumDelay = 0L
-        for ((on, durationMs) in steps) {
-            mainHandler.postDelayed({ sendMotor(on) }, cumDelay)
+        for ((cmd, durationMs) in steps) {
+            mainHandler.postDelayed({ sendCommand(cmd) }, cumDelay)
             cumDelay += durationMs
         }
         mainHandler.postDelayed({
             btnMotorPattern.isEnabled = true
-            btnMotorPattern.text = "📳  Buzz Pattern (3 pulses)"
+            btnMotorPattern.text = "Buzz Pattern (3 pulses)"
         }, cumDelay + 100)
     }
 
@@ -458,43 +503,44 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         tvTestLog.text = log
 
         var delay = 0L
-        delay += scheduleTest(delay, log, "1  Red LED") { sendLed(255, 0, 0) }
-        delay += scheduleOff(delay) { sendLed(0, 0, 0) }
-        delay += scheduleTest(delay, log, "2  Green LED") { sendLed(0, 255, 0) }
-        delay += scheduleOff(delay) { sendLed(0, 0, 0) }
-        delay += scheduleTest(delay, log, "3  Blue LED") { sendLed(0, 0, 255) }
-        delay += scheduleOff(delay) { sendLed(0, 0, 0) }
+        delay += scheduleTest(delay, log, "1  Red LED") { sendCommand("R") }
+        delay += scheduleOff(delay) { sendCommand("O") }
+        delay += scheduleTest(delay, log, "2  Green LED") { sendCommand("G") }
+        delay += scheduleOff(delay) { sendCommand("O") }
+        delay += scheduleTest(delay, log, "3  Blue LED") { sendCommand("B") }
+        delay += scheduleOff(delay) { sendCommand("O") }
 
-        data class Clr(val r: Int, val g: Int, val b: Int, val n: String)
-        val rgbColors = listOf(Clr(255,255,255,"White"), Clr(255,0,0,"Red"), Clr(0,255,0,"Green"), Clr(0,0,255,"Blue"), Clr(255,200,0,"Yellow"), Clr(0,255,255,"Cyan"), Clr(255,0,200,"Magenta"))
+        // RGB cycle test using firmware toggle commands
+        data class Clr(val cmd: String, val n: String)
+        val rgbColors = listOf(Clr("W","White"), Clr("R","Red"), Clr("G","Green"), Clr("B","Blue"))
         for (c in rgbColors) {
             mainHandler.postDelayed({
-                sendLed(c.r, c.g, c.b)
-                log.appendLine("     ${c.n} ✔")
+                sendCommand("O"); mainHandler.postDelayed({ sendCommand(c.cmd) }, 50)
+                log.appendLine("     ${c.n}")
                 tvTestLog.text = log
             }, delay)
-            delay += 400
+            delay += 500
         }
         mainHandler.postDelayed({
-            sendLed(0, 0, 0)
-            log.appendLine("  ✔  TEST 4  RGB Cycle         PASS\n")
+            sendCommand("O")
+            log.appendLine("  TEST 4  RGB Cycle         PASS\n")
             tvTestLog.text = log
         }, delay)
         delay += 300
 
         mainHandler.postDelayed({
-            log.appendLine("  ⏳ TEST 5  Vibration Motor...")
+            log.appendLine("  TEST 5  Vibration Motor...")
             tvTestLog.text = log
-            sendMotor(true)
+            sendCommand("M")
         }, delay)
         delay += 1000
-        mainHandler.postDelayed({ sendMotor(false) }, delay)
+        mainHandler.postDelayed({ sendCommand("X") }, delay)
         delay += 300
-        mainHandler.postDelayed({ sendMotor(true) }, delay)
+        mainHandler.postDelayed({ sendCommand("M") }, delay)
         delay += 300
         mainHandler.postDelayed({
-            sendMotor(false)
-            log.appendLine("  ✔  TEST 5  Vibration Motor    PASS\n")
+            sendCommand("X")
+            log.appendLine("  TEST 5  Vibration Motor    PASS\n")
             tvTestLog.text = log
         }, delay)
         delay += 500
@@ -519,9 +565,10 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
 
         mainHandler.postDelayed({
             if (hasImu) {
+                // Values are now in g (not m/s²) — at rest should be ~1.0g
                 val gMag = Math.sqrt((latestAccX * latestAccX + latestAccY * latestAccY + latestAccZ * latestAccZ).toDouble()).toFloat()
-                val sane = gMag in 7.0f..12.5f
-                log.appendLine("  ${if (sane) "✔" else "⚠"}  MPU6050 IMU  |g|=%.2f m/s²  ${if (sane) "PASS" else "CHECK"}".format(gMag))
+                val sane = gMag in 0.8f..1.3f
+                log.appendLine("  ${if (sane) "" else ""}  MPU6050 IMU  |g|=%.3fg  ${if (sane) "PASS" else "CHECK"}".format(gMag))
             } else {
                 log.appendLine("  ⚠  MPU6050 IMU  No IMU data in BLE packet")
             }

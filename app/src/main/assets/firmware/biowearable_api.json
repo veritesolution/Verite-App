@@ -1,0 +1,533 @@
+{
+  "device": {
+    "name": "BioWearable",
+    "platform": "ESP32-S3",
+    "firmware_version": "4.1",
+    "description": "BioWearable EEG/EMG/HRV/IMU signal acquisition and processing device"
+  },
+
+  "bluetooth": {
+    "protocol": "BLE",
+    "service_uuid": "4fafc201-1fb5-459e-8fcc-c5c9c331914b",
+    "characteristics": {
+      "raw_stream": {
+        "uuid": "beb5483e-36e1-4688-b7f5-ea07361b26a8",
+        "type": "notify",
+        "direction": "device_to_app",
+        "description": "Raw sensor samples at 250 Hz",
+        "rate_hz": 250,
+        "packet_size_bytes": 24
+      },
+      "commands": {
+        "uuid": "12345678-1234-5678-1234-56789abcdef0",
+        "type": "write",
+        "direction": "app_to_device",
+        "description": "ASCII command bytes sent from app to device"
+      },
+      "dsp_results": {
+        "uuid": "abcd1234-ab12-cd34-ef56-abcdef012345",
+        "type": "notify",
+        "direction": "device_to_app",
+        "description": "Processed signal analysis results at 2 Hz",
+        "rate_hz": 2,
+        "packet_size_bytes": 32
+      }
+    }
+  },
+
+  "commands": {
+    "description": "Single ASCII byte written to commands characteristic",
+    "list": {
+      "R": "Toggle Red LED (GPIO 10)",
+      "G": "Toggle Green LED (GPIO 11)",
+      "B": "Toggle Blue LED (GPIO 12)",
+      "W": "All LEDs ON (white)",
+      "M": "Vibration motor ON (GPIO 15)",
+      "X": "Vibration motor OFF",
+      "O": "All outputs OFF",
+      "?": "Request help string (returned via raw_stream characteristic)"
+    }
+  },
+
+  "raw_packet": {
+    "description": "SensorPacket — 24 bytes, little-endian, sent at 250 Hz",
+    "encoding": "binary",
+    "byte_order": "little_endian",
+    "total_bytes": 24,
+    "fields": [
+      {
+        "name": "seq",
+        "byte_offset": 0,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "Sequence counter 0–65535, wraps. Use to detect dropped packets.",
+        "units": "count"
+      },
+      {
+        "name": "eeg1",
+        "byte_offset": 2,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "EEG channel 1 — BioAmp EXG Pill on GPIO 4",
+        "units": "ADC_raw",
+        "range": [0, 4095],
+        "sensor": "BioAmp EXG Pill",
+        "gpio": 4,
+        "note": "DC-biased at ~2048. Apply HPF at 0.5Hz before processing."
+      },
+      {
+        "name": "eeg2",
+        "byte_offset": 4,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "EEG channel 2 — not fitted, always 0",
+        "units": "ADC_raw",
+        "range": [0, 4095],
+        "gpio": 5,
+        "note": "Reserved. Will be 0."
+      },
+      {
+        "name": "emg",
+        "byte_offset": 6,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "EMG — Muscle Sensor v3 on GPIO 7",
+        "units": "ADC_raw",
+        "range": [0, 4095],
+        "sensor": "Muscle Sensor v3",
+        "gpio": 7,
+        "note": "DC-biased at ~2048. Apply HPF at 20Hz before processing."
+      },
+      {
+        "name": "pulse",
+        "byte_offset": 8,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "Pulse sensor — HW-B27 on GPIO 6",
+        "units": "ADC_raw",
+        "range": [0, 4095],
+        "sensor": "HW-B27",
+        "gpio": 6,
+        "note": "Peaks correspond to heartbeats. Apply LPF at 10Hz for peak detection."
+      },
+      {
+        "name": "ax",
+        "byte_offset": 10,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Accelerometer X axis raw — MPU-6050",
+        "units": "raw_LSB",
+        "to_g": "divide by 16384.0",
+        "full_scale": "±2g",
+        "sensor": "MPU-6050",
+        "i2c_address": "0x68"
+      },
+      {
+        "name": "ay",
+        "byte_offset": 12,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Accelerometer Y axis raw",
+        "units": "raw_LSB",
+        "to_g": "divide by 16384.0"
+      },
+      {
+        "name": "az",
+        "byte_offset": 14,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Accelerometer Z axis raw",
+        "units": "raw_LSB",
+        "to_g": "divide by 16384.0"
+      },
+      {
+        "name": "gx",
+        "byte_offset": 16,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Gyroscope X axis raw",
+        "units": "raw_LSB",
+        "to_dps": "divide by 131.0",
+        "full_scale": "±250 degrees/second"
+      },
+      {
+        "name": "gy",
+        "byte_offset": 18,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Gyroscope Y axis raw",
+        "units": "raw_LSB",
+        "to_dps": "divide by 131.0"
+      },
+      {
+        "name": "gz",
+        "byte_offset": 20,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Gyroscope Z axis raw",
+        "units": "raw_LSB",
+        "to_dps": "divide by 131.0"
+      },
+      {
+        "name": "temp",
+        "byte_offset": 22,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "MPU-6050 internal die temperature raw",
+        "units": "raw_LSB",
+        "to_celsius": "raw / 340.0 + 36.53"
+      }
+    ]
+  },
+
+  "dsp_packet": {
+    "description": "ProcessedPacket — 32 bytes, little-endian, sent at 2 Hz after on-device DSP",
+    "encoding": "binary",
+    "byte_order": "little_endian",
+    "total_bytes": 32,
+    "fields": [
+      {
+        "name": "e1_delta",
+        "byte_offset": 0,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH1 Delta band power (0.5–4 Hz) as percentage of total",
+        "units": "percent",
+        "range": [0, 100]
+      },
+      {
+        "name": "e1_theta",
+        "byte_offset": 1,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH1 Theta band power (4–8 Hz)",
+        "units": "percent",
+        "range": [0, 100]
+      },
+      {
+        "name": "e1_alpha",
+        "byte_offset": 2,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH1 Alpha band power (8–13 Hz)",
+        "units": "percent",
+        "range": [0, 100]
+      },
+      {
+        "name": "e1_beta",
+        "byte_offset": 3,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH1 Beta band power (13–30 Hz)",
+        "units": "percent",
+        "range": [0, 100]
+      },
+      {
+        "name": "e1_gamma",
+        "byte_offset": 4,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH1 Gamma band power (30–45 Hz)",
+        "units": "percent",
+        "range": [0, 100]
+      },
+      {
+        "name": "e2_delta",
+        "byte_offset": 5,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EEG CH2 — not fitted, always 0",
+        "units": "percent"
+      },
+      {
+        "name": "e2_theta",  "byte_offset": 6,  "byte_length": 1, "type": "uint8", "units": "percent", "note": "reserved" },
+      { "name": "e2_alpha",  "byte_offset": 7,  "byte_length": 1, "type": "uint8", "units": "percent", "note": "reserved" },
+      { "name": "e2_beta",   "byte_offset": 8,  "byte_length": 1, "type": "uint8", "units": "percent", "note": "reserved" },
+      { "name": "e2_gamma",  "byte_offset": 9,  "byte_length": 1, "type": "uint8", "units": "percent", "note": "reserved" },
+      {
+        "name": "focus_x10",
+        "byte_offset": 10,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Focus index = Beta/Theta ratio × 10",
+        "units": "ratio_x10",
+        "to_float": "divide by 10.0",
+        "interpretation": ">1.5 = focused, <0.8 = unfocused"
+      },
+      {
+        "name": "relax_x10",
+        "byte_offset": 11,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Relaxation index = Alpha/Beta ratio × 10",
+        "units": "ratio_x10",
+        "to_float": "divide by 10.0",
+        "interpretation": ">2.0 = relaxed, <0.8 = alert/tense"
+      },
+      {
+        "name": "drowsy_x10",
+        "byte_offset": 12,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Drowsiness index = Theta/Alpha ratio × 10",
+        "units": "ratio_x10",
+        "to_float": "divide by 10.0",
+        "interpretation": ">1.5 = drowsy"
+      },
+      {
+        "name": "emg_rms",
+        "byte_offset": 13,
+        "byte_length": 2,
+        "type": "uint16",
+        "description": "EMG RMS amplitude over 25-sample sliding window (100ms)",
+        "units": "ADC_raw",
+        "range": [0, 4095]
+      },
+      {
+        "name": "emg_mf",
+        "byte_offset": 15,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EMG Mean Power Frequency — decreases as muscle fatigues",
+        "units": "Hz",
+        "range": [0, 125],
+        "interpretation": "Fresh muscle ~80Hz, fatigued muscle ~30Hz"
+      },
+      {
+        "name": "emg_zcr",
+        "byte_offset": 16,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "EMG Zero Crossing Rate per 100ms window",
+        "units": "crossings_per_100ms"
+      },
+      {
+        "name": "emg_active",
+        "byte_offset": 17,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Muscle contraction status",
+        "units": "boolean",
+        "values": { "0": "relaxed", "1": "contracted" }
+      },
+      {
+        "name": "emg_fatigue",
+        "byte_offset": 18,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Muscle fatigue percentage based on mean frequency decline",
+        "units": "percent",
+        "range": [0, 100],
+        "interpretation": "0=fresh, 100=highly fatigued"
+      },
+      {
+        "name": "bpm",
+        "byte_offset": 19,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Heart rate in beats per minute. 0 = no contact or insufficient data.",
+        "units": "bpm",
+        "range": [0, 220],
+        "normal_range": [50, 100]
+      },
+      {
+        "name": "rmssd",
+        "byte_offset": 20,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "HRV RMSSD — root mean square of successive RR differences",
+        "units": "ms",
+        "normal_range": "20–50ms",
+        "interpretation": "Higher = better autonomic health / more parasympathetic"
+      },
+      {
+        "name": "sdnn",
+        "byte_offset": 21,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "HRV SDNN — standard deviation of RR intervals",
+        "units": "ms",
+        "normal_range": "40–100ms"
+      },
+      {
+        "name": "pnn50",
+        "byte_offset": 22,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "HRV pNN50 — percentage of RR pairs differing by >50ms",
+        "units": "percent",
+        "normal_range": "3–28%"
+      },
+      {
+        "name": "hrv_stress",
+        "byte_offset": 23,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Stress index derived from RMSSD (inverse relationship)",
+        "units": "percent",
+        "range": [0, 100],
+        "interpretation": "0=relaxed, 100=high stress"
+      },
+      {
+        "name": "pitch_x10",
+        "byte_offset": 24,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Device pitch angle from complementary filter (accel + gyro)",
+        "units": "degrees_x10",
+        "to_degrees": "divide by 10.0",
+        "range": [-1800, 1800]
+      },
+      {
+        "name": "roll_x10",
+        "byte_offset": 26,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Device roll angle from complementary filter",
+        "units": "degrees_x10",
+        "to_degrees": "divide by 10.0",
+        "range": [-1800, 1800]
+      },
+      {
+        "name": "yaw_x10",
+        "byte_offset": 28,
+        "byte_length": 2,
+        "type": "int16",
+        "description": "Device yaw angle — gyroscope integration only (no magnetometer)",
+        "units": "degrees_x10",
+        "to_degrees": "divide by 10.0",
+        "range": [-1800, 1800],
+        "note": "Yaw drifts over time without magnetometer correction"
+      },
+      {
+        "name": "accel_mag_x10",
+        "byte_offset": 30,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Total acceleration magnitude (gravity vector length)",
+        "units": "g_x10",
+        "to_g": "divide by 10.0",
+        "interpretation": "1.0g at rest, >1.2g or <0.8g = motion detected"
+      },
+      {
+        "name": "flags",
+        "byte_offset": 31,
+        "byte_length": 1,
+        "type": "uint8",
+        "description": "Status bit flags",
+        "bits": {
+          "bit0": "EEG artefact detected (|signal| > 1500 ADC)",
+          "bit1": "EMG contracted (RMS > threshold)",
+          "bit2": "Motion detected (accel_mag > 1.2g or < 0.8g)",
+          "bit3": "HRV valid (4+ R-peaks detected)",
+          "bit4": "Pulse sensor contacted (signal std-dev > 20 ADC)"
+        }
+      }
+    ]
+  },
+
+  "signal_processing": {
+    "sample_rate_hz": 250,
+    "adc_bits": 12,
+    "adc_range": [0, 4095],
+    "adc_reference_voltage": 3.3,
+    "filters_applied_in_firmware": {
+      "eeg": "HPF 0.5Hz → Notch 50Hz → LPF 45Hz → EMA α=0.8",
+      "emg": "HPF 20Hz → Notch 50Hz → LPF 125Hz",
+      "pulse": "LPF 10Hz",
+      "imu_accel": "LPF 10Hz"
+    },
+    "fft": {
+      "window_size": 256,
+      "window_function": "Hann",
+      "frequency_resolution_hz": 0.977,
+      "update_rate_hz": 2
+    },
+    "imu_fusion": {
+      "algorithm": "Complementary Filter",
+      "gyro_weight": 0.96,
+      "accel_weight": 0.04
+    }
+  },
+
+  "hardware": {
+    "mcu": "ESP32-S3",
+    "sensors": {
+      "eeg": { "chip": "BioAmp EXG Pill", "gpio": 4, "power": "5V", "output_range": "0–3.3V" },
+      "emg": { "chip": "Muscle Sensor v3", "gpio": 7, "power": "±9V", "output_range": "0–3.3V" },
+      "pulse": { "chip": "HW-B27", "gpio": 6, "power": "3.3V", "output_range": "0–3.3V" },
+      "imu": { "chip": "MPU-6050", "i2c_sda": 9, "i2c_scl": 8, "i2c_address": "0x68", "power": "3.3V" }
+    },
+    "outputs": {
+      "led_red":   { "gpio": 10, "driver": "BC547 NPN", "resistor": "220Ω" },
+      "led_green": { "gpio": 11, "driver": "BC547 NPN", "resistor": "220Ω" },
+      "led_blue":  { "gpio": 12, "driver": "BC547 NPN", "resistor": "330Ω" },
+      "motor":     { "gpio": 15, "note": "1N4007 flyback diode required" }
+    }
+  },
+
+  "integration_examples": {
+    "javascript_web_bluetooth": {
+      "connect": "navigator.bluetooth.requestDevice({ filters: [{ name: 'BioWearable' }], optionalServices: ['4fafc201-1fb5-459e-8fcc-c5c9c331914b'] })",
+      "parse_raw_packet": [
+        "const dv = new DataView(event.target.value.buffer);",
+        "const seq   = dv.getUint16(0, true);",
+        "const eeg1  = dv.getUint16(2, true);",
+        "const emg   = dv.getUint16(6, true);",
+        "const pulse = dv.getUint16(8, true);",
+        "const ax_g  = dv.getInt16(10, true) / 16384.0;",
+        "const ay_g  = dv.getInt16(12, true) / 16384.0;",
+        "const az_g  = dv.getInt16(14, true) / 16384.0;",
+        "const gx_dps= dv.getInt16(16, true) / 131.0;",
+        "const temp_c= dv.getInt16(22, true) / 340.0 + 36.53;"
+      ],
+      "parse_dsp_packet": [
+        "const dv = new DataView(event.target.value.buffer);",
+        "const alpha   = dv.getUint8(2);         // EEG alpha %",
+        "const beta    = dv.getUint8(3);         // EEG beta %",
+        "const focus   = dv.getUint8(10) / 10.0; // β/θ ratio",
+        "const emgRms  = dv.getUint16(13, true);",
+        "const bpm     = dv.getUint8(19);",
+        "const rmssd   = dv.getUint8(20);",
+        "const pitch   = dv.getInt16(24, true) / 10.0;",
+        "const flags   = dv.getUint8(31);",
+        "const contacted = !!(flags & 0x10);",
+        "const hrvValid  = !!(flags & 0x08);"
+      ]
+    },
+    "python_bleak": {
+      "install": "pip install bleak",
+      "parse_raw": [
+        "import struct",
+        "seq, eeg1, eeg2, emg, pulse, ax, ay, az, gx, gy, gz, temp = struct.unpack('<HHHHHhhhhhh h', data)",
+        "ax_g = ax / 16384.0",
+        "gx_dps = gx / 131.0",
+        "temp_c = temp / 340.0 + 36.53"
+      ],
+      "parse_dsp": [
+        "import struct",
+        "fields = struct.unpack('<BBBBBBBBBBBBBHBBBBBBBBBhhhBB', data)",
+        "bpm    = fields[19]",
+        "rmssd  = fields[20]",
+        "pitch  = fields[24] / 10.0",
+        "flags  = fields[31]"
+      ]
+    },
+    "flutter_dart": {
+      "parse_raw": [
+        "final seq   = ByteData.sublistView(data).getUint16(0, Endian.little);",
+        "final eeg1  = ByteData.sublistView(data).getUint16(2, Endian.little);",
+        "final emg   = ByteData.sublistView(data).getUint16(6, Endian.little);",
+        "final pulse = ByteData.sublistView(data).getUint16(8, Endian.little);",
+        "final axG   = ByteData.sublistView(data).getInt16(10, Endian.little) / 16384.0;"
+      ],
+      "parse_dsp": [
+        "final bpm   = data[19];",
+        "final rmssd = data[20];",
+        "final pitch = ByteData.sublistView(data).getInt16(24, Endian.little) / 10.0;",
+        "final flags = data[31];",
+        "final contacted = (flags & 0x10) != 0;"
+      ]
+    }
+  }
+}
