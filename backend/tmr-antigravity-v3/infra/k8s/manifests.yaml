@@ -1,0 +1,333 @@
+# ════════════════════════════════════════════════════════════════════════════
+# TMR-ANTIGRAVITY — Kubernetes Production Manifests
+# Apply: kubectl apply -f infra/k8s/
+# ════════════════════════════════════════════════════════════════════════════
+
+---
+# Namespace
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: tmr-antigravity
+  labels:
+    app.kubernetes.io/name: tmr-antigravity
+    environment: production
+
+---
+# ── Secrets (values injected by CI/CD, not stored in repo) ───────────────────
+apiVersion: v1
+kind: Secret
+metadata:
+  name: tmr-secrets
+  namespace: tmr-antigravity
+type: Opaque
+# In production, inject via: kubectl create secret generic tmr-secrets --from-env-file=.env
+# OR use AWS Secrets Manager / GCP Secret Manager via External Secrets Operator
+stringData:
+  SECRET_KEY: "REPLACE_IN_CI"
+  DATABASE_URL: "REPLACE_IN_CI"
+  REDIS_URL: "REPLACE_IN_CI"
+  GROQ_API_KEY: "REPLACE_IN_CI"
+  GEMINI_API_KEY: "REPLACE_IN_CI"
+  FERNET_KEY: "REPLACE_IN_CI"
+  SENTRY_DSN: "REPLACE_IN_CI"
+
+---
+# ── ConfigMap (non-secret configuration) ──────────────────────────────────────
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tmr-config
+  namespace: tmr-antigravity
+data:
+  ENVIRONMENT: "production"
+  APP_VERSION: "2.0.0"
+  LOG_LEVEL: "INFO"
+  EEG_HARDWARE: "synthetic"
+  VOICE_USE_CLOUD: "true"
+  AWS_REGION: "us-east-1"
+  S3_BUCKET_AUDIO: "tmr-audio-cues-prod"
+  S3_BUCKET_EEG: "tmr-eeg-raw-prod"
+
+---
+# ── API Deployment ────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tmr-api
+  namespace: tmr-antigravity
+  labels:
+    app: tmr-api
+    version: "2.0.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: tmr-api
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0       # zero-downtime deploys
+  template:
+    metadata:
+      labels:
+        app: tmr-api
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      serviceAccountName: tmr-api-sa
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 2000
+      containers:
+        - name: api
+          image: YOUR_REGISTRY/tmr-api:2.0.0
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - secretRef:
+                name: tmr-secrets
+            - configMapRef:
+                name: tmr-config
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "512Mi"
+            limits:
+              cpu: "2000m"
+              memory: "2Gi"
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 20
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 2
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "sleep 5"]  # drain requests before shutdown
+      terminationGracePeriodSeconds: 30
+
+---
+# ── API Service ───────────────────────────────────────────────────────────────
+apiVersion: v1
+kind: Service
+metadata:
+  name: tmr-api-svc
+  namespace: tmr-antigravity
+spec:
+  selector:
+    app: tmr-api
+  ports:
+    - port: 80
+      targetPort: 8000
+      name: http
+  type: ClusterIP
+
+---
+# ── API Horizontal Pod Autoscaler ─────────────────────────────────────────────
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: tmr-api-hpa
+  namespace: tmr-antigravity
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: tmr-api
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+---
+# ── Plan Worker Deployment ────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tmr-worker-plans
+  namespace: tmr-antigravity
+  labels:
+    app: tmr-worker-plans
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: tmr-worker-plans
+  template:
+    metadata:
+      labels:
+        app: tmr-worker-plans
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+        - name: worker
+          image: YOUR_REGISTRY/tmr-api:2.0.0
+          command:
+            - celery
+            - -A
+            - services.workers.celery_app:celery_app
+            - worker
+            - --queues=plans
+            - --concurrency=4
+            - --loglevel=info
+            - --hostname=worker-plans@%h
+          envFrom:
+            - secretRef:
+                name: tmr-secrets
+            - configMapRef:
+                name: tmr-config
+          resources:
+            requests:
+              cpu: "1000m"
+              memory: "1Gi"
+            limits:
+              cpu: "4000m"
+              memory: "4Gi"
+
+---
+# ── EEG Worker Deployment (lab-only, node-affinity for hardware machine) ──────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tmr-worker-eeg
+  namespace: tmr-antigravity
+  labels:
+    app: tmr-worker-eeg
+spec:
+  replicas: 1           # MUST be 1 — only one machine has EEG hardware
+  selector:
+    matchLabels:
+      app: tmr-worker-eeg
+  template:
+    metadata:
+      labels:
+        app: tmr-worker-eeg
+    spec:
+      nodeSelector:
+        hardware/eeg: "true"    # label the hardware node: kubectl label node <node> hardware/eeg=true
+      tolerations:
+        - key: "hardware/eeg"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: eeg-worker
+          image: YOUR_REGISTRY/tmr-eeg:2.0.0
+          command:
+            - celery
+            - -A
+            - services.workers.celery_app:celery_app
+            - worker
+            - --queues=eeg
+            - --concurrency=1
+            - --loglevel=info
+          envFrom:
+            - secretRef:
+                name: tmr-secrets
+            - configMapRef:
+                name: tmr-config
+          resources:
+            requests:
+              cpu: "2000m"
+              memory: "2Gi"
+            limits:
+              cpu: "4000m"
+              memory: "4Gi"
+          securityContext:
+            privileged: true    # needed for USB serial device access (OpenBCI)
+
+---
+# ── Ingress (nginx) ───────────────────────────────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: tmr-ingress
+  namespace: tmr-antigravity
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-body-size: "15m"   # allow audio uploads
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - api.tmr-antigravity.yourlab.org
+      secretName: tmr-tls-cert
+  rules:
+    - host: api.tmr-antigravity.yourlab.org
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: tmr-api-svc
+                port:
+                  number: 80
+
+---
+# ── Network Policy (zero-trust between pods) ──────────────────────────────────
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: tmr-network-policy
+  namespace: tmr-antigravity
+spec:
+  podSelector: {}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tmr-antigravity
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: tmr-antigravity
+    - to:    # allow external API calls (LLMs, Google Cloud, AWS, Hume AI)
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - port: 443
+
+---
+# ── Service Account ───────────────────────────────────────────────────────────
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: tmr-api-sa
+  namespace: tmr-antigravity
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::ACCOUNT:role/tmr-api-role"  # IRSA for S3 access

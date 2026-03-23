@@ -1,0 +1,49 @@
+# ════════════════════════════════════════════════════════════════════════════
+# pyproject.toml — project metadata and tool configuration
+# ════════════════════════════════════════════════════════════════════════════
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "tmr-antigravity"
+version = "3.0.0"
+description = "Production TMR + AI habit change platform"
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+markers = [
+    "integration: requires running PostgreSQL and Redis",
+    "hardware: requires physical EEG hardware",
+    "slow: runs for >10 seconds",
+]
+addopts = [
+    "--strict-markers",
+    "-v",
+    "--tb=short",
+]
+
+[tool.coverage.run]
+source = ["services"]
+omit = [
+    "*/tests/*",
+    "*/__init__.py",
+    "*/migrations/*",
+]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+select = ["E", "F", "I", "UP", "B", "S"]
+ignore = ["S101", "S603", "S607"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+strict = false

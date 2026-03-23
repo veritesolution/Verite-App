@@ -1,0 +1,174 @@
+version: "3.9"
+
+# ════════════════════════════════════════════════════════════════════════════
+# TMR-ANTIGRAVITY v2.0 — Local development stack
+# Usage:
+#   docker-compose up                     # start everything
+#   docker-compose up api worker-plans    # start only API + plan workers
+#   docker-compose logs -f api            # follow API logs
+# ════════════════════════════════════════════════════════════════════════════
+
+x-common-env: &common-env
+  env_file: .env
+  environment:
+    - DATABASE_URL=postgresql+asyncpg://${DB_USER:-tmr}:${DB_PASS:-tmrpass}@postgres:5432/tmr_antigravity
+    - REDIS_URL=redis://:${REDIS_PASS:-redispass}@redis:6379/0
+    - CELERY_BROKER_URL=redis://:${REDIS_PASS:-redispass}@redis:6379/1
+    - CELERY_RESULT_BACKEND=redis://:${REDIS_PASS:-redispass}@redis:6379/2
+    - ENVIRONMENT=development
+
+services:
+
+  # ── API ───────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    ports:
+      - "8000:8000"
+    <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ../../services:/app/services    # hot reload in dev
+    command: >
+      uvicorn services.api.main:app
+      --host 0.0.0.0 --port 8000
+      --reload --loop uvloop
+    restart: unless-stopped
+
+  # ── Plan generation worker ────────────────────────────────────────────────
+  worker-plans:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A services.workers.celery_app:celery_app worker
+      --queues plans
+      --concurrency 4
+      --loglevel info
+      --hostname worker-plans@%h
+    restart: unless-stopped
+
+  # ── EEG / TMR worker ──────────────────────────────────────────────────────
+  worker-eeg:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.eeg
+    <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A services.workers.celery_app:celery_app worker
+      --queues eeg
+      --concurrency 1
+      --loglevel info
+      --hostname worker-eeg@%h
+    # Uncomment to pass through OpenBCI serial port:
+    # devices:
+    #   - "/dev/ttyUSB0:/dev/ttyUSB0"
+    restart: unless-stopped
+
+  # ── Audit worker ──────────────────────────────────────────────────────────
+  worker-audit:
+    build:
+      context: ../..
+      dockerfile: infra/docker/Dockerfile.api
+    <<: *common-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: >
+      celery -A services.workers.celery_app:celery_app worker
+      --queues audit
+      --concurrency 2
+      --loglevel info
+      --hostname worker-audit@%h
+    restart: unless-stopped
+
+  # ── Celery Flower (task monitoring UI) ────────────────────────────────────
+  flower:
+    image: mher/flower:2.0
+    <<: *common-env
+    ports:
+      - "5555:5555"
+    command: celery --broker=redis://:${REDIS_PASS:-redispass}@redis:6379/1 flower
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  # ── PostgreSQL ────────────────────────────────────────────────────────────
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: tmr_antigravity
+      POSTGRES_USER: ${DB_USER:-tmr}
+      POSTGRES_PASSWORD: ${DB_PASS:-tmrpass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres-init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tmr}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Redis ─────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASS:-redispass} --appendonly yes
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASS:-redispass}", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+  # ── Prometheus ────────────────────────────────────────────────────────────
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    restart: unless-stopped
+
+  # ── Grafana ───────────────────────────────────────────────────────────────
+  grafana:
+    image: grafana/grafana:latest
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASS:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafanadata:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
+  grafanadata:

@@ -2,18 +2,26 @@ package com.example.myapplication
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ImageView
+import android.widget.ProgressBar
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.remote.PsychNetworkModule
+import com.example.myapplication.data.repository.PsychRepository
+import com.example.myapplication.data.repository.PsychResult
 import com.example.myapplication.util.ProfileIconHelper
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+
+private const val TAG = "OrynActivity"
 
 class OrynActivity : AppCompatActivity() {
 
@@ -21,6 +29,12 @@ class OrynActivity : AppCompatActivity() {
     private val messages = mutableListOf<ChatMessage>()
     private lateinit var recyclerView: RecyclerView
     private lateinit var etChatInput: EditText
+    private var progressBar: ProgressBar? = null
+
+    // Psychologist API
+    private var psychRepository: PsychRepository? = null
+    private var psychSessionId: String? = null
+    private var apiAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,11 +42,40 @@ class OrynActivity : AppCompatActivity() {
 
         val database = AppDatabase.getDatabase(this)
 
+        // Initialize Psychologist API
+        initPsychApi()
+
         setupUI(database)
         setupChat(database)
-        
-        // Initial Oryn Greeting
-        simulateOrynResponse("Hello! I am Oryn. How can I assist you with your mental clarity today?")
+
+        // Initial greeting
+        addMessage(ChatMessage("Hello! I am Oryn, your AI mental wellness companion. How can I help you today?", isUser = false))
+    }
+
+    private fun initPsychApi() {
+        try {
+            PsychNetworkModule.init(this)
+            psychRepository = PsychRepository()
+            apiAvailable = true
+
+            // Check server health in background
+            lifecycleScope.launch {
+                when (val result = psychRepository?.healthCheck()) {
+                    is PsychResult.Success -> {
+                        Log.i(TAG, "Psychologist API online: ${result.data.version}")
+                        apiAvailable = true
+                    }
+                    is PsychResult.Error -> {
+                        Log.w(TAG, "Psychologist API unavailable: ${result.message}")
+                        apiAvailable = false
+                    }
+                    else -> { apiAvailable = false }
+                }
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Could not initialize Psychologist API", e)
+            apiAvailable = false
+        }
     }
 
     private fun setupUI(database: AppDatabase) {
@@ -45,13 +88,15 @@ class OrynActivity : AppCompatActivity() {
 
         ProfileIconHelper.syncProfileIcon(this, profileIcon)
 
-        // Branded header logo
         val headerTitle = findViewById<android.widget.TextView>(R.id.headerTitle)
         com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(headerTitle)
 
         findViewById<Button>(R.id.btnCheckSummary).setOnClickListener {
             startActivity(Intent(this, OrynSummaryActivity::class.java))
         }
+
+        // Optional progress bar (if layout has one)
+        progressBar = findViewById(R.id.progressBar)
     }
 
     private fun setupChat(database: AppDatabase) {
@@ -59,7 +104,7 @@ class OrynActivity : AppCompatActivity() {
         val layoutManager = LinearLayoutManager(this)
         layoutManager.stackFromEnd = true
         recyclerView.layoutManager = layoutManager
-        
+
         adapter = ChatAdapter(messages, database)
         recyclerView.adapter = adapter
 
@@ -71,12 +116,7 @@ class OrynActivity : AppCompatActivity() {
             if (text.isNotEmpty()) {
                 addMessage(ChatMessage(text, isUser = true))
                 etChatInput.text.clear()
-                
-                // Simulate Oryn typing and replying
-                lifecycleScope.launch {
-                    delay(1000) // 1 second delay
-                    simulateOrynResponse("That's interesting. Tell me more about how that made you feel.")
-                }
+                sendToPsychApi(text)
             }
         }
 
@@ -92,13 +132,66 @@ class OrynActivity : AppCompatActivity() {
         }
     }
 
+    private fun sendToPsychApi(text: String) {
+        if (!apiAvailable || psychRepository == null) {
+            // Fallback to local response when API is unavailable
+            addMessage(ChatMessage(
+                "I'm currently in offline mode. Please check your connection to the Verite server. " +
+                "In the meantime, I'm here to listen. Could you tell me more about what's on your mind?",
+                isUser = false
+            ))
+            return
+        }
+
+        setLoading(true)
+        etChatInput.isEnabled = false
+
+        lifecycleScope.launch {
+            when (val result = psychRepository!!.sendMessage(text, psychSessionId)) {
+                is PsychResult.Success -> {
+                    val resp = result.data
+                    psychSessionId = resp.sessionId
+
+                    // Check for crisis
+                    if (resp.safety.isCrisis) {
+                        addMessage(ChatMessage(resp.response, isUser = false))
+                        Toast.makeText(
+                            this@OrynActivity,
+                            "Crisis resources are available. Please reach out for help.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        addMessage(ChatMessage(resp.response, isUser = false))
+                    }
+
+                    Log.d(TAG, "Domain: ${resp.analysis.domain}, Phase: ${resp.analysis.phase}, " +
+                        "Latency: ${resp.metrics.latencyMs}ms")
+                }
+                is PsychResult.Error -> {
+                    Log.e(TAG, "API error: ${result.message}")
+                    // Graceful fallback
+                    addMessage(ChatMessage(
+                        "I had trouble processing that. Could you try again? " +
+                        "I want to make sure I understand you correctly.",
+                        isUser = false
+                    ))
+                }
+                is PsychResult.Loading -> { /* Already showing loading */ }
+            }
+
+            setLoading(false)
+            etChatInput.isEnabled = true
+            etChatInput.requestFocus()
+        }
+    }
+
+    private fun setLoading(loading: Boolean) {
+        progressBar?.visibility = if (loading) View.VISIBLE else View.GONE
+    }
+
     private fun addMessage(message: ChatMessage) {
         messages.add(message)
         adapter.notifyItemInserted(messages.size - 1)
         recyclerView.scrollToPosition(messages.size - 1)
-    }
-
-    private fun simulateOrynResponse(text: String) {
-        addMessage(ChatMessage(text, isUser = false))
     }
 }
