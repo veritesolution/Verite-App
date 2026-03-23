@@ -11,7 +11,10 @@ import coil.transform.CircleCropTransformation
 import com.example.myapplication.data.local.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class ChatMessage(val text: String, val isUser: Boolean)
 
