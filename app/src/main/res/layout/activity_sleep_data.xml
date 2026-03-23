@@ -18,6 +18,10 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         android:fillViewport="true">
 
         <LinearLayout
@@ -43,6 +47,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
+                    android:contentDescription="Back Button"
                     app:tint="@color/accent_teal" />
 
                 <TextView
@@ -67,6 +72,7 @@
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    android:contentDescription="Profile Icon"
                     app:tint="#B4B4B4" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -78,7 +84,8 @@
                 android:layout_gravity="center_horizontal"
                 android:layout_marginBottom="16dp"
                 android:src="@drawable/headband"
-                android:scaleType="fitCenter" />
+                android:scaleType="fitCenter"
+                android:contentDescription="Headband device" />
 
             <!-- Summary Card -->
             <androidx.constraintlayout.widget.ConstraintLayout

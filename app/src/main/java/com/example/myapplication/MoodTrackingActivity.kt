@@ -214,7 +214,7 @@ fun LiveEmotionDisplay(emotion: EmotionState, onSave: () -> Unit, hasSaved: Bool
     val basicLabel = emotion.basic_emotion.replace("_", " ").uppercase()
     val isPositive = emotion.smoothed_valence > 0
     val color = if (isPositive) AccentPrimary else Color(0xFFE57373)
-    val emoji = when (emotion.basic_emotion.lowercase()) {
+    val emoji = when (emotion.basic_emotion.lowercase(java.util.Locale.US)) {
         "happy", "joy" -> "🤩"
         "calm", "relaxed" -> "😌"
         "sad", "depressed" -> "😢"
@@ -265,15 +265,15 @@ fun LiveEmotionDisplay(emotion: EmotionState, onSave: () -> Unit, hasSaved: Bool
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("VALENCE", fontSize = 10.sp, color = Color.White.copy(alpha=0.5f))
-                Text(String.format("%.2f", emotion.smoothed_valence), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(String.format(java.util.Locale.US, "%.2f", emotion.smoothed_valence), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("AROUSAL", fontSize = 10.sp, color = Color.White.copy(alpha=0.5f))
-                Text(String.format("%.2f", emotion.smoothed_arousal), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(String.format(java.util.Locale.US, "%.2f", emotion.smoothed_arousal), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text("QUALITY", fontSize = 10.sp, color = Color.White.copy(alpha=0.5f))
-                Text(String.format("%.0f%%", emotion.signal_quality * 100), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(String.format(java.util.Locale.US, "%.0f%%", emotion.signal_quality * 100), color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
             }
         }
 

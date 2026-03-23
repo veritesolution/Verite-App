@@ -73,7 +73,7 @@ class BioFeedbackActivity : AppCompatActivity() {
         btnRunAiDiagnostic.setOnClickListener {
             // Note: This requires a real audio file to exist at this path.
             // For production, integrate with Android's MediaRecorder to generate this file first.
-            val audioFilePath = "/sdcard/Download/my_recorded_audio.mp3"
+            val audioFilePath = android.os.Environment.getExternalStorageDirectory().path + "/Download/my_recorded_audio.mp3"
             
             btnRunAiDiagnostic.isEnabled = false
             aiLoadingProgress.visibility = View.VISIBLE
@@ -101,9 +101,9 @@ class BioFeedbackActivity : AppCompatActivity() {
         lifecycleScope.launch {
             bluetoothLeManager.bioDataStream.collect { data ->
                 tvHeartRate.text = data.heartRate.toString()
-                tvAlpha.text = String.format("%.1f", data.alpha)
-                tvBeta.text = String.format("%.1f", data.beta)
-                tvTheta.text = String.format("%.1f", data.theta)
+                tvAlpha.text = String.format(java.util.Locale.US, "%.1f", data.alpha)
+                tvBeta.text = String.format(java.util.Locale.US, "%.1f", data.beta)
+                tvTheta.text = String.format(java.util.Locale.US, "%.1f", data.theta)
                 // Pass to engine for analysis
                 stressDetectionEngine.analyze(data)
             }

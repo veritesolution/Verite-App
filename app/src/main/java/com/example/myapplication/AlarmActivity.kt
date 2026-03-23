@@ -33,7 +33,7 @@ data class Alarm(
     var isActive: Boolean = true
 ) {
     val timeString: String
-        get() = String.format("%02d:%02d", if (hour > 12) hour - 12 else if (hour == 0) 12 else hour, minute)
+        get() = String.format(Locale.getDefault(), "%02d:%02d", if (hour > 12) hour - 12 else if (hour == 0) 12 else hour, minute)
     val amPm: String
         get() = if (hour >= 12) "PM" else "AM"
 }
@@ -122,11 +122,12 @@ class AlarmActivity : AppCompatActivity() {
 
         activeAlarm?.let {
             val h = if (it.hour > 12) it.hour - 12 else if (it.hour == 0) 12 else it.hour
-            findViewById<TextView>(R.id.tvNextAlarmHour).text = String.format("%02d", h)
-            findViewById<TextView>(R.id.tvNextAlarmMinute).text = String.format("%02d", it.minute)
+            findViewById<TextView>(R.id.tvNextAlarmHour).text = String.format(Locale.getDefault(), "%02d", h)
+            findViewById<TextView>(R.id.tvNextAlarmMinute).text = String.format(Locale.getDefault(), "%02d", it.minute)
         }
     }
 
+    @android.annotation.SuppressLint("InflateParams")
     private fun showTimePicker() {
         val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.dialog_apple_time_picker, null)

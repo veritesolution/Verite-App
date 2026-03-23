@@ -84,7 +84,7 @@ fun TaskDetailScreen(
         )
 
         Spacer(Modifier.height(8.dp))
-        Text("Sentiment: ${String.format("%.2f", sentiment)}", fontSize = 11.sp, color = MindSetColors.textMuted)
+        Text("Sentiment: ${String.format(java.util.Locale.US, "%.2f", sentiment)}", fontSize = 11.sp, color = MindSetColors.textMuted)
 
         Spacer(Modifier.height(20.dp))
 
