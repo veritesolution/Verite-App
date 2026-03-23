@@ -146,7 +146,7 @@ object PsychNetworkModule {
     // For emulator → localhost: "http://10.0.2.2:8000/"
     // For physical device on same WiFi: "http://192.168.x.x:8000/"
     // For production: "https://api.verite-app.com/"
-    private const val BASE_URL = "http://192.168.1.7:8000/"
+    private const val BASE_URL = "http://192.168.1.3:8000/"
 
     private var retrofit: Retrofit? = null
     private var apiService: PsychApiService? = null
