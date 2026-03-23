@@ -1,6 +1,8 @@
 package com.example.myapplication
 
 import android.content.Intent
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -19,6 +21,7 @@ import com.example.myapplication.data.remote.PsychNetworkModule
 import com.example.myapplication.data.repository.PsychRepository
 import com.example.myapplication.data.repository.PsychResult
 import com.example.myapplication.util.ProfileIconHelper
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 private const val TAG = "OrynActivity"
@@ -56,20 +59,32 @@ class OrynActivity : AppCompatActivity() {
         try {
             PsychNetworkModule.init(this)
             psychRepository = PsychRepository()
-            apiAvailable = true
 
-            // Check server health in background
+            // Check server health in background with retry
             lifecycleScope.launch {
-                when (val result = psychRepository?.healthCheck()) {
-                    is PsychResult.Success -> {
-                        Log.i(TAG, "Psychologist API online: ${result.data.version}")
-                        apiAvailable = true
-                    }
-                    is PsychResult.Error -> {
-                        Log.w(TAG, "Psychologist API unavailable: ${result.message}")
+                repeat(2) { attempt ->
+                    if (!isNetworkAvailable()) {
+                        Log.w(TAG, "No network available (attempt ${attempt + 1})")
                         apiAvailable = false
+                        if (attempt == 0) delay(2000)
+                        return@repeat
                     }
-                    else -> { apiAvailable = false }
+                    when (val result = psychRepository?.healthCheck()) {
+                        is PsychResult.Success -> {
+                            Log.i(TAG, "Psychologist API online: ${result.data.version}")
+                            apiAvailable = true
+                            return@launch
+                        }
+                        is PsychResult.Error -> {
+                            Log.w(TAG, "Psychologist API unavailable (attempt ${attempt + 1}): ${result.message}")
+                            apiAvailable = false
+                            if (attempt == 0) delay(2000)
+                        }
+                        else -> {
+                            apiAvailable = false
+                            if (attempt == 0) delay(2000)
+                        }
+                    }
                 }
             }
         } catch (e: Exception) {
@@ -133,11 +148,22 @@ class OrynActivity : AppCompatActivity() {
     }
 
     private fun sendToPsychApi(text: String) {
-        if (!apiAvailable || psychRepository == null) {
-            // Fallback to local response when API is unavailable
+        if (!isNetworkAvailable()) {
             addMessage(ChatMessage(
-                "I'm currently in offline mode. Please check your connection to the Verite server. " +
-                "In the meantime, I'm here to listen. Could you tell me more about what's on your mind?",
+                "It looks like you're offline right now. I can't connect to my server, " +
+                "but I want you to know I'm here. Try checking your WiFi or mobile data, " +
+                "and we can continue our conversation once you're back online.",
+                isUser = false
+            ))
+            return
+        }
+
+        if (!apiAvailable || psychRepository == null) {
+            addMessage(ChatMessage(
+                "My server seems to be down at the moment. " +
+                "While I can't provide my full analysis right now, please know that " +
+                "it's okay to take a moment and breathe. I'll be fully available once " +
+                "the connection is restored.",
                 isUser = false
             ))
             return
@@ -147,50 +173,63 @@ class OrynActivity : AppCompatActivity() {
         etChatInput.isEnabled = false
 
         lifecycleScope.launch {
-            when (val result = psychRepository!!.sendMessage(text, psychSessionId)) {
-                is PsychResult.Success -> {
-                    val resp = result.data
-                    if (resp.sessionId.isNotEmpty()) {
-                        psychSessionId = resp.sessionId
+            try {
+                when (val result = psychRepository!!.sendMessage(text, psychSessionId)) {
+                    is PsychResult.Success -> {
+                        val resp = result.data
+                        if (resp.sessionId.isNotEmpty()) {
+                            psychSessionId = resp.sessionId
+                        }
+
+                        val responseText = resp.response.ifEmpty { "I'm processing your message..." }
+                        addMessage(ChatMessage(responseText, isUser = false))
+
+                        @Suppress("SENSELESS_COMPARISON")
+                        if (resp.safety != null && resp.safety.isCrisis) {
+                            Toast.makeText(
+                                this@OrynActivity,
+                                "Crisis resources are available. Please reach out for help.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+
+                        @Suppress("SENSELESS_COMPARISON")
+                        val domain = if (resp.analysis != null) resp.analysis.domain else "unknown"
+                        @Suppress("SENSELESS_COMPARISON")
+                        val phase = if (resp.analysis != null) resp.analysis.phase else "unknown"
+                        @Suppress("SENSELESS_COMPARISON")
+                        val latency = if (resp.metrics != null) resp.metrics.latencyMs else 0
+                        Log.d(TAG, "Domain: $domain, Phase: $phase, Latency: ${latency}ms")
                     }
-
-                    val responseText = resp.response.ifEmpty { "I'm processing your message..." }
-                    addMessage(ChatMessage(responseText, isUser = false))
-
-                    // Check for crisis (safe access — Gson may deliver null despite non-null type)
-                    @Suppress("SENSELESS_COMPARISON")
-                    if (resp.safety != null && resp.safety.isCrisis) {
-                        Toast.makeText(
-                            this@OrynActivity,
-                            "Crisis resources are available. Please reach out for help.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                    is PsychResult.Error -> {
+                        Log.e(TAG, "API error: ${result.message}")
+                        addMessage(ChatMessage(
+                            "I had trouble processing that. Could you try again? " +
+                            "I want to make sure I understand you correctly.",
+                            isUser = false
+                        ))
                     }
-
-                    @Suppress("SENSELESS_COMPARISON")
-                    val domain = if (resp.analysis != null) resp.analysis.domain else "unknown"
-                    @Suppress("SENSELESS_COMPARISON")
-                    val phase = if (resp.analysis != null) resp.analysis.phase else "unknown"
-                    @Suppress("SENSELESS_COMPARISON")
-                    val latency = if (resp.metrics != null) resp.metrics.latencyMs else 0
-                    Log.d(TAG, "Domain: $domain, Phase: $phase, Latency: ${latency}ms")
+                    is PsychResult.Loading -> { /* Already showing loading */ }
                 }
-                is PsychResult.Error -> {
-                    Log.e(TAG, "API error: ${result.message}")
-                    // Graceful fallback
-                    addMessage(ChatMessage(
-                        "I had trouble processing that. Could you try again? " +
-                        "I want to make sure I understand you correctly.",
-                        isUser = false
-                    ))
-                }
-                is PsychResult.Loading -> { /* Already showing loading */ }
+            } catch (e: Exception) {
+                Log.e(TAG, "Unexpected error in sendToPsychApi", e)
+                addMessage(ChatMessage(
+                    "Something went wrong on my end. Please try again in a moment.",
+                    isUser = false
+                ))
             }
 
             setLoading(false)
             etChatInput.isEnabled = true
             etChatInput.requestFocus()
         }
+    }
+
+    private fun isNetworkAvailable(): Boolean {
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
 
     private fun setLoading(loading: Boolean) {

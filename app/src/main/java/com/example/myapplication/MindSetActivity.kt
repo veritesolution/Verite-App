@@ -119,7 +119,8 @@ class MindSetActivity : ComponentActivity() {
                                 partialText = state.text
 
                                 // ── Primary: FullVoiceCommandProcessor handles ALL app features ──
-                                val fullResult = FullVoiceCommandProcessor.process(state.text)
+                                try {
+                                    val fullResult = FullVoiceCommandProcessor.process(state.text)
 
                                 if (fullResult.intent != FullIntent.UNKNOWN) {
                                     when (fullResult.intent) {
@@ -347,15 +348,19 @@ class MindSetActivity : ComponentActivity() {
                                             voiceOutputHandler.speak("Got it, working on that")
                                         }
                                     }
-                                } else {
-                                    // ── Fallback for truly unrecognised input ──
-                                    val deviceResult = VoiceCommandProcessor.processCommand(state.text)
-                                    if (deviceResult.action != VoiceCommandProcessor.CommandAction.UNKNOWN) {
-                                        executeDeviceCommand(deviceResult, navController)
-                                        voiceOutputHandler.speak("Done")
                                     } else {
-                                        voiceOutputHandler.speak("Sorry, I didn't understand that. Try saying 'Hey Vérité, add task' or 'play focus music'")
+                                        // ── Fallback for truly unrecognised input ──
+                                        val deviceResult = VoiceCommandProcessor.processCommand(state.text)
+                                        if (deviceResult.action != VoiceCommandProcessor.CommandAction.UNKNOWN) {
+                                            executeDeviceCommand(deviceResult, navController)
+                                            voiceOutputHandler.speak("Done")
+                                        } else {
+                                            voiceOutputHandler.speak("Sorry, I didn't understand that. Try saying 'Hey Vérité, add task' or 'play focus music'")
+                                        }
                                     }
+                                } catch (e: Exception) {
+                                    Log.e("MindSetActivity", "Error processing voice command: ${e.message}", e)
+                                    voiceOutputHandler.speak("I encountered an error processing that command")
                                 }
                             }
                             is VoiceInputHandler.VoiceState.Error -> {

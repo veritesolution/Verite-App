@@ -43,11 +43,14 @@ fun VoiceAgentSettingsScreen(
     var wakeWordEnabled by remember { mutableStateOf(settingsManager.wakeWordEnabled) }
     var voiceStability by remember { mutableFloatStateOf(settingsManager.voiceStability) }
     var voiceSimilarity by remember { mutableFloatStateOf(settingsManager.voiceSimilarity) }
+    var ttsSpeechRate by remember { mutableFloatStateOf(settingsManager.ttsSpeechRate) }
+    var ttsPitch by remember { mutableFloatStateOf(settingsManager.ttsPitch) }
     var usageInfo by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     var isPreviewPlaying by remember { mutableStateOf<String?>(null) }
 
     val isSpeaking by elevenLabsManager.isSpeaking.collectAsState()
     val isLoadingVoices by elevenLabsManager.isLoadingVoices.collectAsState()
+    val voiceLoadError by elevenLabsManager.voiceLoadError.collectAsState()
     val enrollmentState by voiceIdentityManager.enrollmentState.collectAsState()
     val isRecording by voiceIdentityManager.isRecording.collectAsState()
 
@@ -136,16 +139,76 @@ fun VoiceAgentSettingsScreen(
             }
         }
 
-        // ── Voice Selection ──
+        // ── Voice Selection (ElevenLabs) ──
         if (useElevenLabs) {
             item {
                 SectionCard("Select Voice") {
-                    if (isLoadingVoices) {
-                        Box(
-                            modifier = Modifier.fillMaxWidth().padding(24.dp),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator(color = MindSetColors.accentCyan, modifier = Modifier.size(24.dp))
+                    when {
+                        isLoadingVoices -> {
+                            Box(
+                                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                    CircularProgressIndicator(color = MindSetColors.accentCyan, modifier = Modifier.size(24.dp))
+                                    Spacer(Modifier.height(8.dp))
+                                    Text("Loading voices...", color = MindSetColors.textMuted, fontSize = 12.sp)
+                                }
+                            }
+                        }
+                        voiceLoadError != null -> {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Icon(
+                                    Icons.Default.WifiOff,
+                                    null,
+                                    tint = MindSetColors.accentOrange,
+                                    modifier = Modifier.size(32.dp)
+                                )
+                                Spacer(Modifier.height(8.dp))
+                                Text(
+                                    voiceLoadError ?: "Unknown error",
+                                    color = MindSetColors.accentOrange,
+                                    fontSize = 13.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp)
+                                )
+                                Spacer(Modifier.height(12.dp))
+                                Button(
+                                    onClick = {
+                                        scope.launch {
+                                            voices = elevenLabsManager.getAvailableVoices()
+                                            usageInfo = elevenLabsManager.getUsageInfo()
+                                        }
+                                    },
+                                    colors = ButtonDefaults.buttonColors(containerColor = MindSetColors.accentCyan),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Icon(Icons.Default.Refresh, null, modifier = Modifier.size(18.dp))
+                                    Spacer(Modifier.width(8.dp))
+                                    Text("Retry")
+                                }
+                            }
+                        }
+                        voices.isEmpty() && !isLoadingVoices -> {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Text("No voices available", color = MindSetColors.textMuted, fontSize = 13.sp)
+                                Spacer(Modifier.height(8.dp))
+                                OutlinedButton(
+                                    onClick = {
+                                        scope.launch {
+                                            voices = elevenLabsManager.getAvailableVoices()
+                                        }
+                                    },
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Text("Refresh", color = MindSetColors.accentCyan, fontSize = 13.sp)
+                                }
+                            }
                         }
                     }
                 }
@@ -178,10 +241,11 @@ fun VoiceAgentSettingsScreen(
         }
 
         // ── Voice Tuning ──
-        if (useElevenLabs) {
-            item {
-                SectionCard("Voice Tuning") {
-                    Column(modifier = Modifier.padding(12.dp)) {
+        item {
+            SectionCard("Voice Tuning") {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    if (useElevenLabs) {
+                        // ElevenLabs tuning controls
                         Text("Stability", color = MindSetColors.text, fontSize = 13.sp)
                         Text("Higher = more consistent, Lower = more expressive", color = MindSetColors.textMuted, fontSize = 11.sp)
                         Slider(
@@ -213,6 +277,41 @@ fun VoiceAgentSettingsScreen(
                                 activeTrackColor = MindSetColors.accentCyan
                             )
                         )
+                    } else {
+                        // Device TTS tuning controls
+                        Text("Speech Rate", color = MindSetColors.text, fontSize = 13.sp)
+                        Text("Adjust how fast the assistant speaks", color = MindSetColors.textMuted, fontSize = 11.sp)
+                        Slider(
+                            value = ttsSpeechRate,
+                            onValueChange = {
+                                ttsSpeechRate = it
+                                settingsManager.ttsSpeechRate = it
+                            },
+                            valueRange = 0.5f..2.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MindSetColors.accentCyan,
+                                activeTrackColor = MindSetColors.accentCyan
+                            )
+                        )
+                        Text("${String.format("%.1f", ttsSpeechRate)}x", color = MindSetColors.textMuted, fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
+
+                        Spacer(Modifier.height(8.dp))
+
+                        Text("Pitch", color = MindSetColors.text, fontSize = 13.sp)
+                        Text("Adjust the voice pitch", color = MindSetColors.textMuted, fontSize = 11.sp)
+                        Slider(
+                            value = ttsPitch,
+                            onValueChange = {
+                                ttsPitch = it
+                                settingsManager.ttsPitch = it
+                            },
+                            valueRange = 0.5f..2.0f,
+                            colors = SliderDefaults.colors(
+                                thumbColor = MindSetColors.accentCyan,
+                                activeTrackColor = MindSetColors.accentCyan
+                            )
+                        )
+                        Text("${String.format("%.1f", ttsPitch)}x", color = MindSetColors.textMuted, fontSize = 11.sp, modifier = Modifier.align(Alignment.End))
                     }
                 }
             }

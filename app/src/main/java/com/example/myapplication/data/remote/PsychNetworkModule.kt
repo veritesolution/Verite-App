@@ -25,21 +25,22 @@ private const val TAG = "PsychNetwork"
 
 
 class PsychTokenManager(context: Context) {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
-
-    private val prefs: SharedPreferences = try {
-        EncryptedSharedPreferences.create(
-            context,
-            "verite_psych_secure_prefs",
-            masterKey,
-            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-        )
-    } catch (e: Exception) {
-        Log.w(TAG, "EncryptedSharedPreferences failed, falling back to regular prefs", e)
-        context.getSharedPreferences("verite_psych_prefs", Context.MODE_PRIVATE)
+    private val prefs: SharedPreferences by lazy {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        try {
+            EncryptedSharedPreferences.create(
+                context,
+                "verite_psych_secure_prefs",
+                masterKey,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+        } catch (e: Exception) {
+            Log.w(TAG, "EncryptedSharedPreferences failed, falling back to regular prefs", e)
+            context.getSharedPreferences("verite_psych_prefs", Context.MODE_PRIVATE)
+        }
     }
 
     var accessToken: String?

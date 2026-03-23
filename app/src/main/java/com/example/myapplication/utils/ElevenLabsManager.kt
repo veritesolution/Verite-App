@@ -47,6 +47,9 @@ class ElevenLabsManager(private val context: Context) {
     private val _isLoadingVoices = MutableStateFlow(false)
     val isLoadingVoices: StateFlow<Boolean> = _isLoadingVoices.asStateFlow()
 
+    private val _voiceLoadError = MutableStateFlow<String?>(null)
+    val voiceLoadError: StateFlow<String?> = _voiceLoadError.asStateFlow()
+
     // Data classes
     data class VoiceInfo(
         val voiceId: String,
@@ -70,17 +73,31 @@ class ElevenLabsManager(private val context: Context) {
 
     suspend fun getAvailableVoices(): List<VoiceInfo> = withContext(Dispatchers.IO) {
         _isLoadingVoices.value = true
+        _voiceLoadError.value = null
         try {
+            val key = apiKey()
+            if (key.isBlank()) {
+                _voiceLoadError.value = "ElevenLabs API key not configured. Add ELEVENLABS_API_KEY to local.properties."
+                return@withContext emptyList()
+            }
+
             val request = Request.Builder()
                 .url("$BASE_URL/voices")
                 .addHeader("Accept", "application/json")
-                .addHeader("xi-api-key", apiKey())
+                .addHeader("xi-api-key", key)
                 .get()
                 .build()
 
             client.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
+                    val errorMsg = when (response.code) {
+                        401 -> "Invalid API key. Check your ElevenLabs API key."
+                        403 -> "Access denied. Your ElevenLabs plan may not include this feature."
+                        429 -> "Rate limited. Please try again in a moment."
+                        else -> "Server error (${response.code}). Try again later."
+                    }
                     Log.e(TAG, "Failed to fetch voices: ${response.code}")
+                    _voiceLoadError.value = errorMsg
                     return@withContext emptyList()
                 }
 
@@ -93,8 +110,8 @@ class ElevenLabsManager(private val context: Context) {
                     val v = voicesArray.getJSONObject(i)
                     val labelsObj = v.optJSONObject("labels")
                     val labelsMap = mutableMapOf<String, String>()
-                    labelsObj?.keys()?.forEach { key ->
-                        labelsMap[key] = labelsObj.optString(key, "")
+                    labelsObj?.keys()?.forEach { key2 ->
+                        labelsMap[key2] = labelsObj.optString(key2, "")
                     }
 
                     voices.add(VoiceInfo(
@@ -106,10 +123,20 @@ class ElevenLabsManager(private val context: Context) {
                         labels = labelsMap
                     ))
                 }
+                _voiceLoadError.value = null
                 voices
             }
+        } catch (e: java.net.UnknownHostException) {
+            Log.e(TAG, "No internet - cannot reach ElevenLabs", e)
+            _voiceLoadError.value = "No internet connection. Check your WiFi or mobile data."
+            emptyList()
+        } catch (e: java.net.SocketTimeoutException) {
+            Log.e(TAG, "Timeout fetching voices", e)
+            _voiceLoadError.value = "Connection timed out. Check your network and try again."
+            emptyList()
         } catch (e: Exception) {
             Log.e(TAG, "Error fetching voices", e)
+            _voiceLoadError.value = "Network error: ${e.message ?: "Unknown error"}"
             emptyList()
         } finally {
             _isLoadingVoices.value = false
