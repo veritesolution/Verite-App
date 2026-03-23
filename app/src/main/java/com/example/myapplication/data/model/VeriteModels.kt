@@ -38,14 +38,14 @@ data class PsychChatMessageRequest(
 )
 
 data class PsychChatMessageResponse(
-    @SerializedName("session_id") val sessionId: String,
-    val turn: Int,
-    val response: String,
-    val safety: PsychSafetyInfo,
-    val analysis: PsychAnalysisInfo,
-    val metrics: PsychMetricsInfo,
+    @SerializedName("session_id") val sessionId: String = "",
+    val turn: Int = 0,
+    val response: String = "",
+    val safety: PsychSafetyInfo = PsychSafetyInfo(),
+    val analysis: PsychAnalysisInfo = PsychAnalysisInfo(),
+    val metrics: PsychMetricsInfo = PsychMetricsInfo(),
     @SerializedName("debug_metrics") val debugMetrics: PsychDebugMetrics? = null,
-    val timestamp: String
+    val timestamp: String = ""
 )
 
 data class PsychCrisisResponse(
@@ -90,10 +90,10 @@ data class PsychDebugMetrics(
 )
 
 data class PsychCrisisResource(
-    val name: String,
-    val contact: String,
-    val type: String,
-    val available: String
+    val name: String = "",
+    val contact: String = "",
+    val type: String = "",
+    val available: String = ""
 )
 
 // ── Session ──────────────────────────────────────────────────
