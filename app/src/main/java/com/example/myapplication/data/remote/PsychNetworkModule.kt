@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// Psychologist API — Retrofit client with JWT auth interceptor
-// ═══════════════════════════════════════════════════════════════
-
 package com.example.myapplication.data.remote
 
 import android.content.Context
@@ -23,12 +19,10 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.example.myapplication.BuildConfig
 
 private const val TAG = "PsychNetwork"
 
-// ═══════════════════════════════════════════════════════════════
-// Secure Token Storage for Psychologist API
-// ═══════════════════════════════════════════════════════════════
 
 class PsychTokenManager(context: Context) {
     private val masterKey = MasterKey.Builder(context)
@@ -73,9 +67,6 @@ class PsychTokenManager(context: Context) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Auth Interceptor — auto-attaches JWT, auto-refreshes on 401
-// ═══════════════════════════════════════════════════════════════
 
 class PsychAuthInterceptor(
     private val tokenManager: PsychTokenManager,
@@ -150,17 +141,16 @@ class PsychAuthInterceptor(
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Network Module — Creates Retrofit instance for Psychologist API
-// ═══════════════════════════════════════════════════════════════
-
 object PsychNetworkModule {
 
-    // Change to your Psychologist API server URL
-    // For emulator → localhost: "http://10.0.2.2:8000/"
-    // For physical device on same WiFi: "http://192.168.x.x:8000/"
-    // For production: "https://api.verite-app.com/"
-    private const val BASE_URL = "http://192.168.1.7:8000/"
+    // Uses BuildConfig.VERITE_SERVER_URL (set in local.properties)
+    // Same URL source as TMR — ensures both features connect to the same server.
+    // Default: "http://10.0.2.2:8000" (emulator → host)
+    private val BASE_URL: String
+        get() {
+            val url = BuildConfig.VERITE_SERVER_URL
+            return if (url.endsWith("/")) url else "$url/"
+        }
 
     private var retrofit: Retrofit? = null
     private var apiService: PsychApiService? = null
