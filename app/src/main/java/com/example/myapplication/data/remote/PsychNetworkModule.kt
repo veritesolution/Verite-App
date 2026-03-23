@@ -19,6 +19,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.toRequestBody
+import com.example.myapplication.BuildConfig
 
 private const val TAG = "PsychNetwork"
 
@@ -142,11 +143,14 @@ class PsychAuthInterceptor(
 
 object PsychNetworkModule {
 
-    // Change to your Psychologist API server URL
-    // For emulator → localhost: "http://10.0.2.2:8000/"
-    // For physical device on same WiFi: "http://192.168.x.x:8000/"
-    // For production: "https://api.verite-app.com/"
-    private const val BASE_URL = "http://192.168.1.3:8000/"
+    // Uses BuildConfig.VERITE_SERVER_URL (set in local.properties)
+    // Same URL source as TMR — ensures both features connect to the same server.
+    // Default: "http://10.0.2.2:8000" (emulator → host)
+    private val BASE_URL: String
+        get() {
+            val url = BuildConfig.VERITE_SERVER_URL
+            return if (url.endsWith("/")) url else "$url/"
+        }
 
     private var retrofit: Retrofit? = null
     private var apiService: PsychApiService? = null
