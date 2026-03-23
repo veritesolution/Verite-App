@@ -150,22 +150,30 @@ class OrynActivity : AppCompatActivity() {
             when (val result = psychRepository!!.sendMessage(text, psychSessionId)) {
                 is PsychResult.Success -> {
                     val resp = result.data
-                    psychSessionId = resp.sessionId
+                    if (resp.sessionId.isNotEmpty()) {
+                        psychSessionId = resp.sessionId
+                    }
 
-                    // Check for crisis
-                    if (resp.safety.isCrisis) {
-                        addMessage(ChatMessage(resp.response, isUser = false))
+                    val responseText = resp.response.ifEmpty { "I'm processing your message..." }
+                    addMessage(ChatMessage(responseText, isUser = false))
+
+                    // Check for crisis (safe access — Gson may deliver null despite non-null type)
+                    @Suppress("SENSELESS_COMPARISON")
+                    if (resp.safety != null && resp.safety.isCrisis) {
                         Toast.makeText(
                             this@OrynActivity,
                             "Crisis resources are available. Please reach out for help.",
                             Toast.LENGTH_LONG
                         ).show()
-                    } else {
-                        addMessage(ChatMessage(resp.response, isUser = false))
                     }
 
-                    Log.d(TAG, "Domain: ${resp.analysis.domain}, Phase: ${resp.analysis.phase}, " +
-                        "Latency: ${resp.metrics.latencyMs}ms")
+                    @Suppress("SENSELESS_COMPARISON")
+                    val domain = if (resp.analysis != null) resp.analysis.domain else "unknown"
+                    @Suppress("SENSELESS_COMPARISON")
+                    val phase = if (resp.analysis != null) resp.analysis.phase else "unknown"
+                    @Suppress("SENSELESS_COMPARISON")
+                    val latency = if (resp.metrics != null) resp.metrics.latencyMs else 0
+                    Log.d(TAG, "Domain: $domain, Phase: $phase, Latency: ${latency}ms")
                 }
                 is PsychResult.Error -> {
                     Log.e(TAG, "API error: ${result.message}")
