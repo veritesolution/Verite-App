@@ -24,6 +24,9 @@ class OnboardingActivity5 : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Ensure edge-to-edge display
+        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
+        
         // Root Layout
         val rootLayout = ConstraintLayout(this).apply {
             id = View.generateViewId()
@@ -31,7 +34,39 @@ class OnboardingActivity5 : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.BLACK)
+        }
+        
+        // 1. Background Video
+        val videoView = android.widget.VideoView(this).apply {
+            id = View.generateViewId()
+            layoutParams = ConstraintLayout.LayoutParams(0, 0)
+        }
+        rootLayout.addView(videoView, 0)
+
+        val uri = android.net.Uri.parse("android.resource://" + packageName + "/" + R.raw.background_video)
+        videoView.setVideoURI(uri)
+        videoView.setOnPreparedListener { mp ->
+            mp.isLooping = true
+            mp.setVolume(0f, 0f) // Mute audio
+            
+            videoView.post {
+                val videoWidth = mp.videoWidth.toFloat()
+                val videoHeight = mp.videoHeight.toFloat()
+                if (videoWidth == 0f || videoHeight == 0f) return@post
+                
+                val videoRatio = videoWidth / videoHeight
+                val screenRatio = videoView.width.toFloat() / videoView.height.toFloat()
+                
+                val scale = if (videoRatio >= screenRatio) {
+                    videoRatio / screenRatio
+                } else {
+                    screenRatio / videoRatio
+                }
+                
+                videoView.scaleX = scale
+                videoView.scaleY = scale
+            }
+            mp.start()
         }
 
         // Header Layout
@@ -184,6 +219,12 @@ class OnboardingActivity5 : AppCompatActivity() {
         // Constraints
         val set = ConstraintSet()
         set.clone(rootLayout)
+        
+        // Video constraints
+        set.connect(videoView.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP)
+        set.connect(videoView.id, ConstraintSet.BOTTOM, ConstraintSet.PARENT_ID, ConstraintSet.BOTTOM)
+        set.connect(videoView.id, ConstraintSet.START, ConstraintSet.PARENT_ID, ConstraintSet.START)
+        set.connect(videoView.id, ConstraintSet.END, ConstraintSet.PARENT_ID, ConstraintSet.END)
 
         // Header: Top of parent
         set.connect(headerLayout.id, ConstraintSet.TOP, ConstraintSet.PARENT_ID, ConstraintSet.TOP, dpToPx(40))

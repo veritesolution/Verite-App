@@ -1,0 +1,90 @@
+groups:
+  - name: tmr-antigravity-alerts
+    rules:
+
+      # ── API health ──────────────────────────────────────────────────────
+      - alert: APIDown
+        expr: up{job="tmr-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "TMR API is down"
+          description: "The FastAPI service has been unreachable for 1 minute."
+
+      - alert: HighErrorRate
+        expr: |
+          rate(http_requests_total{job="tmr-api",status=~"5.."}[5m]) /
+          rate(http_requests_total{job="tmr-api"}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 5xx error rate"
+          description: "More than 5% of requests are returning 5xx errors."
+
+      - alert: SlowResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            rate(http_request_duration_seconds_bucket{job="tmr-api"}[5m])
+          ) > 5.0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "p95 response time > 5 seconds"
+
+      # ── Celery workers ──────────────────────────────────────────────────
+      - alert: CeleryWorkerDown
+        expr: celery_workers_count < 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "No Celery workers running"
+          description: "Plan generation and TMR tasks cannot be processed."
+
+      - alert: CeleryQueueBacklog
+        expr: celery_queue_length{queue="plans"} > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Large plan generation backlog"
+          description: "Over 100 plans queued — workers may be overwhelmed."
+
+      # ── EEG / TMR specific ──────────────────────────────────────────────
+      - alert: TMRSessionStuck
+        expr: |
+          tmr_session_duration_seconds > 28800
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "TMR session running > 8 hours"
+
+      # ── Safety ──────────────────────────────────────────────────────────
+      - alert: CrisisEventDetected
+        expr: increase(tmr_crisis_events_total[5m]) > 0
+        labels:
+          severity: critical
+        annotations:
+          summary: "Crisis event detected — human review required"
+          description: "A crisis keyword was detected. Check the safety dashboard immediately."
+
+      # ── Database ────────────────────────────────────────────────────────
+      - alert: PostgresConnectionPoolExhausted
+        expr: pg_stat_activity_count > 80
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "PostgreSQL connection pool near limit"
+
+      - alert: DiskSpaceLow
+        expr: node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes < 0.15
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk space below 15%"

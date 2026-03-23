@@ -116,6 +116,12 @@
             android:screenOrientation="portrait"
             android:theme="@style/AppTheme" />
 
+        <!-- TMR Foreground Service -->
+        <service
+            android:name=".tmr.service.VeriteForegroundService"
+            android:foregroundServiceType="microphone"
+            android:exported="false" />
+
         <activity
             android:name=".HeadbandHomeActivity"
             android:exported="false"

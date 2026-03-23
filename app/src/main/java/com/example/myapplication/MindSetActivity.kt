@@ -46,6 +46,10 @@ import com.example.myapplication.ui.theme.AccentPrimary
 import com.example.myapplication.ui.theme.TextMuted
 import androidx.activity.viewModels
 
+import com.example.myapplication.tmr.data.network.VeriteClient
+import com.example.myapplication.tmr.di.TmrDependencyContainer
+import com.example.myapplication.tmr.ui.VeriteNavGraph
+
 class MindSetActivity : ComponentActivity() {
 
     private lateinit var voiceInputHandler: VoiceInputHandler
@@ -70,6 +74,13 @@ class MindSetActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        
+        VeriteClient.configure(
+            baseUrl = BuildConfig.VERITE_SERVER_URL,
+            apiKey = BuildConfig.VERITE_API_KEY,
+            debug = BuildConfig.DEBUG
+        )
+        TmrDependencyContainer.initialize(this)
 
         try {
             voiceInputHandler = VoiceInputHandler(this)
@@ -161,6 +172,18 @@ class MindSetActivity : ComponentActivity() {
                                             voiceOutputHandler.speak("Here are your habits")
                                         }
 
+                                        FullIntent.UPDATE_TASK_PRIORITY -> {
+                                            voiceOutputHandler.speak("Task priority updated")
+                                        }
+
+                                        // ── HABITS (extended) ──
+                                        FullIntent.DELETE_HABIT -> {
+                                            viewModel.executeVoiceCommand(
+                                                VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
+                                            )
+                                            voiceOutputHandler.speak("Habit removed")
+                                        }
+
                                         // ── SLEEP & SOUND ──
                                         FullIntent.START_SLEEP_SESSION -> {
                                             navController.navigate("bedtime")
@@ -188,6 +211,43 @@ class MindSetActivity : ComponentActivity() {
                                         }
                                         FullIntent.STOP_SOUND -> {
                                             voiceOutputHandler.speak("Stopping audio")
+                                        }
+                                        FullIntent.SET_VOLUME -> {
+                                            val level = fullResult.parameters["volume"] ?: "50"
+                                            voiceOutputHandler.speak("Volume set to $level percent")
+                                        }
+
+                                        // ── TMR / LEARNING ──
+                                        FullIntent.START_TMR_SESSION -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Starting your learning session")
+                                        }
+                                        FullIntent.GENERATE_FLASHCARDS -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Generating flashcards")
+                                        }
+                                        FullIntent.START_QUIZ -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Starting quiz mode")
+                                        }
+
+                                        // ── DEVICE CONTROL ──
+                                        FullIntent.CONNECT_DEVICE -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, BluetoothActivity::class.java))
+                                            voiceOutputHandler.speak("Opening device connection")
+                                        }
+                                        FullIntent.DISCONNECT_DEVICE -> {
+                                            voiceOutputHandler.speak("Disconnecting device")
+                                        }
+                                        FullIntent.SET_TEMPERATURE -> {
+                                            val temp = fullResult.parameters["temperature"] ?: "22"
+                                            voiceOutputHandler.speak("Setting temperature to $temp degrees")
+                                        }
+                                        FullIntent.TOGGLE_VIBRATION -> {
+                                            voiceOutputHandler.speak("Toggling vibration")
+                                        }
+                                        FullIntent.TOGGLE_SENSOR -> {
+                                            voiceOutputHandler.speak("Toggling sensor")
                                         }
 
                                         // ── NAVIGATION ──
@@ -219,18 +279,32 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.NAVIGATE_SOUND,
                                         FullIntent.NAVIGATE_ALARM,
                                         FullIntent.NAVIGATE_MORNING_BRIEF,
-                                        FullIntent.NAVIGATE_TMR,
                                         FullIntent.START_BEDTIME_ROUTINE -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening sleep & sound")
+                                        }
+                                        FullIntent.NAVIGATE_TMR -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Opening TMR tools")
                                         }
                                         FullIntent.NAVIGATE_DREAM_JOURNAL -> {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening dream journal")
                                         }
+                                        FullIntent.NAVIGATE_ANTIGRAVITY -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, AntigravityActivity::class.java))
+                                            voiceOutputHandler.speak("Opening antigravity visualization")
+                                        }
                                         FullIntent.NAVIGATE_DEVICES -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Opening devices")
+                                        }
+                                        FullIntent.CHANGE_VOICE -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, VoiceAgentActivity::class.java))
+                                            voiceOutputHandler.speak("Opening voice selection")
+                                        }
+                                        FullIntent.IDENTIFY_USER -> {
+                                            voiceOutputHandler.speak("Identifying your voice profile")
                                         }
                                         FullIntent.VOICE_SETTINGS -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, VoiceAgentActivity::class.java))
@@ -373,32 +447,35 @@ class MindSetActivity : ComponentActivity() {
                                 ) 
                             }
                             composable("settings") {
-                                SettingsScreen(
-                                    habitReminderHour = habitReminderHour,
-                                    bedtimeHour = bedtimeHour,
-                                    firebaseSyncEnabled = firebaseSyncEnabled,
-                                    llmFallbackEnabled = llmFallbackEnabled,
-                                    onHabitReminderChange = { settingsViewModel.updateHabitReminderHour(it) },
-                                    onBedtimeChange = { settingsViewModel.updateBedtimeHour(it) },
-                                    onFirebaseSyncToggle = { settingsViewModel.toggleFirebaseSync(it) },
-                                    onLlmFallbackToggle = { settingsViewModel.toggleLlmFallback(it) },
-                                    onExportData = { settingsViewModel.exportData() },
-                                    onImportData = { settingsViewModel.importData() },
-                                    onSeedDemoData = { settingsViewModel.seedDemoData() },
-                                    onClearAllData = { settingsViewModel.clearAllData() },
-                                    wakeWordEnabled = wakeWordEnabled,
-                                    onWakeWordToggle = { enabled ->
-                                        if (enabled && !hasAudioPermission()) {
-                                            requestPermissions()
-                                        } else {
-                                            settingsViewModel.toggleWakeWord(enabled)
-                                            toggleWakeWordService(enabled)
+                                                SettingsScreen(
+                                                    habitReminderHour = habitReminderHour,
+                                                    bedtimeHour = bedtimeHour,
+                                                    firebaseSyncEnabled = firebaseSyncEnabled,
+                                                    llmFallbackEnabled = llmFallbackEnabled,
+                                                    onHabitReminderChange = { settingsViewModel.updateHabitReminderHour(it) },
+                                                    onBedtimeChange = { settingsViewModel.updateBedtimeHour(it) },
+                                                    onFirebaseSyncToggle = { settingsViewModel.toggleFirebaseSync(it) },
+                                                    onLlmFallbackToggle = { settingsViewModel.toggleLlmFallback(it) },
+                                                    onExportData = { settingsViewModel.exportData() },
+                                                    onImportData = { settingsViewModel.importData() },
+                                                    onSeedDemoData = { settingsViewModel.seedDemoData() },
+                                                    onClearAllData = { settingsViewModel.clearAllData() },
+                                                    wakeWordEnabled = wakeWordEnabled,
+                                                    onWakeWordToggle = { enabled ->
+                                                        if (enabled && !hasAudioPermission()) {
+                                                            requestPermissions()
+                                                        } else {
+                                                            settingsViewModel.toggleWakeWord(enabled)
+                                                            toggleWakeWordService(enabled)
+                                                        }
+                                                    },
+                                                    onBack = { navController.popBackStack() }
+                                                )
+                                            }
+                                            composable("tmr_tools") {
+                                                VeriteNavGraph()
+                                            }
                                         }
-                                    },
-                                    onBack = { navController.popBackStack() }
-                                )
-                            }
-                        }
                     }
                 } // End of SkyBackground
             }
