@@ -112,7 +112,7 @@ fun MoodTrackingCenterWidget() {
         val client = OkHttpClient()
         val gson = Gson()
         // Standard Android emulator connection to local host
-        val request = Request.Builder().url("http://10.0.2.2:8080/api/v1/emotion").build()
+        val request = Request.Builder().url("http://192.168.1.3:8080/api/v1/emotion").build()
         
         while (isPolling) {
             try {
