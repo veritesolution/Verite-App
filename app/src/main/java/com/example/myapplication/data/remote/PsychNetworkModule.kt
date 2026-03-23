@@ -21,6 +21,8 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.RequestBody.Companion.toRequestBody
 
 private const val TAG = "PsychNetwork"
 
@@ -128,8 +130,8 @@ class PsychAuthInterceptor(
                 .build()
 
             val body = gson.toJson(PsychRefreshRequest(tokenManager.refreshToken ?: ""))
-            val mediaType = okhttp3.MediaType.Companion.parse("application/json")
-            val requestBody = okhttp3.RequestBody.Companion.create(mediaType, body)
+            val mediaType = "application/json".toMediaTypeOrNull()
+            val requestBody = body.toRequestBody(mediaType)
 
             val request = Request.Builder()
                 .url("${baseUrl}api/v1/auth/refresh")
