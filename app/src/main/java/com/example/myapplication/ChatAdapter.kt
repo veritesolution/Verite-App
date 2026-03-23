@@ -54,7 +54,7 @@ class ChatAdapter(private val messages: List<ChatMessage>, private val database:
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvUserMessage)
         private val ivAvatar: ImageView = itemView.findViewById(R.id.ivUserAvatar)
-        private var avatarJob: kotlinx.coroutines.Job? = null
+        private var avatarJob: Job? = null
 
         fun bind(message: ChatMessage) {
             tvMessage.text = message.text
@@ -63,12 +63,12 @@ class ChatAdapter(private val messages: List<ChatMessage>, private val database:
             avatarJob?.cancel()
             avatarJob = CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Use first() instead of collect() — we only need one emission
-                    val user = database.userDao().getUser().kotlinx.coroutines.flow.firstOrNull()
+                    // Use firstOrNull() instead of collect() — one-shot, no leak
+                    val user = database.userDao().getUser().firstOrNull()
                     user?.profileImagePath?.let { path ->
                         val file = java.io.File(path)
                         if (file.exists()) {
-                            kotlinx.coroutines.withContext(Dispatchers.Main) {
+                            withContext(Dispatchers.Main) {
                                 ivAvatar.clearColorFilter()
                                 ivAvatar.load(file) {
                                     transformations(CircleCropTransformation())
