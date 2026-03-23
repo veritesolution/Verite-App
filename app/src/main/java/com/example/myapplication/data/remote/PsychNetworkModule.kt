@@ -1,7 +1,3 @@
-// ═══════════════════════════════════════════════════════════════
-// Psychologist API — Retrofit client with JWT auth interceptor
-// ═══════════════════════════════════════════════════════════════
-
 package com.example.myapplication.data.remote
 
 import android.content.Context
@@ -26,9 +22,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 
 private const val TAG = "PsychNetwork"
 
-// ═══════════════════════════════════════════════════════════════
-// Secure Token Storage for Psychologist API
-// ═══════════════════════════════════════════════════════════════
 
 class PsychTokenManager(context: Context) {
     private val masterKey = MasterKey.Builder(context)
@@ -73,9 +66,6 @@ class PsychTokenManager(context: Context) {
     }
 }
 
-// ═══════════════════════════════════════════════════════════════
-// Auth Interceptor — auto-attaches JWT, auto-refreshes on 401
-// ═══════════════════════════════════════════════════════════════
 
 class PsychAuthInterceptor(
     private val tokenManager: PsychTokenManager,
@@ -149,10 +139,6 @@ class PsychAuthInterceptor(
         }
     }
 }
-
-// ═══════════════════════════════════════════════════════════════
-// Network Module — Creates Retrofit instance for Psychologist API
-// ═══════════════════════════════════════════════════════════════
 
 object PsychNetworkModule {
 
