@@ -143,12 +143,14 @@ class PsychAuthInterceptor(
 
 object PsychNetworkModule {
 
-    // Uses BuildConfig.VERITE_SERVER_URL (set in local.properties)
-    // Same URL source as TMR — ensures both features connect to the same server.
-    // Default: "http://10.0.2.2:8000" (emulator → host)
+    // Uses BuildConfig.VERITE_PSYCH_URL (set via VERITE_PSYCH_URL in local.properties).
+    // Falls back to VERITE_SERVER_URL if VERITE_PSYCH_URL is not set.
+    // Override in local.properties when TMR and Psych servers run on different ports:
+    //   VERITE_SERVER_URL=http://192.168.1.3:8000    ← TMR
+    //   VERITE_PSYCH_URL=http://192.168.1.3:8001     ← Psychologist
     private val BASE_URL: String
         get() {
-            val url = BuildConfig.VERITE_SERVER_URL
+            val url = BuildConfig.VERITE_PSYCH_URL
             return if (url.endsWith("/")) url else "$url/"
         }
 

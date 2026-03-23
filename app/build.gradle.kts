@@ -60,6 +60,13 @@ android {
             "VERITE_API_KEY",
             "\"${localProperties.getProperty("VERITE_API_KEY", "dev-verite-tmr-key-2024")}\""
         )
+        // Psychologist server — separate from TMR if on different port/host
+        // Defaults to VERITE_SERVER_URL if not set
+        buildConfigField(
+            "String",
+            "VERITE_PSYCH_URL",
+            "\"${localProperties.getProperty("VERITE_PSYCH_URL", localProperties.getProperty("VERITE_SERVER_URL", "http://10.0.2.2:8000"))}\""
+        )
     }
 
     buildTypes {
