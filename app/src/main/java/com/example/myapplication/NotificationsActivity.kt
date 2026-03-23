@@ -1,3 +1,4 @@
+
 package com.example.myapplication
 
 import android.os.Bundle
@@ -19,6 +20,8 @@ import com.example.myapplication.ui.components.TopBar
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import com.example.myapplication.utils.SettingsManager
+
+/*NotificationsActivity class*/
 
 class NotificationsActivity : ComponentActivity() {
     private lateinit var settingsManager: SettingsManager

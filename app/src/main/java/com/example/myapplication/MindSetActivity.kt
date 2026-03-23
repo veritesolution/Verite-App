@@ -30,7 +30,6 @@ import com.example.myapplication.utils.VoiceOutputHandler
 import com.example.myapplication.utils.VoiceCommandProcessor
 import com.example.myapplication.utils.FullVoiceCommandProcessor
 import com.example.myapplication.utils.FullVoiceCommandProcessor.FullIntent
-import com.example.myapplication.ml.LlmVoiceProcessor
 import com.example.myapplication.ui.tasks.TaskDetailScreen
 import com.example.myapplication.ui.todo.TodoMainScreen
 import com.example.myapplication.viewmodel.TodoViewModel
@@ -38,7 +37,6 @@ import com.example.myapplication.ui.settings.SettingsViewModel
 import com.example.myapplication.data.model.VoiceCommandResult
 import com.example.myapplication.data.model.Intent
 import com.example.myapplication.data.model.Task
-import android.widget.Toast
 
 import androidx.activity.result.contract.ActivityResultContracts
 import android.Manifest
@@ -56,6 +54,11 @@ class MindSetActivity : ComponentActivity() {
 
     private lateinit var voiceInputHandler: VoiceInputHandler
     private lateinit var voiceOutputHandler: VoiceOutputHandler
+
+    companion object {
+        private const val TAG = "MindSetActivity"
+        private const val EXTRA_ACTIVATE_VOICE = "ACTIVATE_VOICE"
+    }
 
     private val settingsViewModel: SettingsViewModel by viewModels()
 
@@ -85,7 +88,7 @@ class MindSetActivity : ComponentActivity() {
             voiceInputHandler.initialize()
             voiceOutputHandler.initialize()
         } catch (e: Exception) {
-            Log.e("MindSetActivity", "Error initializing voice handlers", e)
+            Log.e(TAG, "Error initializing voice handlers", e)
         }
 
         handleVoiceIntent(intent)
@@ -128,13 +131,13 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.ADD_TASK -> {
                                             val name = fullResult.entityName ?: state.text
                                             viewModel.createTask(name, fullResult.category, fullResult.priority)
-                                            voiceOutputHandler.speak("Task added: $name")
+                                            voiceOutputHandler.speak(getString(R.string.voice_task_added, name))
                                         }
                                         FullIntent.COMPLETE_TASK -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
                                             )
-                                            voiceOutputHandler.speak("Task marked complete")
+                                            voiceOutputHandler.speak(getString(R.string.voice_task_complete))
                                         }
                                         FullIntent.DELETE_TASK -> {
                                             viewModel.executeVoiceCommand(
@@ -152,13 +155,13 @@ class MindSetActivity : ComponentActivity() {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.ADD_HABIT, 0.9f, fullResult.entityName, category = fullResult.category)
                                             )
-                                            voiceOutputHandler.speak("Habit added: ${fullResult.entityName}")
+                                            voiceOutputHandler.speak(getString(R.string.voice_habit_added, fullResult.entityName))
                                         }
                                         FullIntent.TOGGLE_HABIT -> {
                                             viewModel.executeVoiceCommand(
                                                 VoiceCommandResult(Intent.TOGGLE_HABIT, 0.9f, fullResult.entityName)
                                             )
-                                            voiceOutputHandler.speak("Habit updated")
+                                            voiceOutputHandler.speak(getString(R.string.voice_habit_updated))
                                         }
                                         FullIntent.QUERY_STREAK -> {
                                             navController.navigate("analytics")
@@ -259,7 +262,7 @@ class MindSetActivity : ComponentActivity() {
                                         FullIntent.SHOW_ANALYTICS,
                                         FullIntent.SHOW_DAILY_PROGRESS -> {
                                             navController.navigate("analytics")
-                                            voiceOutputHandler.speak("Opening insights")
+                                            voiceOutputHandler.speak(getString(R.string.voice_opening_insights))
                                         }
                                         FullIntent.NAVIGATE_TODO -> {
                                             navController.navigate("todo_main")
@@ -267,7 +270,7 @@ class MindSetActivity : ComponentActivity() {
                                         }
                                         FullIntent.NAVIGATE_SETTINGS -> {
                                             navController.navigate("settings")
-                                            voiceOutputHandler.speak("Opening settings")
+                                            voiceOutputHandler.speak(getString(R.string.voice_opening_settings))
                                         }
                                         FullIntent.NAVIGATE_PROFILE -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, ProfileActivity::class.java))
@@ -354,7 +357,7 @@ class MindSetActivity : ComponentActivity() {
                                         executeDeviceCommand(deviceResult, navController)
                                         voiceOutputHandler.speak("Done")
                                     } else {
-                                        voiceOutputHandler.speak("Sorry, I didn't understand that. Try saying 'Hey Vérité, add task' or 'play focus music'")
+                                        voiceOutputHandler.speak(getString(R.string.voice_fallback_sorry))
                                     }
                                 }
                             }
@@ -485,7 +488,7 @@ class MindSetActivity : ComponentActivity() {
     }
 
     private fun handleVoiceIntent(intent: android.content.Intent?) {
-        if (intent?.getBooleanExtra("ACTIVATE_VOICE", false) == true) {
+        if (intent?.getBooleanExtra(EXTRA_ACTIVATE_VOICE, false) == true) {
             voiceInputHandler.startListening()
         }
     }
@@ -533,7 +536,7 @@ class MindSetActivity : ComponentActivity() {
                 stopService(serviceIntent)
             }
         } catch (e: Exception) {
-            Log.e("MindSetActivity", "Error toggling wake word service", e)
+            Log.e(TAG, "Error toggling wake word service", e)
         }
     }
 

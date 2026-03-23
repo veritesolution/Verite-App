@@ -58,6 +58,8 @@ class DreamJournalActivity : AppCompatActivity() {
         }
     }
 
+    /* add showadddream dialog */
+
     private fun showAddDreamDialog() {
         val dialogView = LayoutInflater.from(this).inflate(R.layout.dialog_add_dream, null)
         val etTitle = dialogView.findViewById<EditText>(R.id.etDreamTitle)
@@ -92,6 +94,8 @@ class DreamJournalActivity : AppCompatActivity() {
             database.dreamDao().deleteDream(dream)
         }
     }
+
+    /*add a class */
 
     class DreamAdapter(
         private var list: List<DreamEntry>,
