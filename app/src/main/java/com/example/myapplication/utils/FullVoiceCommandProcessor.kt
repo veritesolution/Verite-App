@@ -1,7 +1,6 @@
 package com.example.myapplication.utils
 
 import android.util.Log
-import com.example.myapplication.Secrets
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType

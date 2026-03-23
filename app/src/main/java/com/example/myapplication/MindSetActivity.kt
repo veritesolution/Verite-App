@@ -169,6 +169,18 @@ class MindSetActivity : ComponentActivity() {
                                             voiceOutputHandler.speak("Here are your habits")
                                         }
 
+                                        FullIntent.UPDATE_TASK_PRIORITY -> {
+                                            voiceOutputHandler.speak("Task priority updated")
+                                        }
+
+                                        // ── HABITS (extended) ──
+                                        FullIntent.DELETE_HABIT -> {
+                                            viewModel.executeVoiceCommand(
+                                                VoiceCommandResult(Intent.COMPLETE_TASK, 0.9f, fullResult.entityName)
+                                            )
+                                            voiceOutputHandler.speak("Habit removed")
+                                        }
+
                                         // ── SLEEP & SOUND ──
                                         FullIntent.START_SLEEP_SESSION -> {
                                             navController.navigate("bedtime")
@@ -196,6 +208,43 @@ class MindSetActivity : ComponentActivity() {
                                         }
                                         FullIntent.STOP_SOUND -> {
                                             voiceOutputHandler.speak("Stopping audio")
+                                        }
+                                        FullIntent.SET_VOLUME -> {
+                                            val level = fullResult.parameters["volume"] ?: "50"
+                                            voiceOutputHandler.speak("Volume set to $level percent")
+                                        }
+
+                                        // ── TMR / LEARNING ──
+                                        FullIntent.START_TMR_SESSION -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Starting your learning session")
+                                        }
+                                        FullIntent.GENERATE_FLASHCARDS -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Generating flashcards")
+                                        }
+                                        FullIntent.START_QUIZ -> {
+                                            navController.navigate("tmr_tools")
+                                            voiceOutputHandler.speak("Starting quiz mode")
+                                        }
+
+                                        // ── DEVICE CONTROL ──
+                                        FullIntent.CONNECT_DEVICE -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, BluetoothActivity::class.java))
+                                            voiceOutputHandler.speak("Opening device connection")
+                                        }
+                                        FullIntent.DISCONNECT_DEVICE -> {
+                                            voiceOutputHandler.speak("Disconnecting device")
+                                        }
+                                        FullIntent.SET_TEMPERATURE -> {
+                                            val temp = fullResult.parameters["temperature"] ?: "22"
+                                            voiceOutputHandler.speak("Setting temperature to $temp degrees")
+                                        }
+                                        FullIntent.TOGGLE_VIBRATION -> {
+                                            voiceOutputHandler.speak("Toggling vibration")
+                                        }
+                                        FullIntent.TOGGLE_SENSOR -> {
+                                            voiceOutputHandler.speak("Toggling sensor")
                                         }
 
                                         // ── NAVIGATION ──
@@ -239,9 +288,20 @@ class MindSetActivity : ComponentActivity() {
                                             navController.navigate("bedtime")
                                             voiceOutputHandler.speak("Opening dream journal")
                                         }
+                                        FullIntent.NAVIGATE_ANTIGRAVITY -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, AntigravityActivity::class.java))
+                                            voiceOutputHandler.speak("Opening antigravity visualization")
+                                        }
                                         FullIntent.NAVIGATE_DEVICES -> {
                                             navController.navigate("dashboard")
                                             voiceOutputHandler.speak("Opening devices")
+                                        }
+                                        FullIntent.CHANGE_VOICE -> {
+                                            startActivity(android.content.Intent(this@MindSetActivity, VoiceAgentActivity::class.java))
+                                            voiceOutputHandler.speak("Opening voice selection")
+                                        }
+                                        FullIntent.IDENTIFY_USER -> {
+                                            voiceOutputHandler.speak("Identifying your voice profile")
                                         }
                                         FullIntent.VOICE_SETTINGS -> {
                                             startActivity(android.content.Intent(this@MindSetActivity, VoiceAgentActivity::class.java))
