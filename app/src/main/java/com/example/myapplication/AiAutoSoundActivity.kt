@@ -241,7 +241,7 @@ class AiAutoSoundActivity : AppCompatActivity() {
 
         val (soundType, reason) = when {
             stressScore > 70 -> SoundType.RELAX to "High stress detected ($stressScore). Switching to Alpha waves for calming."
-            ratio > 1.8 -> SoundType.FOCUS to "High cognitive effort detected (Beta ratio: ${String.format("%.2f", ratio)}). Optimizing for concentration."
+            ratio > 1.8 -> SoundType.FOCUS to "High cognitive effort detected (Beta ratio: ${String.format(Locale.getDefault(), "%.2f", ratio)}). Optimizing for concentration."
             data.theta > 0.45 -> SoundType.MEDITATE to "Deep Theta flow detected. Enhancing meditation depth."
             data.heartRate < 60 && data.beta < 0.2 -> SoundType.SLEEP to "Pre-sleep patterns identified. Switching to Delta induction."
             else -> null to null
