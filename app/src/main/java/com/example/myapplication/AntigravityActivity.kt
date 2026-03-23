@@ -21,6 +21,10 @@ class AntigravityActivity : AppCompatActivity() {
     private lateinit var bluetoothLeManager: BluetoothLeManager
     private val stressDetectionEngine = StressDetectionEngine()
 
+    // Cache latest BioData for pushing complete HRV data to web
+    @Volatile
+    private var latestBioData: com.example.myapplication.data.bluetooth.BioData? = null
+
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,7 +63,7 @@ class AntigravityActivity : AppCompatActivity() {
     private fun observeBioData() {
         lifecycleScope.launch {
             bluetoothLeManager.bioDataStream.collect { data ->
-                // Feed to engine
+                latestBioData = data
                 stressDetectionEngine.analyze(data)
             }
         }
@@ -82,12 +86,35 @@ class AntigravityActivity : AppCompatActivity() {
     }
 
     private fun pushDataToWeb(stress: Float) {
+        val bio = latestBioData
         val data = JSONObject().apply {
             put("stress", stress.toDouble())
-            put("hr", 72) // Fallback or get from latest data
-            put("sdnn", 45)
-            put("rmssd", 38)
-            put("ibis", JSONArray(listOf(830, 840, 820))) // Example
+            put("hr", bio?.heartRate ?: 0)
+            put("sdnn", bio?.sdnn ?: 0)
+            put("rmssd", bio?.rmssd ?: 0)
+            put("pnn50", bio?.pnn50 ?: 0)
+            put("hrvStress", bio?.hrvStress ?: 0)
+
+            // EEG band powers for visualization
+            put("alpha", (bio?.alpha ?: 0f).toDouble())
+            put("beta", (bio?.beta ?: 0f).toDouble())
+            put("theta", (bio?.theta ?: 0f).toDouble())
+            put("delta", (bio?.delta ?: 0f).toDouble())
+            put("gamma", (bio?.gamma ?: 0f).toDouble())
+
+            // Cognitive indices
+            put("focusIndex", (bio?.focusIndex ?: 0f).toDouble())
+            put("relaxIndex", (bio?.relaxIndex ?: 0f).toDouble())
+            put("drowsyIndex", (bio?.drowsyIndex ?: 0f).toDouble())
+
+            // IMU orientation
+            put("pitch", (bio?.pitch ?: 0f).toDouble())
+            put("roll", (bio?.roll ?: 0f).toDouble())
+
+            // Approximate IBI from HR (60000 / BPM) for heart coherence display
+            val hr = bio?.heartRate ?: 72
+            val ibiMs = if (hr > 0) 60000 / hr else 830
+            put("ibis", JSONArray(listOf(ibiMs, ibiMs + 10, ibiMs - 10)))
         }
 
         webView.post {
