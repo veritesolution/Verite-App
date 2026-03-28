@@ -209,9 +209,9 @@ class OnboardingActivity2 : AppCompatActivity() {
         val nextButton = Button(this).apply {
             id = View.generateViewId()
             text = "→"
-            textSize = 24f
+            textSize = 48f
             setTextColor(Color.parseColor("#66CCCC"))
-            setBackgroundColor(Color.parseColor("#1A1A1A"))
+            setBackgroundColor(Color.TRANSPARENT)
             
             val size = dpToPx(64)
             layoutParams = ConstraintLayout.LayoutParams(size, size)
