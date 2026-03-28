@@ -17,6 +17,7 @@ import com.example.myapplication.data.model.MoodEntry
 import com.example.myapplication.data.model.BedtimeItem
 import com.example.myapplication.data.model.ChatSession
 import com.example.myapplication.data.model.ChatMessageEntity
+import com.example.myapplication.data.model.AppNotification
 import androidx.room.TypeConverters
 
 @Database(
@@ -24,9 +25,10 @@ import androidx.room.TypeConverters
         RecoveryPlan::class, Task::class, DreamEntry::class, Device::class,
         PowerOffSettings::class, User::class, SensorReading::class,
         Habit::class, HabitCompletion::class, MoodEntry::class, BedtimeItem::class,
-        ChatSession::class, ChatMessageEntity::class
+        ChatSession::class, ChatMessageEntity::class,
+        AppNotification::class
     ],
-    version = 13,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -43,6 +45,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun moodEntryDao(): MoodEntryDao
     abstract fun bedtimeItemDao(): BedtimeItemDao
     abstract fun chatDao(): ChatDao
+    abstract fun notificationDao(): NotificationDao
 
     companion object {
         @Volatile
