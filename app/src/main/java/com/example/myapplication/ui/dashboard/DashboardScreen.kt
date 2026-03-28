@@ -29,7 +29,9 @@ fun DashboardScreen(
     viewModel: DashboardViewModel,
     onNavigateToTaskDetail: (String) -> Unit,
     onBackClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {}
 ) {
     val snapshot by viewModel.snapshot.collectAsState()
     val momentum by viewModel.momentum.collectAsState()
@@ -45,7 +47,9 @@ fun DashboardScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         com.example.myapplication.ui.components.VeriteTopBar(
             onBackClick = onBackClick,
-            onProfileClick = onProfileClick
+            onProfileClick = onProfileClick,
+            notificationCount = notificationCount,
+            onNotificationClick = onNotificationClick
         )
         LazyColumn(
             modifier = Modifier
