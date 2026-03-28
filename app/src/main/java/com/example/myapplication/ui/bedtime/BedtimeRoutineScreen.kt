@@ -30,14 +30,18 @@ import androidx.compose.ui.graphics.Color
 fun BedtimeRoutineScreen(
     viewModel: DashboardViewModel,
     onBackClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {}
 ) {
     val items by viewModel.bedtimeRoutine.collectAsState(initial = emptyList())
 
     Column(modifier = Modifier.fillMaxSize()) {
         com.example.myapplication.ui.components.VeriteTopBar(
             onBackClick = onBackClick,
-            onProfileClick = onProfileClick
+            onProfileClick = onProfileClick,
+            notificationCount = notificationCount,
+            onNotificationClick = onNotificationClick
         )
         Column(
             modifier = Modifier
