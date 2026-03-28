@@ -461,18 +461,22 @@ class MindSetActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            composable("analytics") { 
+                            composable("analytics") {
                                 AnalyticsScreen(
                                     viewModel = viewModel,
                                     onBackClick = { if (!navController.popBackStack()) finish() },
-                                    onProfileClick = { navController.navigate("settings") }
-                                ) 
+                                    onProfileClick = { navController.navigate("settings") },
+                                    notificationCount = unreadCount,
+                                    onNotificationClick = { notifViewModel.togglePanel() }
+                                )
                             }
-                            composable("bedtime") { 
+                            composable("bedtime") {
                                 BedtimeRoutineScreen(
                                     viewModel = viewModel,
                                     onBackClick = { if (!navController.popBackStack()) finish() },
-                                    onProfileClick = { navController.navigate("settings") }
+                                    onProfileClick = { navController.navigate("settings") },
+                                    notificationCount = unreadCount,
+                                    onNotificationClick = { notifViewModel.togglePanel() }
                                 ) 
                             }
                             composable("settings") {
