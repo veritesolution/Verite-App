@@ -11,7 +11,10 @@ import coil.transform.CircleCropTransformation
 import com.example.myapplication.data.local.AppDatabase
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class ChatMessage(val text: String, val isUser: Boolean)
 
@@ -51,18 +54,21 @@ class ChatAdapter(private val messages: List<ChatMessage>, private val database:
     inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val tvMessage: TextView = itemView.findViewById(R.id.tvUserMessage)
         private val ivAvatar: ImageView = itemView.findViewById(R.id.ivUserAvatar)
+        private var avatarJob: Job? = null
 
         fun bind(message: ChatMessage) {
             tvMessage.text = message.text
-            
-            // Load user profile Image
-            CoroutineScope(Dispatchers.IO).launch {
-                database.userDao().getUser().collect { user ->
+
+            // Cancel previous avatar-load coroutine to prevent leak
+            avatarJob?.cancel()
+            avatarJob = CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Use firstOrNull() instead of collect() — one-shot, no leak
+                    val user = database.userDao().getUser().firstOrNull()
                     user?.profileImagePath?.let { path ->
                         val file = java.io.File(path)
                         if (file.exists()) {
-                            // Update UI on main thread
-                            CoroutineScope(Dispatchers.Main).launch {
+                            withContext(Dispatchers.Main) {
                                 ivAvatar.clearColorFilter()
                                 ivAvatar.load(file) {
                                     transformations(CircleCropTransformation())
@@ -70,7 +76,7 @@ class ChatAdapter(private val messages: List<ChatMessage>, private val database:
                             }
                         }
                     }
-                }
+                } catch (_: Exception) { /* ViewHolder recycled */ }
             }
         }
     }

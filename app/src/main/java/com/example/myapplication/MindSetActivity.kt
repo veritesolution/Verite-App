@@ -3,7 +3,8 @@ package com.example.myapplication
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Alignment
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Analytics
 import androidx.compose.material.icons.filled.Dashboard
@@ -49,6 +50,12 @@ import androidx.activity.viewModels
 import com.example.myapplication.tmr.data.network.VeriteClient
 import com.example.myapplication.tmr.di.TmrDependencyContainer
 import com.example.myapplication.tmr.ui.VeriteNavGraph
+import com.example.myapplication.ui.notification.NotificationViewModel
+import com.example.myapplication.ui.notification.NotificationPanel
+import com.example.myapplication.ui.notification.VeriteToastBanner
+import com.example.myapplication.data.repository.NotificationRepository
+import com.example.myapplication.data.model.AppNotification
+import kotlinx.coroutines.delay
 
 class MindSetActivity : ComponentActivity() {
 
@@ -99,8 +106,24 @@ class MindSetActivity : ComponentActivity() {
                     val navController = rememberNavController()
                     val viewModel: DashboardViewModel = viewModel()
                     val todoViewModel: TodoViewModel = viewModel()
-                    // Use the class-level settingsViewModel instead of a local one
-                    
+                    val notifViewModel: NotificationViewModel = viewModel()
+
+                    // Notification state
+                    val notifications by notifViewModel.notifications.collectAsState()
+                    val unreadCount by notifViewModel.unreadCount.collectAsState()
+                    val isPanelOpen by notifViewModel.isPanelOpen.collectAsState()
+
+                    // Toast banner state (shows latest notification briefly)
+                    var toastNotification by remember { mutableStateOf<AppNotification?>(null) }
+                    LaunchedEffect(notifications) {
+                        val latest = notifications.firstOrNull()
+                        if (latest != null && !latest.isRead) {
+                            toastNotification = latest
+                            delay(4000)
+                            toastNotification = null
+                        }
+                    }
+
                     val voiceState by voiceInputHandler.state.collectAsState()
                     var partialText by remember { mutableStateOf("") }
 
@@ -122,7 +145,8 @@ class MindSetActivity : ComponentActivity() {
                                 partialText = state.text
 
                                 // ── Primary: FullVoiceCommandProcessor handles ALL app features ──
-                                val fullResult = FullVoiceCommandProcessor.process(state.text)
+                                try {
+                                    val fullResult = FullVoiceCommandProcessor.process(state.text)
 
                                 if (fullResult.intent != FullIntent.UNKNOWN) {
                                     when (fullResult.intent) {
@@ -350,15 +374,12 @@ class MindSetActivity : ComponentActivity() {
                                             voiceOutputHandler.speak("Got it, working on that")
                                         }
                                     }
-                                } else {
-                                    // ── Fallback for truly unrecognised input ──
-                                    val deviceResult = VoiceCommandProcessor.processCommand(state.text)
-                                    if (deviceResult.action != VoiceCommandProcessor.CommandAction.UNKNOWN) {
-                                        executeDeviceCommand(deviceResult, navController)
-                                        voiceOutputHandler.speak("Done")
                                     } else {
-                                        voiceOutputHandler.speak(getString(R.string.voice_fallback_sorry))
+
                                     }
+                                } catch (e: Exception) {
+                                    Log.e("MindSetActivity", "Error processing voice command: ${e.message}", e)
+                                    voiceOutputHandler.speak("I encountered an error processing that command")
                                 }
                             }
                             is VoiceInputHandler.VoiceState.Error -> {
@@ -370,6 +391,7 @@ class MindSetActivity : ComponentActivity() {
                         }
                     }
 
+                    Box(modifier = Modifier.fillMaxSize()) {
                     Scaffold(
                         bottomBar = {
                             val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -384,6 +406,7 @@ class MindSetActivity : ComponentActivity() {
                                         label = { Text(item.title) },
                                         selected = currentRoute == item.route,
                                         onClick = {
+                                            notifViewModel.closePanel()
                                             navController.navigate(item.route) {
                                                 popUpTo(navController.graph.startDestinationId) { saveState = true }
                                                 launchSingleTop = true
@@ -410,7 +433,9 @@ class MindSetActivity : ComponentActivity() {
                                     viewModel = viewModel,
                                     onNavigateToTaskDetail = { taskId -> navController.navigate("task_detail/$taskId") },
                                     onBackClick = { if (!navController.popBackStack()) finish() },
-                                    onProfileClick = { navController.navigate("settings") }
+                                    onProfileClick = { navController.navigate("settings") },
+                                    notificationCount = unreadCount,
+                                    onNotificationClick = { notifViewModel.togglePanel() }
                                 )
                             }
                             composable("todo_main") {
@@ -432,18 +457,22 @@ class MindSetActivity : ComponentActivity() {
                                     )
                                 }
                             }
-                            composable("analytics") { 
+                            composable("analytics") {
                                 AnalyticsScreen(
                                     viewModel = viewModel,
                                     onBackClick = { if (!navController.popBackStack()) finish() },
-                                    onProfileClick = { navController.navigate("settings") }
-                                ) 
+                                    onProfileClick = { navController.navigate("settings") },
+                                    notificationCount = unreadCount,
+                                    onNotificationClick = { notifViewModel.togglePanel() }
+                                )
                             }
-                            composable("bedtime") { 
+                            composable("bedtime") {
                                 BedtimeRoutineScreen(
                                     viewModel = viewModel,
                                     onBackClick = { if (!navController.popBackStack()) finish() },
-                                    onProfileClick = { navController.navigate("settings") }
+                                    onProfileClick = { navController.navigate("settings") },
+                                    notificationCount = unreadCount,
+                                    onNotificationClick = { notifViewModel.togglePanel() }
                                 ) 
                             }
                             composable("settings") {
@@ -477,6 +506,53 @@ class MindSetActivity : ComponentActivity() {
                                             }
                                         }
                     }
+
+                    // ── Notification Panel Overlay ──────────────────
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isPanelOpen,
+                        enter = androidx.compose.animation.slideInVertically(
+                            initialOffsetY = { -it }
+                        ) + androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.slideOutVertically(
+                            targetOffsetY = { -it }
+                        ) + androidx.compose.animation.fadeOut(),
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    ) {
+                        NotificationPanel(
+                            notifications = notifications,
+                            onMarkAllRead = { notifViewModel.markAllAsRead() },
+                            onClearAll = { notifViewModel.clearAll(); notifViewModel.closePanel() },
+                            onNotificationClick = { notif ->
+                                notifViewModel.markAsRead(notif.id)
+                                notifViewModel.closePanel()
+                                notif.actionRoute?.let { route ->
+                                    navController.navigate(route) {
+                                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                        launchSingleTop = true
+                                    }
+                                }
+                            },
+                            onDismiss = { id -> notifViewModel.deleteNotification(id) },
+                            onClose = { notifViewModel.closePanel() }
+                        )
+                    }
+
+                    // ── Toast Banner (top of screen) ────────────────
+                    VeriteToastBanner(
+                        notification = toastNotification,
+                        onDismiss = { toastNotification = null },
+                        onClick = {
+                            toastNotification?.actionRoute?.let { route ->
+                                navController.navigate(route) {
+                                    launchSingleTop = true
+                                }
+                            }
+                            toastNotification = null
+                        },
+                        modifier = Modifier.align(Alignment.TopCenter)
+                    )
+
+                    } // End of Box overlay wrapper
                 } // End of SkyBackground
             }
         }

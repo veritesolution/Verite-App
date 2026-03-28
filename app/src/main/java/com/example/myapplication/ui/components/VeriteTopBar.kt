@@ -27,11 +27,14 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
+import com.example.myapplication.ui.notification.NotificationBell
 
 @Composable
 fun VeriteTopBar(
     onBackClick: () -> Unit,
     onProfileClick: () -> Unit = {},
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -85,23 +88,35 @@ fun VeriteTopBar(
             )
         }
 
-        // Right Section: Profile Icon
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .size(40.dp)
-                .background(Color(0xFF0F1B1B), CircleShape)
-                .border(1.dp, Color(0xFF1C9C91), CircleShape)
-                .clip(CircleShape)
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
+        // Right Section: Notification Bell + Profile Icon
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Icon(
-                painter = painterResource(id = R.drawable.ic_account),
-                contentDescription = "Profile",
-                modifier = Modifier.size(24.dp),
-                tint = Color(180, 180, 180) // Grey icon as requested
+            // Notification Bell
+            NotificationBell(
+                unreadCount = notificationCount,
+                onClick = onNotificationClick
             )
+
+            // Profile Icon
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .background(Color(0xFF0F1B1B), CircleShape)
+                    .border(1.dp, Color(0xFF1C9C91), CircleShape)
+                    .clip(CircleShape)
+                    .clickable { onProfileClick() },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_account),
+                    contentDescription = "Profile",
+                    modifier = Modifier.size(24.dp),
+                    tint = Color(180, 180, 180)
+                )
+            }
         }
     }
 }

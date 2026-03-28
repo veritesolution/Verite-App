@@ -79,6 +79,14 @@ class SettingsManager(context: Context) {
         get() = prefs.getFloat(KEY_VOICE_SIMILARITY, 0.75f)
         set(value) = prefs.edit().putFloat(KEY_VOICE_SIMILARITY, value).apply()
 
+    var ttsSpeechRate: Float
+        get() = prefs.getFloat(KEY_TTS_SPEECH_RATE, 1.0f)
+        set(value) = prefs.edit().putFloat(KEY_TTS_SPEECH_RATE, value).apply()
+
+    var ttsPitch: Float
+        get() = prefs.getFloat(KEY_TTS_PITCH, 1.0f)
+        set(value) = prefs.edit().putFloat(KEY_TTS_PITCH, value).apply()
+
     companion object {
         private const val PREFS_NAME = "verite_settings"
         private const val KEY_HABIT_REMINDER_HOUR = "habit_reminder_hour"
@@ -101,5 +109,7 @@ class SettingsManager(context: Context) {
         private const val KEY_SELECTED_VOICE_ID = "selected_voice_id"
         private const val KEY_VOICE_STABILITY = "voice_stability"
         private const val KEY_VOICE_SIMILARITY = "voice_similarity"
+        private const val KEY_TTS_SPEECH_RATE = "tts_speech_rate"
+        private const val KEY_TTS_PITCH = "tts_pitch"
     }
 }

@@ -11,6 +11,9 @@ import android.text.Spanned
 import android.text.method.LinkMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.ForegroundColorSpan
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import android.util.Log
 import android.util.Patterns
 import android.view.Gravity
 import android.view.View
@@ -28,10 +31,14 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.data.auth.AuthManager
 import com.example.myapplication.data.local.AppDatabase
+import com.example.myapplication.data.model.User
 import com.example.myapplication.data.repository.DeviceRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.FirebaseNetworkException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class SignInActivity : AppCompatActivity() {
     
@@ -50,7 +57,17 @@ class SignInActivity : AppCompatActivity() {
                         authResult.onSuccess {
                             navigateToNextScreen()
                         }.onFailure { e ->
-                             Toast.makeText(this@SignInActivity, "Google Sign In Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                            when (e) {
+                                is FirebaseNetworkException -> {
+                                    if (BuildConfig.DEBUG) {
+                                        Toast.makeText(this@SignInActivity, "Firebase unreachable — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                                        offlineDevLogin(account.email ?: "dev@verite.local")
+                                    } else {
+                                        Toast.makeText(this@SignInActivity, "Cannot reach login server. Check your internet connection.", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                                else -> Toast.makeText(this@SignInActivity, "Google Sign In Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                            }
                         }
                     }
                 }
@@ -524,12 +541,37 @@ class SignInActivity : AppCompatActivity() {
                         ).show()
                         return@setOnClickListener
                     }
+
+                    // Pre-check network before calling Firebase
+                    if (!isNetworkAvailable()) {
+                        if (BuildConfig.DEBUG) {
+                            // Dev bypass — proceed offline so app features can still be tested
+                            Toast.makeText(this@SignInActivity, "No internet — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                            offlineDevLogin(email)
+                        } else {
+                            Toast.makeText(this@SignInActivity, "No internet connection. Please check your WiFi or mobile data.", Toast.LENGTH_LONG).show()
+                        }
+                        return@setOnClickListener
+                    }
+
                     lifecycleScope.launch {
                         val result = authManager.signIn(email, password)
                         result.onSuccess {
                              navigateToNextScreen()
                         }.onFailure { e ->
-                            Toast.makeText(this@SignInActivity, "Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                            when (e) {
+                                is FirebaseNetworkException -> {
+                                    if (BuildConfig.DEBUG) {
+                                        Toast.makeText(this@SignInActivity, "Firebase unreachable — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                                        offlineDevLogin(email)
+                                    } else {
+                                        Toast.makeText(this@SignInActivity, "Cannot reach login server. Check your internet connection and try again.", Toast.LENGTH_LONG).show()
+                                    }
+                                }
+                                else -> {
+                                    Toast.makeText(this@SignInActivity, "Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                }
+                            }
                         }
                     }
                 } else {
@@ -618,6 +660,40 @@ class SignInActivity : AppCompatActivity() {
         }
     }
     
+    /**
+     * Check whether the device has an active internet-capable network.
+     */
+    private fun isNetworkAvailable(): Boolean {
+        val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+                && caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    /**
+     * Dev-mode offline login: creates a local-only user so the rest of the app
+     * can be tested when Firebase Auth is unreachable (no internet / server down).
+     * Only available in DEBUG builds.
+     */
+    private fun offlineDevLogin(email: String) {
+        lifecycleScope.launch {
+            withContext(Dispatchers.IO) {
+                val database = AppDatabase.getDatabase(this@SignInActivity)
+                val user = User(
+                    id = 1,
+                    name = email.substringBefore("@"),
+                    email = email,
+                    profileImagePath = null,
+                    joinDate = System.currentTimeMillis()
+                )
+                database.userDao().insertUser(user)
+            }
+            Log.w("SignInActivity", "Offline dev login — Firebase bypassed")
+            navigateToNextScreen()
+        }
+    }
+
     private fun dpToPx(dp: Int): Int {
         return (dp * resources.displayMetrics.density).toInt()
     }

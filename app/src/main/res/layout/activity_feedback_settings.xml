@@ -85,7 +85,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:text="Feedback Settings"
-                android:textColor="@color/white"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-light"
+                android:letterSpacing="0.02"
+                android:textStyle="bold"
                 android:textSize="18sp"
                 app:layout_constraintEnd_toEndOf="@id/bgMainCard"
                 app:layout_constraintStart_toStartOf="@id/bgMainCard"
@@ -116,8 +119,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Excellent"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.02"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -148,8 +153,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Good"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.02"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -171,8 +178,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Satisfactory"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.02"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -194,8 +203,10 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Bad"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="16sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.02"
                         android:textStyle="bold"
                         app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintStart_toStartOf="parent"
@@ -237,7 +248,10 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="32dp"
                 android:text="Feedback Settings (Visualized)"
-                android:textColor="@color/white"
+                android:textColor="@color/text_primary"
+                android:fontFamily="sans-serif-light"
+                android:letterSpacing="0.02"
+                android:textStyle="bold"
                 android:textSize="18sp"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/bgMainCard" />
@@ -274,8 +288,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Bad"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.01"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -298,8 +314,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Satisfied"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.01"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -322,8 +340,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Good"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.01"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -349,8 +369,10 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="Excellent"
-                        android:textColor="@color/white"
+                        android:textColor="@color/text_primary"
                         android:textSize="14sp"
+                        android:fontFamily="sans-serif-light"
+                        android:letterSpacing="0.01"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -360,20 +382,19 @@
     </ScrollView>
 
     <!-- Confirm Button -->
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnConfirm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginBottom="24dp"
-        android:backgroundTint="@android:color/transparent"
-        android:background="@drawable/btn_outline_teal"
-        android:paddingVertical="16dp"
-        android:text="Confirm !"
-        android:textAllCaps="false"
-        android:textColor="#00BFA5"
-        android:textSize="16sp"
+        android:background="@drawable/bg_scifi_button"
+        android:padding="16dp"
+        android:text="CONFIRM"
+        android:textColor="@color/accent_bright"
         android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.1"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

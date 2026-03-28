@@ -10,6 +10,9 @@ import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.FirebaseNetworkException
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.ktx.userProfileChangeRequest
@@ -33,8 +36,14 @@ class AuthManager(private val context: Context) {
                 syncUserToLocalDb(user)
                 Result.success(user)
             } ?: Result.failure(Exception("Sign in failed"))
+        } catch (e: FirebaseNetworkException) {
+            Result.failure(Exception("Network error: Please check your internet connection"))
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            Result.failure(Exception("Invalid email or password"))
+        } catch (e: FirebaseAuthInvalidUserException) {
+            Result.failure(Exception("Account not found"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(e.message ?: "Sign in failed"))
         }
     }
 
@@ -46,8 +55,12 @@ class AuthManager(private val context: Context) {
                 syncUserToLocalDb(user, name)
                 Result.success(user)
             } ?: Result.failure(Exception("Sign up failed"))
+        } catch (e: FirebaseNetworkException) {
+            Result.failure(Exception("Network error: Please check your internet connection"))
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            Result.failure(Exception("Invalid email or password"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(e.message ?: "Sign up failed"))
         }
     }
 
@@ -68,8 +81,12 @@ class AuthManager(private val context: Context) {
                 syncUserToLocalDb(user)
                 Result.success(user)
             } ?: Result.failure(Exception("Google sign in failed"))
+        } catch (e: FirebaseNetworkException) {
+            Result.failure(Exception("Network error: Please check your internet connection"))
+        } catch (e: FirebaseAuthInvalidCredentialsException) {
+            Result.failure(Exception("Invalid credentials for Google sign in"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(e.message ?: "Google sign in failed"))
         }
     }
 
@@ -102,8 +119,12 @@ class AuthManager(private val context: Context) {
         return try {
             auth.sendPasswordResetEmail(email).await()
             Result.success(Unit)
+        } catch (e: FirebaseNetworkException) {
+            Result.failure(Exception("Network error: Please check your internet connection"))
+        } catch (e: FirebaseAuthInvalidUserException) {
+            Result.failure(Exception("Account not found"))
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception(e.message ?: "Failed to send password reset email"))
         }
     }
 }

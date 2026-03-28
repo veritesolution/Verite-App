@@ -149,18 +149,19 @@
         app:layout_constraintTop_toBottomOf="@id/inputFrame" />
 
     <!-- Summary Button -->
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnCheckSummary"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginHorizontal="32dp"
         android:layout_marginBottom="24dp"
-        android:backgroundTint="#0F1A18"
-        android:paddingVertical="16dp"
-        android:text="check Summary !"
-        android:textAllCaps="false"
-        android:textColor="@color/white"
-        app:cornerRadius="12dp"
+        android:background="@drawable/bg_scifi_button"
+        android:padding="16dp"
+        android:text="CHECK SUMMARY"
+        android:textColor="@color/accent_bright"
+        android:textStyle="bold"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.1"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

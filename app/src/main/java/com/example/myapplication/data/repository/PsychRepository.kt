@@ -6,6 +6,8 @@ package com.example.myapplication.data.repository
 
 import com.example.myapplication.data.model.*
 import com.example.myapplication.data.remote.PsychNetworkModule
+import java.net.SocketTimeoutException
+import java.net.UnknownHostException
 
 sealed class PsychResult<out T> {
     data class Success<T>(val data: T) : PsychResult<T>()
@@ -34,6 +36,10 @@ class PsychRepository {
                     response.code()
                 )
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -53,6 +59,10 @@ class PsychRepository {
                     response.code()
                 )
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -79,6 +89,10 @@ class PsychRepository {
                 val errorBody = response.errorBody()?.string()
                 PsychResult.Error(errorBody ?: "Failed to send message", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -92,6 +106,10 @@ class PsychRepository {
             } else {
                 PsychResult.Error("Failed to create session", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -105,6 +123,10 @@ class PsychRepository {
             } else {
                 PsychResult.Error("Failed to list sessions", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -118,6 +140,10 @@ class PsychRepository {
             } else {
                 PsychResult.Error("Failed to delete session", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -140,6 +166,10 @@ class PsychRepository {
             } else {
                 PsychResult.Error("Failed to submit feedback", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Network error")
         }
@@ -155,6 +185,10 @@ class PsychRepository {
             } else {
                 PsychResult.Error("Server unhealthy", response.code())
             }
+        } catch (e: SocketTimeoutException) {
+            PsychResult.Error("Server took too long to respond")
+        } catch (e: UnknownHostException) {
+            PsychResult.Error("Cannot reach server")
         } catch (e: Exception) {
             PsychResult.Error(e.message ?: "Cannot reach server")
         }

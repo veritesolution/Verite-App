@@ -15,15 +15,20 @@ import com.example.myapplication.data.model.Habit
 import com.example.myapplication.data.model.HabitCompletion
 import com.example.myapplication.data.model.MoodEntry
 import com.example.myapplication.data.model.BedtimeItem
+import com.example.myapplication.data.model.ChatSession
+import com.example.myapplication.data.model.ChatMessageEntity
+import com.example.myapplication.data.model.AppNotification
 import androidx.room.TypeConverters
 
 @Database(
     entities = [
-        RecoveryPlan::class, Task::class, DreamEntry::class, Device::class, 
+        RecoveryPlan::class, Task::class, DreamEntry::class, Device::class,
         PowerOffSettings::class, User::class, SensorReading::class,
-        Habit::class, HabitCompletion::class, MoodEntry::class, BedtimeItem::class
+        Habit::class, HabitCompletion::class, MoodEntry::class, BedtimeItem::class,
+        ChatSession::class, ChatMessageEntity::class,
+        AppNotification::class
     ],
-    version = 12,
+    version = 14,
     exportSchema = false
 )
 @TypeConverters(Converters::class)
@@ -39,11 +44,13 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun habitCompletionDao(): HabitCompletionDao
     abstract fun moodEntryDao(): MoodEntryDao
     abstract fun bedtimeItemDao(): BedtimeItemDao
-    
+    abstract fun chatDao(): ChatDao
+    abstract fun notificationDao(): NotificationDao
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
-        
+
         fun getDatabase(context: Context): AppDatabase {
             return INSTANCE ?: synchronized(this) {
                 val instance = Room.databaseBuilder(
@@ -51,7 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "verite_database"
                 )
-                    .fallbackToDestructiveMigration() // TODO: Replace with proper Migration objects before next DB version bump
+                    .fallbackToDestructiveMigration()
                     .build()
                 INSTANCE = instance
                 instance

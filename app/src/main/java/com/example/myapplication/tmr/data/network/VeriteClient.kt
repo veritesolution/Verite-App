@@ -27,6 +27,14 @@ object VeriteClient {
         get() = _baseUrl.replace("https://", "wss://").replace("http://", "ws://")
 
     fun configure(baseUrl: String, apiKey: String, debug: Boolean = false) {
+        // Validate URL format
+        if (baseUrl.isBlank()) {
+            throw IllegalArgumentException("Base URL cannot be empty")
+        }
+        if (!baseUrl.startsWith("http://") && !baseUrl.startsWith("https://")) {
+            throw IllegalArgumentException("Base URL must start with http:// or https://")
+        }
+
         _baseUrl = if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/"
         _apiKey = apiKey
 
