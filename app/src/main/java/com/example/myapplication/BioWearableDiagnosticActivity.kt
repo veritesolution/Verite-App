@@ -12,25 +12,36 @@ import android.os.Looper
 import android.util.Log
 import android.view.View
 import android.widget.*
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import java.util.UUID
 
-// ── BLE UUIDs — must match BioWearable firmware exactly ─────────────────────
-private val SERVICE_UUID       = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
-private val SENSOR_DATA_UUID   = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")   // NOTIFY 24-byte raw @ 250 Hz
-private val COMMANDS_UUID      = UUID.fromString("12345678-1234-5678-1234-56789abcdef0")     // WRITE ASCII commands
-private val DSP_RESULTS_UUID   = UUID.fromString("abcd1234-ab12-cd34-ef56-abcdef012345")    // NOTIFY 32-byte processed @ 2 Hz
-private val CCCD_UUID          = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-
-private const val TAG             = "BioWearable"
-private const val DEVICE_NAME     = "BioWearable"
-private const val SCAN_TIMEOUT_MS = 12_000L
-private const val RECONNECT_DELAY = 2_000L
-private const val REQUEST_PERM    = 100
 
 class BioWearableDiagnosticActivity : AppCompatActivity() {
+    
+    companion object {
+        private const val TAG = "BioWearable"
+        private const val DEVICE_NAME = "BioWerable"
+        private const val SCAN_TIMEOUT_MS = 12_000L
+        private const val RECONNECT_DELAY = 2_000L
+        private const val REQUEST_PERM = 100
+
+        private val SERVICE_UUID = UUID.fromString("4fafc201-1fb5-459e-8fcc-c5c9c331914b")
+        private val SENSOR_DATA_UUID = UUID.fromString("beb5483e-36e1-4688-b7f5-ea07361b26a8")
+        private val LED_CONTROL_UUID = UUID.fromString("cba1d466-344c-4be3-ab3f-189f80dd7518")
+        private val MOTOR_CONTROL_UUID = UUID.fromString("f9279c99-b7b3-4e9e-b0dd-e4e2c95e9ad3")
+        private val CCCD_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+
+        private const val STATUS_SCANNING = "🔍 Scanning for \"%s\"..."
+        private const val STATUS_FOUND = "📡 Found %s — connecting..."
+        private const val STATUS_CONNECTED = "🟢 Connected — receiving live data"
+        private const val STATUS_DISCONNECTED = "🔴 Disconnected"
+        private const val STATUS_RECONNECTING = "🔄 Connection lost — reconnecting..."
+        private const val STATUS_NOT_FOUND = "⏱ Not found — tap Scan to retry"
+    }
+
 
     // ── Views — Bio-Sensors ────────────────────────────────────────────────
     private lateinit var btnScan        : Button
@@ -109,47 +120,50 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         userDisconnect = true
+        if (isScanning) stopScan()
+        testRunning = false
+        isCycling = false
         mainHandler.removeCallbacksAndMessages(null)
         disconnect()
+        super.onDestroy()
     }
 
     private fun bindViews() {
         findViewById<ImageView>(R.id.btnBack).setOnClickListener { finish() }
-        
-        btnScan        = findViewById(R.id.btnScan)
-        btnDisconnect  = findViewById(R.id.btnDisconnect)
-        tvStatus       = findViewById(R.id.tvStatus)
-        tvDataRate     = findViewById(R.id.tvDataRate)
-        tvEeg1         = findViewById(R.id.tvEeg1)
-        tvEeg2         = findViewById(R.id.tvEeg2)
-        tvEmg          = findViewById(R.id.tvEmg)
-        tvPulse        = findViewById(R.id.tvPulse)
-        pbEeg1         = findViewById(R.id.pbEeg1)
-        pbEeg2         = findViewById(R.id.pbEeg2)
-        pbEmg          = findViewById(R.id.pbEmg)
-        pbPulse        = findViewById(R.id.pbPulse)
 
-        cardImu        = findViewById(R.id.cardImu)
-        tvAccX         = findViewById(R.id.tvAccX)
-        tvAccY         = findViewById(R.id.tvAccY)
-        tvAccZ         = findViewById(R.id.tvAccZ)
-        tvGyroX        = findViewById(R.id.tvGyroX)
-        tvGyroY        = findViewById(R.id.tvGyroY)
-        tvGyroZ        = findViewById(R.id.tvGyroZ)
-        tvImuTemp      = findViewById(R.id.tvImuTemp)
+        btnScan = findViewById(R.id.btnScan)
+        btnDisconnect = findViewById(R.id.btnDisconnect)
+        tvStatus = findViewById(R.id.tvStatus)
+        tvDataRate = findViewById(R.id.tvDataRate)
+        tvEeg1 = findViewById(R.id.tvEeg1)
+        tvEeg2 = findViewById(R.id.tvEeg2)
+        tvEmg = findViewById(R.id.tvEmg)
+        tvPulse = findViewById(R.id.tvPulse)
+        pbEeg1 = findViewById(R.id.pbEeg1)
+        pbEeg2 = findViewById(R.id.pbEeg2)
+        pbEmg = findViewById(R.id.pbEmg)
+        pbPulse = findViewById(R.id.pbPulse)
 
-        btnLedRed      = findViewById(R.id.btnLedRed)
-        btnLedGreen    = findViewById(R.id.btnLedGreen)
-        btnLedBlue     = findViewById(R.id.btnLedBlue)
-        btnLedOff      = findViewById(R.id.btnLedOff)
-        btnLedCycle    = findViewById(R.id.btnLedCycle)
-        btnMotorOn     = findViewById(R.id.btnMotorOn)
-        btnMotorOff    = findViewById(R.id.btnMotorOff)
-        btnMotorPattern= findViewById(R.id.btnMotorPattern)
-        btnTestAll     = findViewById(R.id.btnTestAll)
-        tvTestLog      = findViewById(R.id.tvTestLog)
+        cardImu = findViewById(R.id.cardImu)
+        tvAccX = findViewById(R.id.tvAccX)
+        tvAccY = findViewById(R.id.tvAccY)
+        tvAccZ = findViewById(R.id.tvAccZ)
+        tvGyroX = findViewById(R.id.tvGyroX)
+        tvGyroY = findViewById(R.id.tvGyroY)
+        tvGyroZ = findViewById(R.id.tvGyroZ)
+        tvImuTemp = findViewById(R.id.tvImuTemp)
+
+        btnLedRed = findViewById(R.id.btnLedRed)
+        btnLedGreen = findViewById(R.id.btnLedGreen)
+        btnLedBlue = findViewById(R.id.btnLedBlue)
+        btnLedOff = findViewById(R.id.btnLedOff)
+        btnLedCycle = findViewById(R.id.btnLedCycle)
+        btnMotorOn = findViewById(R.id.btnMotorOn)
+        btnMotorOff = findViewById(R.id.btnMotorOff)
+        btnMotorPattern = findViewById(R.id.btnMotorPattern)
+        btnTestAll = findViewById(R.id.btnTestAll)
+        tvTestLog = findViewById(R.id.tvTestLog)
 
         setControlsEnabled(false)
     }
@@ -206,33 +220,44 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         userDisconnect = false
         bleScanner = bluetoothAdapter.bluetoothLeScanner
 
-        val filter = ScanFilter.Builder().setDeviceName(DEVICE_NAME).build()
-        val settings = ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
+        val filter = createScanFilter()
+        val settings = createScanSettings()
 
         isScanning = true
-        btnScan.text = "Stop Scan"
-        setStatus("🔍 Scanning for \"$DEVICE_NAME\"...")
+        btnScan.text = getString(R.string.btn_scan_stop)
+        setStatus(STATUS_SCANNING.format(DEVICE_NAME))
 
         bleScanner?.startScan(listOf(filter), settings, scanCallback)
 
         mainHandler.postDelayed({
-            if (isScanning) { stopScan(); setStatus("⏱ Not found — tap Scan to retry") }
+            if (isScanning) { stopScan(); setStatus(STATUS_NOT_FOUND) }
         }, SCAN_TIMEOUT_MS)
+    }
+
+    private fun createScanFilter(): ScanFilter {
+        return ScanFilter.Builder().setDeviceName(DEVICE_NAME).build()
+    }
+
+    private fun createScanSettings(): ScanSettings {
+        return ScanSettings.Builder().setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY).build()
     }
 
     @SuppressLint("MissingPermission")
     private fun stopScan() {
         isScanning = false
-        btnScan.text = "Scan for BioWearable"
+        btnScan.text = getString(R.string.btn_scan_start)
         bleScanner?.stopScan(scanCallback)
         bleScanner = null
     }
 
+    /**
+     * Callback for Bluetooth LE scan results.
+     */
     private val scanCallback = object : ScanCallback() {
         override fun onScanResult(callbackType: Int, result: ScanResult) {
             stopScan()
             lastDevice = result.device
-            setStatus("📡 Found BioWearable — connecting...")
+            setStatus(STATUS_FOUND.format(DEVICE_NAME))
             connectToDevice(result.device)
         }
         override fun onScanFailed(errorCode: Int) {
@@ -246,9 +271,13 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         bluetoothGatt = device.connectGatt(this, false, gattCallback, BluetoothDevice.TRANSPORT_LE)
     }
 
+    /**
+     * Core GATT callback handling connection states, service discovery, and notifications.
+     */
     @SuppressLint("MissingPermission")
     private val gattCallback = object : BluetoothGattCallback() {
         override fun onConnectionStateChange(gatt: BluetoothGatt, status: Int, newState: Int) {
+            Log.d(TAG, "onConnectionStateChange: status=$status, newState=$newState")
             when {
                 newState == BluetoothProfile.STATE_CONNECTED -> {
                     gatt.requestMtu(185)
@@ -258,14 +287,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
                     bluetoothGatt = null; commandChar = null
 
                     runOnUiThread {
-                        setStatus("🔴 Disconnected")
+                        setStatus(STATUS_DISCONNECTED)
                         setControlsEnabled(false)
                         btnScan.isEnabled = true
                         cardImu.visibility = View.GONE
                     }
 
                     if (!userDisconnect && lastDevice != null) {
-                        runOnUiThread { setStatus("🔄 Connection lost — reconnecting...") }
+                        runOnUiThread { setStatus(STATUS_RECONNECTING) }
                         mainHandler.postDelayed({
                             lastDevice?.let { connectToDevice(it) }
                         }, RECONNECT_DELAY)
@@ -275,28 +304,27 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         }
 
         override fun onMtuChanged(gatt: BluetoothGatt, mtu: Int, status: Int) {
+            Log.d(TAG, "onMtuChanged: mtu=$mtu, status=$status")
             gatt.discoverServices()
         }
 
         override fun onServicesDiscovered(gatt: BluetoothGatt, status: Int) {
-            if (status != BluetoothGatt.GATT_SUCCESS) return
+            if (status != BluetoothGatt.GATT_SUCCESS) {
+                Log.e(TAG, "Service discovery failed with status $status")
+                return
+            }
+            
             val service = gatt.getService(SERVICE_UUID)
             if (service == null) {
+                Log.e(TAG, "BioWearable service (UUID: $SERVICE_UUID) not found on device")
                 runOnUiThread { setStatus("❌ BioWearable service not found") }
                 return
             }
 
-            // Store the command characteristic for sending LED/motor commands
-            commandChar = service.getCharacteristic(COMMANDS_UUID)
 
-            // Subscribe to NOTIFY characteristics sequentially (BLE handles one at a time)
-            pendingDescriptorWrites.clear()
-            service.getCharacteristic(DSP_RESULTS_UUID)?.let { pendingDescriptorWrites.add(it) }
-            service.getCharacteristic(SENSOR_DATA_UUID)?.let { pendingDescriptorWrites.add(it) }
-            enableNextNotification(gatt)
 
             runOnUiThread {
-                setStatus("🟢 Connected — receiving live data")
+                setStatus(STATUS_CONNECTED)
                 setControlsEnabled(true)
                 lastRateTime = System.currentTimeMillis()
                 packetCount = 0
@@ -320,9 +348,7 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
 
         @Suppress("DEPRECATION")
         override fun onCharacteristicChanged(gatt: BluetoothGatt, characteristic: BluetoothGattCharacteristic) {
-            when (characteristic.uuid) {
-                SENSOR_DATA_UUID -> parseSensorData(characteristic.value)
-                DSP_RESULTS_UUID -> parseProcessedData(characteristic.value)
+
             }
         }
     }
@@ -343,42 +369,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
      *   offset 22: int16  temp (divide by 340 + 36.53 for Celsius)
      */
     private fun parseSensorData(data: ByteArray) {
-        if (data.size < 24) return
-
-        fun u16(i: Int) = ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
-        fun s16(i: Int): Int {
-            val v = ((data[i + 1].toInt() and 0xFF) shl 8) or (data[i].toInt() and 0xFF)
-            return if (v >= 0x8000) v - 0x10000 else v
-        }
-
-        // val seq = u16(0)  // Sequence counter
-        val eeg1  = u16(2);  val eeg2  = u16(4)
-        val emg   = u16(6);  val pulse = u16(8)
-        latestEeg1 = eeg1; latestEeg2 = eeg2; latestEmg = emg; latestPulse = pulse
-
-        val v1 = eeg1  * 3.3f / 4095f
-        val v2 = eeg2  * 3.3f / 4095f
-        val v3 = emg   * 3.3f / 4095f
-        val v4 = pulse * 3.3f / 4095f
-
-        // IMU data is always present in the 24-byte packet
-        val accX = s16(10) / 16384.0f  // Convert to g
-        val accY = s16(12) / 16384.0f
-        val accZ = s16(14) / 16384.0f
-        val gyrX = s16(16) / 131.0f    // Convert to degrees/second
-        val gyrY = s16(18) / 131.0f
-        val gyrZ = s16(20) / 131.0f
-        val temp = s16(22) / 340.0f + 36.53f  // Convert to Celsius
-        latestAccX = accX; latestAccY = accY; latestAccZ = accZ
-        hasImu = true
 
         packetCount++
 
         runOnUiThread {
-            tvEeg1.text  = "EEG 1:  $eeg1  (%.2fV)".format(v1)
-            tvEeg2.text  = "EEG 2:  $eeg2  (%.2fV)".format(v2)
-            tvEmg.text   = "EMG:    $emg  (%.2fV)".format(v3)
-            tvPulse.text = "Pulse:  $pulse  (%.2fV)".format(v4)
+            tvEeg1.text  = "EEG 1:  $eeg1  (%.2fV)".format(eeg1Volts)
+            tvEeg2.text  = "EEG 2:  $eeg2  (%.2fV)".format(eeg2Volts)
+            tvEmg.text   = "EMG:    $emg  (%.2fV)".format(emgVolts)
+            tvPulse.text = "Pulse:  $pulse  (%.2fV)".format(pulseVolts)
             pbEeg1.progress  = eeg1
             pbEeg2.progress  = eeg2
             pbEmg.progress   = emg
@@ -602,10 +600,14 @@ class BioWearableDiagnosticActivity : AppCompatActivity() {
         bluetoothGatt = null
         setControlsEnabled(false)
         btnScan.isEnabled = true
-        setStatus("🔴 Disconnected")
+        setStatus(STATUS_DISCONNECTED)
     }
 
     private fun setStatus(msg: String) { tvStatus.text = msg }
+
+    private fun showToast(msg: String) {
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+    }
 
     private fun setControlsEnabled(enabled: Boolean) {
         btnDisconnect.isEnabled  = enabled

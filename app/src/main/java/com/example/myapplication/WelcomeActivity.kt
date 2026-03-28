@@ -36,7 +36,8 @@ class WelcomeActivity : AppCompatActivity() {
         val database = AppDatabase.getDatabase(this)
         deviceRepository = DeviceRepository(database.deviceDao())
 
-        // Check for existing session
+        
+        /*Check for existing session*/
         if (authManager.currentUser != null) {
             lifecycleScope.launch {
                 val connectedDevice = deviceRepository.getConnectedDevice()

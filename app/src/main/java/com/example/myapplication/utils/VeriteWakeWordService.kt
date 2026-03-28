@@ -24,6 +24,9 @@ class VeriteWakeWordService : Service() {
     private val CHANNEL_ID = "wake_word_service"
     private val NOTIF_ID = 1001
 
+    /**
+     * Initializes the notification channel and starts the foreground service.
+     */
     override fun onCreate() {
         super.onCreate()
         try {
@@ -120,6 +123,10 @@ class VeriteWakeWordService : Service() {
         return false
     }
 
+    /**
+     * Triggers the voice assistant activation by providing haptic feedback
+     * and bringing the [MindSetActivity] to the foreground.
+     */
     private fun triggerActivation() {
         // 1. Notify user with vibration
         val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {

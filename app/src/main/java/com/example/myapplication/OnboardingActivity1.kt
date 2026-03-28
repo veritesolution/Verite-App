@@ -19,15 +19,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 
+/*OnboardingActivity1 class */
+
 class OnboardingActivity1 : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Ensure edge-to-edge display
-        androidx.core.view.WindowCompat.setDecorFitsSystemWindows(window, false)
-        
-        // Create root ConstraintLayout
+
         val rootLayout = ConstraintLayout(this).apply {
             id = View.generateViewId()
             layoutParams = ViewGroup.LayoutParams(
@@ -68,8 +67,9 @@ class OnboardingActivity1 : AppCompatActivity() {
             }
             mp.start()
         }
-        
-        // Create header with back button and title
+
+
+        /* Create header with back button and title */
         val headerLayout = LinearLayout(this).apply {
             id = View.generateViewId()
             orientation = LinearLayout.HORIZONTAL
@@ -81,6 +81,7 @@ class OnboardingActivity1 : AppCompatActivity() {
             )
         }
         rootLayout.addView(headerLayout)
+        
         
         // Back arrow button
         val backButton = Button(this).apply {
