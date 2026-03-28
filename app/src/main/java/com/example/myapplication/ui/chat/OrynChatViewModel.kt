@@ -194,37 +194,28 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
 
     private suspend fun addOfflineResponse() {
         val session = _uiState.value.currentSession ?: return
-        val msg = ChatMessageEntity(
-            sessionId = session.id,
-            content = "It looks like you're offline right now. I can't connect to my server, " +
-                "but I want you to know I'm here. Try checking your WiFi or mobile data.",
-            isUser = false,
-            timestamp = System.currentTimeMillis()
+        repository.saveLocalBotMessage(
+            session.id,
+            "It looks like you're offline right now. I can't connect to my server, " +
+                "but I want you to know I'm here. Try checking your WiFi or mobile data."
         )
-        AppDatabase.getDatabase(getApplication()).chatDao().insertMessage(msg)
     }
 
     private suspend fun addServerDownResponse() {
         val session = _uiState.value.currentSession ?: return
-        val msg = ChatMessageEntity(
-            sessionId = session.id,
-            content = "I'm connecting to my server... Please try sending your message again in a moment.",
-            isUser = false,
-            timestamp = System.currentTimeMillis()
+        repository.saveLocalBotMessage(
+            session.id,
+            "I'm connecting to my server... Please try sending your message again in a moment."
         )
-        AppDatabase.getDatabase(getApplication()).chatDao().insertMessage(msg)
     }
 
     private suspend fun addErrorResponse() {
         val session = _uiState.value.currentSession ?: return
-        val msg = ChatMessageEntity(
-            sessionId = session.id,
-            content = "I had trouble processing that. Could you try again? " +
-                "I want to make sure I understand you correctly.",
-            isUser = false,
-            timestamp = System.currentTimeMillis()
+        repository.saveLocalBotMessage(
+            session.id,
+            "I had trouble processing that. Could you try again? " +
+                "I want to make sure I understand you correctly."
         )
-        AppDatabase.getDatabase(getApplication()).chatDao().insertMessage(msg)
     }
 
     // ═══════════════════════════════════════════════════════
@@ -291,9 +282,6 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
         val caps = cm.getNetworkCapabilities(network) ?: return false
         return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
     }
-
-    private fun AppDatabase.Companion.getDatabase(app: Application) =
-        AppDatabase.getDatabase(app.applicationContext)
 
     override fun onCleared() {
         super.onCleared()

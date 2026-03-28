@@ -137,6 +137,19 @@ class ChatRepository(private val context: Context) {
     }
 
     /**
+     * Save a local bot message (for offline/error fallback responses).
+     */
+    suspend fun saveLocalBotMessage(sessionId: Long, content: String) {
+        val msg = ChatMessageEntity(
+            sessionId = sessionId,
+            content = content,
+            isUser = false,
+            timestamp = System.currentTimeMillis()
+        )
+        chatDao.insertMessage(msg)
+    }
+
+    /**
      * Save a user message to the local database.
      */
     suspend fun saveUserMessage(sessionId: Long, content: String): ChatMessageEntity {
