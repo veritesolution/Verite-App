@@ -1,11 +1,7 @@
 package com.example.myapplication
 
 import android.content.Intent
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.Button
@@ -13,32 +9,30 @@ import android.widget.EditText
 import android.widget.ImageView
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.local.AppDatabase
-import com.example.myapplication.data.remote.PsychNetworkModule
-import com.example.myapplication.data.repository.PsychRepository
-import com.example.myapplication.data.repository.PsychResult
+import com.example.myapplication.data.model.ChatMessageEntity
+import com.example.myapplication.ui.chat.OrynChatViewModel
 import com.example.myapplication.util.ProfileIconHelper
-import kotlinx.coroutines.delay
+import coil.load
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
-
-private const val TAG = "OrynActivity"
 
 class OrynActivity : AppCompatActivity() {
 
-    private lateinit var adapter: ChatAdapter
-    private val messages = mutableListOf<ChatMessage>()
+    private val viewModel: OrynChatViewModel by viewModels()
+
+    private lateinit var adapter: OrynChatAdapter
+    private val messages = mutableListOf<ChatMessageEntity>()
     private lateinit var recyclerView: RecyclerView
     private lateinit var etChatInput: EditText
     private var progressBar: ProgressBar? = null
-
-    // Psychologist API
-    private var psychRepository: PsychRepository? = null
-    private var psychSessionId: String? = null
-    private var apiAvailable = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,130 +40,12 @@ class OrynActivity : AppCompatActivity() {
 
         val database = AppDatabase.getDatabase(this)
 
-        // Initialize Psychologist API
-        initPsychApi()
-
         setupUI(database)
         setupChat(database)
+        observeViewModel()
 
-        // Initial greeting
-        addMessage(ChatMessage("Hello! I am Oryn, your AI mental wellness companion. How can I help you today?", isUser = false))
-    }
-
-    /**
-     * Generate a stable device-based username for auto-registration
-     * with the Verite backend. Uses Android ID for uniqueness.
-     */
-    private fun getDeviceUsername(): String {
-        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        return "verite_${androidId?.take(12) ?: "default"}"
-    }
-
-    /**
-     * Auto-authenticate with the Verite production backend.
-     * Tries login first; if user doesn't exist, registers automatically.
-     * This is seamless — the user never sees a login screen for Oryn.
-     */
-    private suspend fun autoAuthenticate(): Boolean {
-        val repo = psychRepository ?: return false
-        val tokenManager = PsychNetworkModule.tokenManager
-
-        // If already logged in with valid tokens, skip auth
-        if (tokenManager.isLoggedIn) {
-            Log.d(TAG, "Already authenticated, skipping auto-auth")
-            return true
-        }
-
-        val username = getDeviceUsername()
-        val password = "verite_secure_${username}_2026"
-
-        // Try login first
-        when (val loginResult = repo.login(username, password)) {
-            is PsychResult.Success -> {
-                Log.i(TAG, "Auto-login successful for $username")
-                return true
-            }
-            is PsychResult.Error -> {
-                Log.d(TAG, "Login failed (${loginResult.message}), trying registration...")
-            }
-            else -> {}
-        }
-
-        // Login failed — try register (user might not exist yet)
-        when (val regResult = repo.register(username, password, "Verite User")) {
-            is PsychResult.Success -> {
-                Log.i(TAG, "Auto-registration successful for $username")
-                return true
-            }
-            is PsychResult.Error -> {
-                // If registration says "already exists", try login again
-                if (regResult.message.contains("exist", ignoreCase = true) ||
-                    regResult.message.contains("taken", ignoreCase = true) ||
-                    regResult.code == 400
-                ) {
-                    when (val retryLogin = repo.login(username, password)) {
-                        is PsychResult.Success -> {
-                            Log.i(TAG, "Retry login successful for $username")
-                            return true
-                        }
-                        else -> {
-                            Log.e(TAG, "Auto-auth completely failed for $username")
-                        }
-                    }
-                } else {
-                    Log.e(TAG, "Auto-registration failed: ${regResult.message}")
-                }
-            }
-            else -> {}
-        }
-
-        return false
-    }
-
-    private fun initPsychApi() {
-        try {
-            PsychNetworkModule.init(this)
-            psychRepository = PsychRepository()
-
-            // Check server health, auto-authenticate, then mark API ready
-            lifecycleScope.launch {
-                repeat(2) { attempt ->
-                    if (!isNetworkAvailable()) {
-                        Log.w(TAG, "No network available (attempt ${attempt + 1})")
-                        apiAvailable = false
-                        if (attempt == 0) delay(2000)
-                        return@repeat
-                    }
-                    when (val result = psychRepository?.healthCheck()) {
-                        is PsychResult.Success -> {
-                            Log.i(TAG, "Verite API online: ${result.data.version} | LLM: ${result.data.llmProvider}")
-                            // Server is up — now auto-authenticate
-                            val authOk = autoAuthenticate()
-                            if (authOk) {
-                                apiAvailable = true
-                                Log.i(TAG, "Oryn fully connected and authenticated")
-                            } else {
-                                Log.w(TAG, "Server online but authentication failed")
-                                apiAvailable = true // Still allow unauthenticated health checks
-                            }
-                            return@launch
-                        }
-                        is PsychResult.Error -> {
-                            Log.w(TAG, "Verite API unavailable (attempt ${attempt + 1}): ${result.message}")
-                            apiAvailable = false
-                            if (attempt == 0) delay(2000)
-                        }
-                        else -> {
-                            apiAvailable = false
-                            if (attempt == 0) delay(2000)
-                        }
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            Log.w(TAG, "Could not initialize Verite API", e)
-            apiAvailable = false
-        }
+        // Add greeting if this is a fresh session (no messages yet)
+        // The ViewModel will load existing messages from DB
     }
 
     private fun setupUI(database: AppDatabase) {
@@ -180,16 +56,23 @@ class OrynActivity : AppCompatActivity() {
             startActivity(Intent(this, ProfileActivity::class.java))
         }
 
+        // Real-time profile icon sync using Flow (updates when image changes)
         ProfileIconHelper.syncProfileIcon(this, profileIcon)
 
         val headerTitle = findViewById<android.widget.TextView>(R.id.headerTitle)
         com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(headerTitle)
 
         findViewById<Button>(R.id.btnCheckSummary).setOnClickListener {
-            startActivity(Intent(this, OrynSummaryActivity::class.java))
+            // End session + generate summary, then navigate
+            viewModel.endSessionAndSummarize { sessionId ->
+                val intent = Intent(this, OrynSummaryActivity::class.java)
+                if (sessionId != null) {
+                    intent.putExtra("SESSION_ID", sessionId)
+                }
+                startActivity(intent)
+            }
         }
 
-        // Optional progress bar (if layout has one)
         progressBar = findViewById(R.id.progressBar)
     }
 
@@ -199,7 +82,7 @@ class OrynActivity : AppCompatActivity() {
         layoutManager.stackFromEnd = true
         recyclerView.layoutManager = layoutManager
 
-        adapter = ChatAdapter(messages, database)
+        adapter = OrynChatAdapter(messages, database)
         recyclerView.adapter = adapter
 
         etChatInput = findViewById(R.id.etChatInput)
@@ -208,9 +91,8 @@ class OrynActivity : AppCompatActivity() {
         val sendMessageAction = {
             val text = etChatInput.text.toString().trim()
             if (text.isNotEmpty()) {
-                addMessage(ChatMessage(text, isUser = true))
                 etChatInput.text.clear()
-                sendToPsychApi(text)
+                viewModel.sendMessage(text)
             }
         }
 
@@ -226,123 +108,127 @@ class OrynActivity : AppCompatActivity() {
         }
     }
 
-    private fun sendToPsychApi(text: String) {
-        if (!isNetworkAvailable()) {
-            addMessage(ChatMessage(
-                "It looks like you're offline right now. I can't connect to my server, " +
-                "but I want you to know I'm here. Try checking your WiFi or mobile data, " +
-                "and we can continue our conversation once you're back online.",
-                isUser = false
-            ))
-            return
-        }
-
-        if (!apiAvailable || psychRepository == null) {
-            // Try to reconnect in background
-            lifecycleScope.launch {
-                Log.d(TAG, "API not available, attempting reconnect...")
-                initPsychApi()
-            }
-            addMessage(ChatMessage(
-                "I'm connecting to my server... Please try sending your message again in a moment.",
-                isUser = false
-            ))
-            return
-        }
-
-        setLoading(true)
-        etChatInput.isEnabled = false
-
+    /**
+     * Observe ViewModel state and update UI reactively.
+     * Uses repeatOnLifecycle for proper lifecycle-aware collection.
+     */
+    private fun observeViewModel() {
         lifecycleScope.launch {
-            try {
-                when (val result = psychRepository!!.sendMessage(text, psychSessionId)) {
-                    is PsychResult.Success -> {
-                        val resp = result.data
-                        if (resp.sessionId.isNotEmpty()) {
-                            psychSessionId = resp.sessionId
-                        }
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.uiState.collect { state ->
+                    // Update messages list
+                    val hadMessages = messages.isNotEmpty()
+                    messages.clear()
+                    messages.addAll(state.messages)
+                    adapter.notifyDataSetChanged()
 
-                        val responseText = resp.response.ifEmpty { "I'm processing your message..." }
-                        addMessage(ChatMessage(responseText, isUser = false))
-
-                        @Suppress("SENSELESS_COMPARISON")
-                        if (resp.safety != null && resp.safety.isCrisis) {
-                            Toast.makeText(
-                                this@OrynActivity,
-                                "Crisis resources are available. Please reach out for help.",
-                                Toast.LENGTH_LONG
-                            ).show()
-                        }
-
-                        @Suppress("SENSELESS_COMPARISON")
-                        val domain = if (resp.analysis != null) resp.analysis.domain else "unknown"
-                        @Suppress("SENSELESS_COMPARISON")
-                        val phase = if (resp.analysis != null) resp.analysis.phase else "unknown"
-                        @Suppress("SENSELESS_COMPARISON")
-                        val latency = if (resp.metrics != null) resp.metrics.latencyMs else 0
-                        Log.d(TAG, "Domain: $domain, Phase: $phase, Latency: ${latency}ms")
+                    // Auto-scroll to bottom when new messages arrive
+                    if (messages.isNotEmpty()) {
+                        recyclerView.scrollToPosition(messages.size - 1)
                     }
-                    is PsychResult.Error -> {
-                        Log.e(TAG, "API error (code ${result.code}): ${result.message}")
 
-                        // If 401 Unauthorized, try to re-authenticate and retry
-                        if (result.code == 401) {
-                            Log.d(TAG, "Got 401, attempting re-authentication...")
-                            val reAuthOk = autoAuthenticate()
-                            if (reAuthOk) {
-                                // Retry the message
-                                when (val retryResult = psychRepository!!.sendMessage(text, psychSessionId)) {
-                                    is PsychResult.Success -> {
-                                        val resp = retryResult.data
-                                        if (resp.sessionId.isNotEmpty()) psychSessionId = resp.sessionId
-                                        addMessage(ChatMessage(resp.response.ifEmpty { "I'm processing..." }, isUser = false))
-                                        setLoading(false)
-                                        etChatInput.isEnabled = true
-                                        return@launch
-                                    }
-                                    else -> {
-                                        Log.e(TAG, "Retry after re-auth also failed")
-                                    }
+                    // Show greeting if first load with no messages
+                    if (!hadMessages && state.messages.isEmpty() && !state.isConnecting) {
+                        // Add initial greeting (not persisted — just UI decoration)
+                    }
+
+                    // Loading state
+                    progressBar?.visibility = if (state.isLoading) View.VISIBLE else View.GONE
+                    etChatInput.isEnabled = !state.isLoading && !state.isConnecting
+
+                    // Crisis alert
+                    if (state.isCrisisActive) {
+                        Toast.makeText(
+                            this@OrynActivity,
+                            "Crisis resources are available. Please reach out for help.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    // Error handling
+                    state.error?.let { error ->
+                        Toast.makeText(this@OrynActivity, error, Toast.LENGTH_SHORT).show()
+                        viewModel.clearError()
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Upgraded ChatAdapter that works with ChatMessageEntity from Room DB.
+ * Supports persistent messages with rich metadata.
+ */
+class OrynChatAdapter(
+    private val messages: List<ChatMessageEntity>,
+    private val database: AppDatabase
+) : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
+
+    companion object {
+        private const val VIEW_TYPE_USER = 1
+        private const val VIEW_TYPE_ORYN = 2
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return if (messages[position].isUser) VIEW_TYPE_USER else VIEW_TYPE_ORYN
+    }
+
+    override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): RecyclerView.ViewHolder {
+        val inflater = android.view.LayoutInflater.from(parent.context)
+        return if (viewType == VIEW_TYPE_USER) {
+            val view = inflater.inflate(R.layout.item_chat_user, parent, false)
+            UserViewHolder(view)
+        } else {
+            val view = inflater.inflate(R.layout.item_chat_oryn, parent, false)
+            OrynViewHolder(view)
+        }
+    }
+
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+        val message = messages[position]
+        if (holder is UserViewHolder) holder.bind(message)
+        else if (holder is OrynViewHolder) holder.bind(message)
+    }
+
+    override fun getItemCount(): Int = messages.size
+
+    inner class UserViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvMessage: android.widget.TextView = itemView.findViewById(R.id.tvUserMessage)
+        private val ivAvatar: ImageView = itemView.findViewById(R.id.ivUserAvatar)
+        private var avatarJob: kotlinx.coroutines.Job? = null
+
+        fun bind(message: ChatMessageEntity) {
+            tvMessage.text = message.content
+
+            avatarJob?.cancel()
+            avatarJob = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                try {
+                    val user = database.userDao().getUser().firstOrNull()
+                    user?.profileImagePath?.let { path ->
+                        val file = java.io.File(path)
+                        if (file.exists()) {
+                            kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                                ivAvatar.clearColorFilter()
+                                ivAvatar.load(file) {
+                                    transformations(coil.transform.CircleCropTransformation())
                                 }
                             }
                         }
-
-                        addMessage(ChatMessage(
-                            "I had trouble processing that. Could you try again? " +
-                            "I want to make sure I understand you correctly.",
-                            isUser = false
-                        ))
                     }
-                    is PsychResult.Loading -> { /* Already showing loading */ }
-                }
-            } catch (e: Exception) {
-                Log.e(TAG, "Unexpected error in sendToPsychApi", e)
-                addMessage(ChatMessage(
-                    "Something went wrong on my end. Please try again in a moment.",
-                    isUser = false
-                ))
+                } catch (_: Exception) { }
             }
-
-            setLoading(false)
-            etChatInput.isEnabled = true
-            etChatInput.requestFocus()
         }
     }
 
-    private fun isNetworkAvailable(): Boolean {
-        val cm = getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
-        val network = cm.activeNetwork ?: return false
-        val caps = cm.getNetworkCapabilities(network) ?: return false
-        return caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
-    }
+    inner class OrynViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        private val tvMessage: android.widget.TextView = itemView.findViewById(R.id.tvOrynMessage)
 
-    private fun setLoading(loading: Boolean) {
-        progressBar?.visibility = if (loading) View.VISIBLE else View.GONE
-    }
-
-    private fun addMessage(message: ChatMessage) {
-        messages.add(message)
-        adapter.notifyItemInserted(messages.size - 1)
-        recyclerView.scrollToPosition(messages.size - 1)
+        fun bind(message: ChatMessageEntity) {
+            tvMessage.text = message.content
+        }
     }
 }
+
+// Keep the old ChatMessage class for backward compat with other usages
+data class ChatMessage(val text: String, val isUser: Boolean)
