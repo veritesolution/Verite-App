@@ -121,18 +121,17 @@
         </LinearLayout>
     </ScrollView>
 
-    <Button
+    <androidx.appcompat.widget.AppCompatButton
         android:id="@+id/btnGenerate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/primary_teal"
+        android:background="@drawable/bg_scifi_button"
         android:text="Generate Recovery Plan"
-        android:textColor="@color/text_primary"
+        android:textColor="@color/accent_bright"
         android:textStyle="bold"
-        android:fontFamily="sans-serif-light"
-        android:letterSpacing="0.05"
+        android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.1"
         android:padding="16dp"
-        app:cornerRadius="12dp"
         app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
