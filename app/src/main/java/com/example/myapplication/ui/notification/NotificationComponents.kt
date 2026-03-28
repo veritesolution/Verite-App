@@ -162,7 +162,7 @@ fun NotificationPanel(
             }
         }
 
-        Divider(color = AccentPrimary.copy(alpha = 0.12f), thickness = 0.5.dp)
+        HorizontalDivider(color = AccentPrimary.copy(alpha = 0.12f), thickness = 0.5.dp)
 
         // ── Notification List ───────────────────────────────
         if (notifications.isEmpty()) {
@@ -216,7 +216,7 @@ fun NotificationPanel(
 
         // ── Footer ──────────────────────────────────────────
         if (notifications.isNotEmpty()) {
-            Divider(color = AccentPrimary.copy(alpha = 0.12f), thickness = 0.5.dp)
+            HorizontalDivider(color = AccentPrimary.copy(alpha = 0.12f), thickness = 0.5.dp)
             TextButton(
                 onClick = onClearAll,
                 modifier = Modifier

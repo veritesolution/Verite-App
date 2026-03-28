@@ -11,6 +11,7 @@ import com.example.myapplication.data.model.ChatSession
 import com.example.myapplication.data.remote.PsychNetworkModule
 import com.example.myapplication.data.repository.ApiMessageResult
 import com.example.myapplication.data.repository.ChatRepository
+import com.example.myapplication.data.repository.NotificationHelper
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -199,6 +200,7 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
             "It looks like you're offline right now. I can't connect to my server, " +
                 "but I want you to know I'm here. Try checking your WiFi or mobile data."
         )
+        NotificationHelper.onNetworkLost(getApplication())
     }
 
     private suspend fun addServerDownResponse() {
@@ -207,6 +209,7 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
             session.id,
             "I'm connecting to my server... Please try sending your message again in a moment."
         )
+        NotificationHelper.onServerDown(getApplication())
     }
 
     private suspend fun addErrorResponse() {
@@ -216,6 +219,7 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
             "I had trouble processing that. Could you try again? " +
                 "I want to make sure I understand you correctly."
         )
+        NotificationHelper.onApiError(getApplication(), "Oryn had trouble processing your message.")
     }
 
     // ═══════════════════════════════════════════════════════
@@ -257,6 +261,7 @@ class OrynChatViewModel(application: Application) : AndroidViewModel(application
             if (session != null && session.messageCount > 0) {
                 repository.generateSessionSummary(session.id)
                 repository.endSession(session.id)
+                NotificationHelper.onAiSessionComplete(getApplication(), session.title)
                 onComplete(session.id)
             } else {
                 onComplete(null)
