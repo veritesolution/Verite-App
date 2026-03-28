@@ -26,7 +26,9 @@ import com.example.myapplication.ui.components.BrandedHeader
 fun AnalyticsScreen(
     viewModel: DashboardViewModel,
     onBackClick: () -> Unit = {},
-    onProfileClick: () -> Unit = {}
+    onProfileClick: () -> Unit = {},
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {}
 ) {
     val streaks by viewModel.streakInfos.collectAsState()
     val clusters by viewModel.clusters.collectAsState()
@@ -42,7 +44,9 @@ fun AnalyticsScreen(
     Column(modifier = Modifier.fillMaxSize()) {
         com.example.myapplication.ui.components.VeriteTopBar(
             onBackClick = onBackClick,
-            onProfileClick = onProfileClick
+            onProfileClick = onProfileClick,
+            notificationCount = notificationCount,
+            onNotificationClick = onNotificationClick
         )
         LazyColumn(
             modifier = Modifier
