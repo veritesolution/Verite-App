@@ -229,6 +229,3 @@ class OrynChatAdapter(
         }
     }
 }
-
-// Keep the old ChatMessage class for backward compat with other usages
-data class ChatMessage(val text: String, val isUser: Boolean)
