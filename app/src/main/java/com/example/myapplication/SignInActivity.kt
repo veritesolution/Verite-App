@@ -143,7 +143,20 @@ class SignInActivity : AppCompatActivity() {
                 1f
             )
         }
+        // Apply official logo styling
+        com.example.myapplication.util.VeriteLogoHelper.applyLogoStyle(titleText)
         headerLayout.addView(titleText)
+
+        // Dummy view to push the title exactly to the center 
+        // by mirroring the back button's space on the right
+        val dummyView = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                dpToPx(48),
+                dpToPx(48)
+            )
+            visibility = View.INVISIBLE
+        }
+        headerLayout.addView(dummyView)
         
         // "Sign In" title
         val signInTitle = TextView(this).apply {

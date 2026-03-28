@@ -89,7 +89,7 @@ class SignUpActivity : AppCompatActivity() {
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
-            setBackgroundColor(Color.BLACK)
+            setBackgroundColor(Color.parseColor("#001A1A"))
         }
         
         // Header layout

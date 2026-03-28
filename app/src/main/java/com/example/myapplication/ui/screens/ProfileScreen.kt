@@ -62,6 +62,7 @@ fun ProfileScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .padding(horizontal = 24.dp, vertical = 24.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
@@ -147,24 +148,27 @@ fun ProfileScreen(
                     .size(110.dp)
                     .clip(CircleShape)
                     .border(2.dp, Color.White.copy(0.1f), CircleShape)
-                    .background(DarkBackground)
+                    .background(Color(0xFF0D1817))
 
-                if (!profileImagePath.isNullOrEmpty()) {
-                    try {
-                        val bitmap = BitmapFactory.decodeFile(profileImagePath)?.asImageBitmap()
-                        if (bitmap != null) {
-                            Image(
-                                bitmap = bitmap,
-                                contentDescription = "Profile Picture",
-                                modifier = avatarModifier,
-                                contentScale = ContentScale.Crop
-                            )
-                        } else {
-                            DefaultAvatar(avatarModifier)
+                val bitmap by remember(profileImagePath) {
+                    mutableStateOf(
+                        try {
+                            if (!profileImagePath.isNullOrEmpty()) {
+                                BitmapFactory.decodeFile(profileImagePath)?.asImageBitmap()
+                            } else null
+                        } catch (e: Exception) {
+                            null
                         }
-                    } catch (e: Exception) {
-                        DefaultAvatar(avatarModifier)
-                    }
+                    )
+                }
+
+                if (bitmap != null) {
+                    Image(
+                        bitmap = bitmap!!,
+                        contentDescription = "Profile Picture",
+                        modifier = avatarModifier,
+                        contentScale = ContentScale.Crop
+                    )
                 } else {
                     DefaultAvatar(avatarModifier)
                 }
@@ -238,7 +242,7 @@ fun ProfileScreen(
                 letterSpacing = 3.sp,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, bottom = 16.dp),
+                    .padding(start = 32.dp, end = 32.dp, bottom = 16.dp),
                 textAlign = androidx.compose.ui.text.style.TextAlign.Start
             )
 
@@ -270,7 +274,8 @@ fun ProfileScreen(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 24.dp, bottom = 48.dp)
+                    .navigationBarsPadding()
+                    .padding(start = 24.dp, end = 24.dp, bottom = 48.dp)
                     .clip(RoundedCornerShape(8.dp))
                     .background(
                         Brush.horizontalGradient(
