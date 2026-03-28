@@ -91,6 +91,13 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+
+    // 16KB page size support — fixes ANR on Android 15+ devices
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
@@ -125,7 +132,7 @@ dependencies {
     // Lifecycle ViewModel
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.4")
 
-    // Fix for 16KB Page Size Compatibility
+    // 16KB Page Size Compatibility fix
     implementation("androidx.graphics:graphics-path:1.0.1")
 
     // Coil for Image Loading
@@ -136,11 +143,12 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:32.7.2"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.android.gms:play-services-auth:21.0.0")
-    // SceneView for 3D Model Rendering
-    implementation("io.github.sceneview:sceneview:1.2.1")
 
-    // TensorFlow Lite
-    implementation("org.tensorflow:tensorflow-lite:2.14.0")
+    // NOTE: SceneView removed — it ships Filament native libs that are not 16KB aligned
+    // and was not used anywhere in the codebase. Re-add only if needed.
+
+    // TensorFlow Lite — updated to 2.16.1 for 16KB page alignment support
+    implementation("org.tensorflow:tensorflow-lite:2.16.1")
     implementation("org.tensorflow:tensorflow-lite-support:0.4.4") {
         exclude(group = "com.google.flatbuffers", module = "flatbuffers-java")
     }
@@ -157,25 +165,25 @@ dependencies {
     implementation("androidx.media3:media3-session:$media3Version")
     implementation("androidx.media3:media3-ui:$media3Version")
 
-    // ── Networking (Groq + Gemini API calls) ─────────────────────
+    // Networking
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation("com.squareup.retrofit2:converter-gson:2.11.0")
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
 
-    // ── JSON parsing ─────────────────────────────────────────────
+    // JSON parsing
     implementation("com.google.code.gson:gson:2.11.0")
 
-    // ── Coroutines ───────────────────────────────────────────────
+    // Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.4")
 
-    // ── Secure key storage (replaces BuildConfig keys) ──────────
+    // Secure key storage
     implementation("androidx.security:security-crypto:1.1.0-alpha06")
 
-    // ── PDF text extraction (replaces pdfplumber) ────────────────
+    // PDF text extraction
     implementation("com.tom-roush:pdfbox-android:2.0.27.0")
 
-    // ── DOCX text extraction (replaces python-docx) ──────────────
+    // DOCX text extraction
     implementation("org.apache.poi:poi-ooxml:5.2.5")
 }

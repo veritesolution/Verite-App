@@ -1,62 +1,64 @@
 // ═══════════════════════════════════════════════════════════════
-// Verite Psychologist API data classes
+// File: data/model/VeriteModels.kt
+// Verite API data classes for Kotlin/Android
+// Add to: app/src/main/java/com/yourapp/data/model/
 // ═══════════════════════════════════════════════════════════════
 
-package com.example.myapplication.data.model
+package com.yourapp.data.model
 
 import com.google.gson.annotations.SerializedName
 
 // ── Auth ─────────────────────────────────────────────────────
 
-data class PsychRegisterRequest(
+data class RegisterRequest(
     val username: String,
     val password: String,
     @SerializedName("display_name") val displayName: String? = null
 )
 
-data class PsychLoginRequest(
+data class LoginRequest(
     val username: String,
     val password: String
 )
 
-data class PsychTokenResponse(
+data class TokenResponse(
     @SerializedName("access_token") val accessToken: String,
     @SerializedName("refresh_token") val refreshToken: String,
     @SerializedName("token_type") val tokenType: String,
     @SerializedName("expires_in") val expiresIn: Int
 )
 
-data class PsychRefreshRequest(
+data class RefreshRequest(
     @SerializedName("refresh_token") val refreshToken: String
 )
 
 // ── Chat ─────────────────────────────────────────────────────
 
-data class PsychChatMessageRequest(
+data class ChatMessageRequest(
     val message: String,
     @SerializedName("session_id") val sessionId: String? = null
 )
 
-data class PsychChatMessageResponse(
-    @SerializedName("session_id") val sessionId: String = "",
-    val turn: Int = 0,
-    val response: String = "",
-    val safety: PsychSafetyInfo = PsychSafetyInfo(),
-    val analysis: PsychAnalysisInfo = PsychAnalysisInfo(),
-    val metrics: PsychMetricsInfo = PsychMetricsInfo(),
-    @SerializedName("debug_metrics") val debugMetrics: PsychDebugMetrics? = null,
-    val timestamp: String = ""
-)
-
-data class PsychCrisisResponse(
+data class ChatMessageResponse(
     @SerializedName("session_id") val sessionId: String,
-    @SerializedName("is_crisis") val isCrisis: Boolean,
-    val message: String,
-    val resources: List<PsychCrisisResource>,
+    val turn: Int,
+    val response: String,
+    val safety: SafetyInfo,
+    val analysis: AnalysisInfo,
+    val metrics: MetricsInfo,
+    @SerializedName("debug_metrics") val debugMetrics: DebugMetrics? = null,
     val timestamp: String
 )
 
-data class PsychSafetyInfo(
+data class CrisisResponse(
+    @SerializedName("session_id") val sessionId: String,
+    @SerializedName("is_crisis") val isCrisis: Boolean,
+    val message: String,
+    val resources: List<CrisisResource>,
+    val timestamp: String
+)
+
+data class SafetyInfo(
     @SerializedName("is_crisis") val isCrisis: Boolean = false,
     @SerializedName("crisis_method") val crisisMethod: String? = null,
     @SerializedName("toxicity_score") val toxicityScore: Float = 0f,
@@ -64,7 +66,7 @@ data class PsychSafetyInfo(
     @SerializedName("harmful_advice_blocked") val harmfulAdviceBlocked: Boolean = false
 )
 
-data class PsychAnalysisInfo(
+data class AnalysisInfo(
     val domain: String = "unknown",
     val phase: String = "intake",
     @SerializedName("emotional_intensity") val emotionalIntensity: Float = 0.5f,
@@ -73,7 +75,7 @@ data class PsychAnalysisInfo(
     val reasoning: String = ""
 )
 
-data class PsychMetricsInfo(
+data class MetricsInfo(
     @SerializedName("json_parsed_ok") val jsonParsedOk: Boolean = false,
     @SerializedName("input_tokens") val inputTokens: Int = 0,
     @SerializedName("output_tokens") val outputTokens: Int = 0,
@@ -81,7 +83,7 @@ data class PsychMetricsInfo(
     @SerializedName("provider_used") val providerUsed: String = ""
 )
 
-data class PsychDebugMetrics(
+data class DebugMetrics(
     @SerializedName("style_empathy_similarity") val styleEmpathySimilarity: Float = -1f,
     @SerializedName("style_therapeutic_similarity") val styleTherapeuticSimilarity: Float = -1f,
     @SerializedName("relevance_passed") val relevancePassed: Boolean = true,
@@ -89,26 +91,26 @@ data class PsychDebugMetrics(
     val note: String = ""
 )
 
-data class PsychCrisisResource(
-    val name: String = "",
-    val contact: String = "",
-    val type: String = "",
-    val available: String = ""
+data class CrisisResource(
+    val name: String,
+    val contact: String,
+    val type: String,
+    val available: String
 )
 
 // ── Session ──────────────────────────────────────────────────
 
-data class PsychSessionCreateResponse(
+data class SessionCreateResponse(
     @SerializedName("session_id") val sessionId: String,
     @SerializedName("created_at") val createdAt: String
 )
 
-data class PsychSessionListResponse(
-    val sessions: List<PsychSessionSummary>,
+data class SessionListResponse(
+    val sessions: List<SessionSummary>,
     val total: Int
 )
 
-data class PsychSessionSummary(
+data class SessionSummary(
     @SerializedName("session_id") val sessionId: String,
     @SerializedName("created_at") val createdAt: String,
     @SerializedName("turn_count") val turnCount: Int,
@@ -121,48 +123,46 @@ data class PsychSessionSummary(
 
 // ── Feedback ─────────────────────────────────────────────────
 
-data class PsychFeedbackRequest(
+data class FeedbackRequest(
     @SerializedName("session_id") val sessionId: String,
     val turn: Int,
     val rating: String,  // "helpful" or "not_helpful"
     val comment: String? = null
 )
 
-data class PsychFeedbackResponse(
+data class FeedbackResponse(
     val status: String
 )
 
 // ── Health ───────────────────────────────────────────────────
 
-data class PsychHealthResponse(
-    val status: String = "",
-    val version: String = "",
-    @SerializedName("llm_provider") val llmProvider: String = "",
-    @SerializedName("llm_available") val llmAvailable: Boolean = false,
-    @SerializedName("safety_checks") val safetyChecks: Map<String, String>? = null,
-    @SerializedName("rag_status") val ragStatus: Map<String, Any>? = null,
-    @SerializedName("uptime_seconds") val uptimeSeconds: Float = 0f
+data class HealthResponse(
+    val status: String,
+    val version: String,
+    @SerializedName("llm_provider") val llmProvider: String,
+    @SerializedName("llm_available") val llmAvailable: Boolean,
+    @SerializedName("uptime_seconds") val uptimeSeconds: Float
 )
 
 // ── WebSocket ────────────────────────────────────────────────
 
-data class PsychWSAuthMessage(
+data class WSAuthMessage(
     val token: String,
     @SerializedName("session_id") val sessionId: String? = null
 )
 
-data class PsychWSChatMessage(
+data class WSChatMessage(
     val type: String = "message",
     val content: String? = null
 )
 
-data class PsychWSResponse(
+data class WSResponse(
     val type: String,  // "response" | "crisis" | "error" | "session_created" | "pong"
     val content: String? = null,
     @SerializedName("session_id") val sessionId: String? = null,
-    val analysis: PsychAnalysisInfo? = null,
-    val safety: PsychSafetyInfo? = null,
-    val metrics: PsychMetricsInfo? = null,
-    val resources: List<PsychCrisisResource>? = null,
+    val analysis: AnalysisInfo? = null,
+    val safety: SafetyInfo? = null,
+    val metrics: MetricsInfo? = null,
+    val resources: List<CrisisResource>? = null,
     val error: String? = null
 )

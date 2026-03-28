@@ -4,6 +4,7 @@ import android.content.Intent
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Bundle
+import android.provider.Settings
 import android.util.Log
 import android.view.View
 import android.view.inputmethod.EditorInfo
@@ -55,12 +56,82 @@ class OrynActivity : AppCompatActivity() {
         addMessage(ChatMessage("Hello! I am Oryn, your AI mental wellness companion. How can I help you today?", isUser = false))
     }
 
+    /**
+     * Generate a stable device-based username for auto-registration
+     * with the Verite backend. Uses Android ID for uniqueness.
+     */
+    private fun getDeviceUsername(): String {
+        val androidId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        return "verite_${androidId?.take(12) ?: "default"}"
+    }
+
+    /**
+     * Auto-authenticate with the Verite production backend.
+     * Tries login first; if user doesn't exist, registers automatically.
+     * This is seamless — the user never sees a login screen for Oryn.
+     */
+    private suspend fun autoAuthenticate(): Boolean {
+        val repo = psychRepository ?: return false
+        val tokenManager = PsychNetworkModule.tokenManager
+
+        // If already logged in with valid tokens, skip auth
+        if (tokenManager.isLoggedIn) {
+            Log.d(TAG, "Already authenticated, skipping auto-auth")
+            return true
+        }
+
+        val username = getDeviceUsername()
+        val password = "verite_secure_${username}_2026"
+
+        // Try login first
+        when (val loginResult = repo.login(username, password)) {
+            is PsychResult.Success -> {
+                Log.i(TAG, "Auto-login successful for $username")
+                return true
+            }
+            is PsychResult.Error -> {
+                Log.d(TAG, "Login failed (${loginResult.message}), trying registration...")
+            }
+            else -> {}
+        }
+
+        // Login failed — try register (user might not exist yet)
+        when (val regResult = repo.register(username, password, "Verite User")) {
+            is PsychResult.Success -> {
+                Log.i(TAG, "Auto-registration successful for $username")
+                return true
+            }
+            is PsychResult.Error -> {
+                // If registration says "already exists", try login again
+                if (regResult.message.contains("exist", ignoreCase = true) ||
+                    regResult.message.contains("taken", ignoreCase = true) ||
+                    regResult.code == 400
+                ) {
+                    when (val retryLogin = repo.login(username, password)) {
+                        is PsychResult.Success -> {
+                            Log.i(TAG, "Retry login successful for $username")
+                            return true
+                        }
+                        else -> {
+                            Log.e(TAG, "Auto-auth completely failed for $username")
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Auto-registration failed: ${regResult.message}")
+                }
+            }
+            else -> {}
+        }
+
+        return false
+    }
+
     private fun initPsychApi() {
         try {
             PsychNetworkModule.init(this)
             psychRepository = PsychRepository()
 
-            // Check server health in background with retry
+            // Check server health, auto-authenticate, then mark API ready
             lifecycleScope.launch {
                 repeat(2) { attempt ->
                     if (!isNetworkAvailable()) {
@@ -71,12 +142,20 @@ class OrynActivity : AppCompatActivity() {
                     }
                     when (val result = psychRepository?.healthCheck()) {
                         is PsychResult.Success -> {
-                            Log.i(TAG, "Psychologist API online: ${result.data.version}")
-                            apiAvailable = true
+                            Log.i(TAG, "Verite API online: ${result.data.version} | LLM: ${result.data.llmProvider}")
+                            // Server is up — now auto-authenticate
+                            val authOk = autoAuthenticate()
+                            if (authOk) {
+                                apiAvailable = true
+                                Log.i(TAG, "Oryn fully connected and authenticated")
+                            } else {
+                                Log.w(TAG, "Server online but authentication failed")
+                                apiAvailable = true // Still allow unauthenticated health checks
+                            }
                             return@launch
                         }
                         is PsychResult.Error -> {
-                            Log.w(TAG, "Psychologist API unavailable (attempt ${attempt + 1}): ${result.message}")
+                            Log.w(TAG, "Verite API unavailable (attempt ${attempt + 1}): ${result.message}")
                             apiAvailable = false
                             if (attempt == 0) delay(2000)
                         }
@@ -88,7 +167,7 @@ class OrynActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Could not initialize Psychologist API", e)
+            Log.w(TAG, "Could not initialize Verite API", e)
             apiAvailable = false
         }
     }
@@ -159,11 +238,13 @@ class OrynActivity : AppCompatActivity() {
         }
 
         if (!apiAvailable || psychRepository == null) {
+            // Try to reconnect in background
+            lifecycleScope.launch {
+                Log.d(TAG, "API not available, attempting reconnect...")
+                initPsychApi()
+            }
             addMessage(ChatMessage(
-                "My server seems to be down at the moment. " +
-                "While I can't provide my full analysis right now, please know that " +
-                "it's okay to take a moment and breathe. I'll be fully available once " +
-                "the connection is restored.",
+                "I'm connecting to my server... Please try sending your message again in a moment.",
                 isUser = false
             ))
             return
@@ -202,7 +283,30 @@ class OrynActivity : AppCompatActivity() {
                         Log.d(TAG, "Domain: $domain, Phase: $phase, Latency: ${latency}ms")
                     }
                     is PsychResult.Error -> {
-                        Log.e(TAG, "API error: ${result.message}")
+                        Log.e(TAG, "API error (code ${result.code}): ${result.message}")
+
+                        // If 401 Unauthorized, try to re-authenticate and retry
+                        if (result.code == 401) {
+                            Log.d(TAG, "Got 401, attempting re-authentication...")
+                            val reAuthOk = autoAuthenticate()
+                            if (reAuthOk) {
+                                // Retry the message
+                                when (val retryResult = psychRepository!!.sendMessage(text, psychSessionId)) {
+                                    is PsychResult.Success -> {
+                                        val resp = retryResult.data
+                                        if (resp.sessionId.isNotEmpty()) psychSessionId = resp.sessionId
+                                        addMessage(ChatMessage(resp.response.ifEmpty { "I'm processing..." }, isUser = false))
+                                        setLoading(false)
+                                        etChatInput.isEnabled = true
+                                        return@launch
+                                    }
+                                    else -> {
+                                        Log.e(TAG, "Retry after re-auth also failed")
+                                    }
+                                }
+                            }
+                        }
+
                         addMessage(ChatMessage(
                             "I had trouble processing that. Could you try again? " +
                             "I want to make sure I understand you correctly.",
