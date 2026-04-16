@@ -30,7 +30,9 @@ import com.example.myapplication.ui.home.FeatureInfo
 fun HomeScreen(
     onBackClick: () -> Unit,
     onProfileClick: () -> Unit,
-    onFeatureClick: (com.example.myapplication.data.Feature) -> Unit
+    onFeatureClick: (com.example.myapplication.data.Feature) -> Unit,
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {}
 ) {
     var activeFeature by remember { mutableStateOf(featuresList[0]) }
 
@@ -42,7 +44,9 @@ fun HomeScreen(
         ) {
             TopBar(
                 onBackClick = onBackClick,
-                onProfileClick = onProfileClick
+                onProfileClick = onProfileClick,
+                notificationCount = notificationCount,
+                onNotificationClick = onNotificationClick
             )
 
             Spacer(modifier = Modifier.weight(1f))

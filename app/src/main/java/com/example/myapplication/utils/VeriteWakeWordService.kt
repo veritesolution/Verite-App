@@ -111,16 +111,31 @@ class VeriteWakeWordService : Service() {
         override fun onEvent(eventType: Int, params: Bundle?) {}
     }
 
+    /**
+     * Check for the wake word "Hey Vérité" with proper matching.
+     * Returns the command text AFTER the wake word, or null if no wake word detected.
+     */
     private fun checkForWakeWord(text: String): Boolean {
-        if (text.contains("verite") || text.contains("very") || text.contains("hey")) {
-            Log.i(TAG, "Wake-word DETECTED: $text")
-            triggerActivation()
+        // Must contain "verite" / "vérité" / "verity" (common misrecognitions)
+        val wakePatterns = listOf(
+            "hey verite", "hey vérité", "hey verity",
+            "a verite", "a vérité",   // common misheard "hey" as "a"
+            "verite", "vérité"        // direct name mention
+        )
+
+        val matchedPattern = wakePatterns.firstOrNull { text.contains(it) }
+        if (matchedPattern != null) {
+            Log.i(TAG, "Wake-word DETECTED: '$text' (matched: $matchedPattern)")
+
+            // Extract command after the wake word (e.g. "hey verite start my sleep" → "start my sleep")
+            val commandText = text.substringAfter(matchedPattern).trim()
+            triggerActivation(commandText.ifBlank { null })
             return true
         }
         return false
     }
 
-    private fun triggerActivation() {
+    private fun triggerActivation(commandText: String? = null) {
         // 1. Notify user with vibration
         val vibrator = if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
             val vibratorManager = getSystemService(android.os.VibratorManager::class.java)
@@ -136,10 +151,14 @@ class VeriteWakeWordService : Service() {
             vibrator.vibrate(200)
         }
 
-        // 2. Bring Activity to foreground or send broadcast
+        // 2. Bring Activity to foreground with voice activation
         val intent = Intent(this, MindSetActivity::class.java).apply {
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             putExtra("ACTIVATE_VOICE", true)
+            // Pass the command text if the user said "Hey Verite [command]"
+            if (!commandText.isNullOrBlank()) {
+                putExtra("VOICE_COMMAND", commandText)
+            }
         }
         startActivity(intent)
     }

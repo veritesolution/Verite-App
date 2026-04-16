@@ -14,6 +14,7 @@ import com.verite.tmr.DocumentTextExtractor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.example.myapplication.ui.components.VeriteAlert
 
 class LearningSessionActivity : AppCompatActivity() {
 
@@ -52,7 +53,7 @@ class LearningSessionActivity : AppCompatActivity() {
 
         // Study Materials button
         findViewById<LinearLayout>(R.id.btnStudyMaterials).setOnClickListener {
-            Toast.makeText(this, "Opening study materials...", Toast.LENGTH_SHORT).show()
+            VeriteAlert.info(this, "Opening study materials...")
         }
 
         // + button at bottom - goes back to TMR Feature Page
@@ -62,15 +63,15 @@ class LearningSessionActivity : AppCompatActivity() {
     }
 
     private fun processDocument(uri: Uri) {
-        Toast.makeText(this, "Extracting text...", Toast.LENGTH_SHORT).show()
+        VeriteAlert.info(this, "Extracting text...")
         lifecycleScope.launch {
             val extractedText = withContext(Dispatchers.IO) {
                 DocumentTextExtractor.extractText(this@LearningSessionActivity, uri)
             }
             if (extractedText.isNullOrBlank()) {
-                Toast.makeText(this@LearningSessionActivity, "Could not extract text from document.", Toast.LENGTH_LONG).show()
+                VeriteAlert.error(this@LearningSessionActivity, "Could not extract text from document.")
             } else {
-                Toast.makeText(this@LearningSessionActivity, "Text extracted (${extractedText.length} chars). Analyzing...", Toast.LENGTH_SHORT).show()
+                VeriteAlert.info(this@LearningSessionActivity, "Text extracted (${extractedText.length} chars). Analyzing...")
                 // Save for LearningSkillsActivity to reuse
                 getSharedPreferences("tmr_session", MODE_PRIVATE).edit()
                     .putString("last_processed_text", extractedText)

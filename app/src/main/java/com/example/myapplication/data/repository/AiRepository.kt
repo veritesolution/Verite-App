@@ -29,9 +29,9 @@ class AiRepository {
         }
         val client = OkHttpClient.Builder()
             .addInterceptor(logging)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(120, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(30, TimeUnit.SECONDS)
+            .readTimeout(180, TimeUnit.SECONDS)   // 21-day plan generation needs time
+            .writeTimeout(30, TimeUnit.SECONDS)
             .build()
 
         Retrofit.Builder()
@@ -42,9 +42,11 @@ class AiRepository {
             .create(AiApiService::class.java)
     }
 
-    private val PRIMARY_MODEL = "deepseek/deepseek-r1-0528:free"
-    private val SECONDARY_MODEL = "deepseek/deepseek-chat"
-    private val TERTIARY_MODEL = "mistralai/mistral-7b-instruct:free"
+    // Use reliable, fast free models — deepseek:free is a heavy reasoning model
+    // that is frequently rate-limited and returns empty responses
+    private val PRIMARY_MODEL   = "meta-llama/llama-3.1-8b-instruct:free"   // Fast, reliable
+    private val SECONDARY_MODEL = "google/gemma-2-9b-it:free"                 // Good fallback
+    private val TERTIARY_MODEL  = "mistralai/mistral-7b-instruct:free"        // Final fallback
     private val MAX_RETRIES = 2
     private val RETRY_DELAY = 1500L // milliseconds
 
@@ -148,8 +150,21 @@ class AiRepository {
         }
 
         // Final failure if all models failed
-        val failureMsg = "AI services are currently busy or unavailable. Please try again in a few minutes."
-        if (BuildConfig.DEBUG) Log.e(TAG, "All models failed. Emitting failure.")
+        val failureMsg = buildString {
+            append("Could not generate your plan right now. ")
+            if (lastError?.message?.contains("timeout", ignoreCase = true) == true ||
+                lastError?.message?.contains("SocketTimeoutException", ignoreCase = true) == true) {
+                append("The AI took too long to respond.")
+            } else if (lastError?.message?.contains("401", ignoreCase = true) == true ||
+                       lastError?.message?.contains("403", ignoreCase = true) == true) {
+                append("API key may have expired.")
+            } else if (lastError?.message?.contains("429", ignoreCase = true) == true) {
+                append("Service is rate limited — please wait 1 minute and try again.")
+            } else {
+                append("Please check your internet connection and try again.")
+            }
+        }
+        if (BuildConfig.DEBUG) Log.e(TAG, "All models failed. Last error: ${lastError?.message}")
         emit(Result.failure(Exception(failureMsg)))
     }
 

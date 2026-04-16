@@ -16,6 +16,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.util.VeriteLogoHelper
 import com.verite.tmr.*
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class StudyMaterialActivity : AppCompatActivity() {
 
@@ -691,7 +692,7 @@ class StudyMaterialActivity : AppCompatActivity() {
         scoreCard.addView(scoreInner)
         contentContainer.addView(scoreCard, 1) // Insert after title
 
-        Toast.makeText(this, "Score: $correct/${quiz.questions.size}", Toast.LENGTH_SHORT).show()
+        VeriteAlert.success(this, "Score: $correct/${quiz.questions.size}")
     }
 
     // ═════════════════════════════════════════════════════════════════

@@ -19,6 +19,7 @@ import com.example.myapplication.data.repository.DeviceRepository
 import com.example.myapplication.util.ProfileIconHelper
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class DeviceDashboardActivity : AppCompatActivity() {
 
@@ -41,7 +42,7 @@ class DeviceDashboardActivity : AppCompatActivity() {
         val fab = findViewById<FloatingActionButton>(R.id.fabAddDevice)
         fab.setOnClickListener {
             // Placeholder for "Add Device" feature
-            Toast.makeText(this, "Scanning for devices...", Toast.LENGTH_SHORT).show()
+            VeriteAlert.info(this, "Scanning for devices...")
         }
         val pulseAnimation = android.view.animation.AnimationUtils.loadAnimation(this, R.anim.anim_pulse)
         fab.startAnimation(pulseAnimation)

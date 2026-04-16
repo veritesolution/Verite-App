@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.DreamEntry
 import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import kotlinx.coroutines.flow.collect
@@ -80,7 +81,7 @@ class DreamJournalActivity : AppCompatActivity() {
                         database.dreamDao().insertDream(DreamEntry(title = title, content = content, mood = mood))
                     }
                 } else {
-                    Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
+                    VeriteAlert.warning(this, "Please fill all fields")
                 }
             }
             .setNegativeButton("Cancel", null)

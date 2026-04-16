@@ -28,6 +28,7 @@ import coil.compose.AsyncImage
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.User
 import com.example.myapplication.ui.components.TopBar
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import kotlinx.coroutines.Dispatchers
@@ -69,7 +70,7 @@ class EditProfileActivity : ComponentActivity() {
 
     private fun saveProfile(name: String, email: String, newUri: Uri?, currentUser: User?) {
         if (name.isBlank() || email.isBlank()) {
-            Toast.makeText(this, "Name and Email are required", Toast.LENGTH_SHORT).show()
+            VeriteAlert.warning(this, "Name and Email are required")
             return
         }
         
@@ -107,9 +108,9 @@ class EditProfileActivity : ComponentActivity() {
             )
 
             db.userDao().insertUser(updatedUser)
-            
+
             withContext(Dispatchers.Main) {
-                Toast.makeText(this@EditProfileActivity, "Profile Updated", Toast.LENGTH_SHORT).show()
+                VeriteAlert.success(this@EditProfileActivity, "Profile Updated")
                 finish()
             }
         }

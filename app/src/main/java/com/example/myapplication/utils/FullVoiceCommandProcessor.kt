@@ -77,7 +77,20 @@ object FullVoiceCommandProcessor {
      * Process voice input. Tries local parsing first; falls back to LLM if needed.
      */
     suspend fun process(input: String): FullCommandResult {
-        val text = input.lowercase().trim()
+        var text = input.lowercase().trim()
+
+        // Strip wake word prefix if present (e.g. "hey verite start sleep" → "start sleep")
+        val wakeWordPrefixes = listOf(
+            "hey verite ", "hey vérité ", "hey verity ",
+            "a verite ", "a vérité ",
+            "verite ", "vérité "
+        )
+        for (prefix in wakeWordPrefixes) {
+            if (text.startsWith(prefix)) {
+                text = text.removePrefix(prefix).trim()
+                break
+            }
+        }
 
         // 1. Try fast local matching first
         val localResult = parseLocal(text)
@@ -176,8 +189,12 @@ object FullVoiceCommandProcessor {
         }
 
         // ── SLEEP & SOUND ──
-        if (matchesAny(text, listOf("start sleep", "begin sleep", "sleep session", "going to sleep", "track my sleep"))) {
+        if (matchesAny(text, listOf("start sleep", "begin sleep", "sleep session", "going to sleep", "track my sleep", "start my sleep"))) {
             return FullCommandResult(FullIntent.START_SLEEP_SESSION, 0.9f)
+        }
+        // Also match when "start" and "sleep" both appear in the text (e.g. "start my sleep session")
+        if (text.contains("start") && text.contains("sleep")) {
+            return FullCommandResult(FullIntent.START_SLEEP_SESSION, 0.85f)
         }
         if (matchesAny(text, listOf("stop sleep", "end sleep", "wake up", "stop tracking"))) {
             return FullCommandResult(FullIntent.STOP_SLEEP_SESSION, 0.9f)

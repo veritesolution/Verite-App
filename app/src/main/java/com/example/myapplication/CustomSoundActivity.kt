@@ -12,6 +12,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
+import com.example.myapplication.ui.components.VeriteAlert
 
 class CustomSoundActivity : AppCompatActivity() {
 
@@ -185,7 +186,7 @@ class CustomSoundActivity : AppCompatActivity() {
             ).apply { cornerRadius = dpToPx(26).toFloat() }
             layoutParams = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, dpToPx(54))
             setOnClickListener {
-                Toast.makeText(this@CustomSoundActivity, "Custom sound generated! Playing... 🎵", Toast.LENGTH_SHORT).show()
+                VeriteAlert.success(this@CustomSoundActivity, "Custom sound generated! Playing... 🎵")
             }
         }
         root.addView(generateBtn)

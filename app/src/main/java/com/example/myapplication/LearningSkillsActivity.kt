@@ -6,6 +6,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.myapplication.ui.components.VeriteAlert
 
 class LearningSkillsActivity : AppCompatActivity() {
 
@@ -59,7 +60,7 @@ class LearningSkillsActivity : AppCompatActivity() {
 
     private fun launchStudyMaterial(text: String?, initialTab: String, featureName: String) {
         if (text.isNullOrBlank()) {
-            Toast.makeText(this, "Please upload a study document first from Study Material page", Toast.LENGTH_LONG).show()
+            VeriteAlert.warning(this, "Please upload a study document first from Study Material page")
             return
         }
         val intent = Intent(this, StudyMaterialActivity::class.java).apply {

@@ -34,6 +34,7 @@ import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class FocusSoundActivity : AppCompatActivity() {
 
@@ -52,7 +53,7 @@ class FocusSoundActivity : AppCompatActivity() {
             audioManager?.playSound(SoundType.FOCUS)
         } catch (e: Exception) {
             android.util.Log.e("FocusSound", "Audio init failed: ${e.message}")
-            Toast.makeText(this, "Audio playback unavailable", Toast.LENGTH_SHORT).show()
+            VeriteAlert.error(this, "Audio playback unavailable")
         }
 
         // Bio monitoring — optional, wrapped in try-catch

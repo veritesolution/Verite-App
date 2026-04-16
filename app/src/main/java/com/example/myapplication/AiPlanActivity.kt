@@ -8,12 +8,12 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
-import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import androidx.lifecycle.lifecycleScope
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.repository.AiRepository
 import com.example.myapplication.data.repository.RecoveryRepository
@@ -58,11 +58,19 @@ class AiPlanActivity : AppCompatActivity() {
             val resultScrollView = findViewById<View>(R.id.resultScrollView)
             val planContent = findViewById<TextView>(R.id.planContent)
             val btnSave = findViewById<Button>(R.id.btnSave)
+            val btnRetry = findViewById<Button>(R.id.btnRetry)
 
             findViewById<View>(R.id.backButton).setOnClickListener { finish() }
 
             findViewById<View>(R.id.profileIcon).setOnClickListener {
                 startActivity(Intent(this, ProfileActivity::class.java))
+            }
+
+            btnRetry.setOnClickListener {
+                btnRetry.visibility = View.GONE
+                loadingText.text = "Generating your personalized plan..."
+                loadingText.setTextColor(android.graphics.Color.parseColor("#888888"))
+                viewModel.generatePlan(ailmentType, frequency, trigger, duration, motivation)
             }
 
             // Start Generation
@@ -79,8 +87,11 @@ class AiPlanActivity : AppCompatActivity() {
                         is AiPlanState.Loading -> {
                             loadingSpinner.visibility = View.VISIBLE
                             loadingText.visibility = View.VISIBLE
+                            loadingText.text = "Generating your personalized plan..."
+                            loadingText.setTextColor(android.graphics.Color.parseColor("#888888"))
                             resultScrollView.visibility = View.GONE
                             btnSave.visibility = View.GONE
+                            btnRetry.visibility = View.GONE
                         }
 
                         is AiPlanState.Success -> {
@@ -88,6 +99,7 @@ class AiPlanActivity : AppCompatActivity() {
                             loadingText.visibility = View.GONE
                             resultScrollView.visibility = View.VISIBLE
                             btnSave.visibility = View.VISIBLE
+                            btnRetry.visibility = View.GONE
                             planContent.text = state.plan
                             currentPlanId = state.planId
                         }
@@ -95,13 +107,9 @@ class AiPlanActivity : AppCompatActivity() {
                         is AiPlanState.Error -> {
                             loadingSpinner.visibility = View.GONE
                             loadingText.visibility = View.VISIBLE
-                            loadingText.text = "Error: ${state.message}"
-                            loadingText.setTextColor(android.graphics.Color.RED)
-                            Toast.makeText(
-                                this@AiPlanActivity,
-                                "Plan generation failed",
-                                Toast.LENGTH_LONG
-                            ).show()
+                            loadingText.text = state.message
+                            loadingText.setTextColor(android.graphics.Color.parseColor("#FF6B6B"))
+                            btnRetry.visibility = View.VISIBLE
                             android.util.Log.e("AiPlanActivity", "UI Error State: ${state.message}")
                         }
                     }
@@ -137,26 +145,24 @@ class AiPlanActivity : AppCompatActivity() {
                                 intent.putExtra("PLAN_ID", currentPlanId)
                                 startActivity(intent)
                             } else {
-                                Toast.makeText(
+                                VeriteAlert.info(
                                     this@AiPlanActivity,
-                                    "Please wait for plan to save...",
-                                    Toast.LENGTH_SHORT
-                                ).show()
+                                    "Please wait for plan to save..."
+                                )
                             }
                         } catch (e: Exception) {
                             android.util.Log.e("AiPlanActivity", "Error saving plan", e)
-                            Toast.makeText(
+                            VeriteAlert.error(
                                 this@AiPlanActivity,
-                                "Failed to save plan: ${e.message}",
-                                Toast.LENGTH_LONG
-                            ).show()
+                                "Failed to save plan: ${e.message}"
+                            )
                         }
                     }
                 }
             }
         } catch (e: Exception) {
             android.util.Log.e("AiPlanActivity", "Crash in onCreate", e)
-            Toast.makeText(this, "Error initializing screen: ${e.message}", Toast.LENGTH_LONG).show()
+            VeriteAlert.error(this, "Error initializing screen: ${e.message}")
             finish()
         }
     }

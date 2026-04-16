@@ -286,7 +286,9 @@ fun AilmentDetailScreen(
                 Button(
                     onClick = {
                         if (reasonForStopping.isBlank()) {
-                            Toast.makeText(context, "Please enter why you want to stop", Toast.LENGTH_SHORT).show()
+                            (context as? android.app.Activity)?.let {
+                                com.example.myapplication.ui.components.VeriteAlert.warning(it, "Please enter why you want to stop")
+                            }
                             return@Button
                         }
                         

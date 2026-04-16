@@ -10,6 +10,7 @@ import com.example.myapplication.ui.screens.DailyProgressScreen
 import com.example.myapplication.ui.theme.VeriteTheme
 import com.example.myapplication.utils.TextCleaningUtils
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class DailyProgressActivity : ComponentActivity() {
 
@@ -18,7 +19,7 @@ class DailyProgressActivity : ComponentActivity() {
 
         val planId = intent.getLongExtra("PLAN_ID", -1L)
         if (planId == -1L) {
-            Toast.makeText(this, "Error: No plan ID provided", Toast.LENGTH_LONG).show()
+            VeriteAlert.error(this, "Error: No plan ID provided")
             finish()
             return
         }
@@ -45,20 +46,20 @@ class DailyProgressActivity : ComponentActivity() {
                                     startActivity(android.content.Intent(this@DailyProgressActivity, ProfileActivity::class.java))
                                 },
                                 onViewTaskClick = {
-                                    Toast.makeText(this@DailyProgressActivity, "Detailed tasks coming soon!", Toast.LENGTH_SHORT).show()
+                                    VeriteAlert.info(this@DailyProgressActivity, "Detailed tasks coming soon!")
                                 },
                                 onStartFocusSession = {
-                                    Toast.makeText(this@DailyProgressActivity, "Focus session starting...", Toast.LENGTH_SHORT).show()
+                                    VeriteAlert.info(this@DailyProgressActivity, "Focus session starting...")
                                 }
                             )
                         }
                     }
                 } else {
-                    Toast.makeText(this@DailyProgressActivity, "Error: Plan found in intent but not in DB (ID: $planId)", Toast.LENGTH_LONG).show()
+                    VeriteAlert.error(this@DailyProgressActivity, "Error: Plan found in intent but not in DB (ID: $planId)")
                     finish()
                 }
             } catch (e: Exception) {
-                Toast.makeText(this@DailyProgressActivity, "Error loading plan: ${e.message}", Toast.LENGTH_LONG).show()
+                VeriteAlert.error(this@DailyProgressActivity, "Error loading plan: ${e.message}")
                 e.printStackTrace()
                 finish()
             }

@@ -30,6 +30,7 @@ import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.data.auth.AuthManager
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.model.User
 import com.example.myapplication.data.repository.DeviceRepository
@@ -60,19 +61,19 @@ class SignInActivity : AppCompatActivity() {
                             when (e) {
                                 is FirebaseNetworkException -> {
                                     if (BuildConfig.DEBUG) {
-                                        Toast.makeText(this@SignInActivity, "Firebase unreachable — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                                        VeriteAlert.info(this@SignInActivity, "Firebase unreachable — entering offline dev mode")
                                         offlineDevLogin(account.email ?: "dev@verite.local")
                                     } else {
-                                        Toast.makeText(this@SignInActivity, "Cannot reach login server. Check your internet connection.", Toast.LENGTH_LONG).show()
+                                        VeriteAlert.error(this@SignInActivity, "Cannot reach login server. Check your internet connection.")
                                     }
                                 }
-                                else -> Toast.makeText(this@SignInActivity, "Google Sign In Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                else -> VeriteAlert.error(this@SignInActivity, "Google Sign In Failed: ${e.message}")
                             }
                         }
                     }
                 }
             } catch (e: ApiException) {
-                Toast.makeText(this, "Google Sign In Error: ${e.statusCode}", Toast.LENGTH_SHORT).show()
+                VeriteAlert.error(this, "Google Sign In Error: ${e.statusCode}")
             }
         }
     }
@@ -227,7 +228,7 @@ class SignInActivity : AppCompatActivity() {
                 marginEnd = dpToPx(8)
             }
             setOnClickListener {
-                 Toast.makeText(this@SignInActivity, "Facebook Login implementation pending App ID", Toast.LENGTH_SHORT).show()
+                 VeriteAlert.info(this@SignInActivity, "Facebook Login implementation pending App ID")
             }
         }
         socialButtonsLayout.addView(facebookButton)
@@ -379,28 +380,25 @@ class SignInActivity : AppCompatActivity() {
             setOnClickListener {
                 val email = emailInput.text.toString().trim()
                 if (email.isEmpty() || !Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                    Toast.makeText(
+                    VeriteAlert.warning(
                         this@SignInActivity,
-                        "Enter a valid email above to reset your password",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                        "Enter a valid email above to reset your password"
+                    )
                     return@setOnClickListener
                 }
 
                 lifecycleScope.launch {
                     val result = authManager.sendPasswordResetEmail(email)
                     result.onSuccess {
-                        Toast.makeText(
+                        VeriteAlert.success(
                             this@SignInActivity,
-                            "Password reset email sent",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                            "Password reset email sent"
+                        )
                     }.onFailure { e ->
-                        Toast.makeText(
+                        VeriteAlert.error(
                             this@SignInActivity,
-                            "Reset failed: ${e.message}",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                            "Reset failed: ${e.message}"
+                        )
                     }
                 }
             }
@@ -547,11 +545,10 @@ class SignInActivity : AppCompatActivity() {
 
                 if (email.isNotEmpty() && password.isNotEmpty()) {
                     if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-                        Toast.makeText(
+                        VeriteAlert.error(
                             this@SignInActivity,
-                            "Please enter a valid email address",
-                            Toast.LENGTH_SHORT
-                        ).show()
+                            "Please enter a valid email address"
+                        )
                         return@setOnClickListener
                     }
 
@@ -559,10 +556,10 @@ class SignInActivity : AppCompatActivity() {
                     if (!isNetworkAvailable()) {
                         if (BuildConfig.DEBUG) {
                             // Dev bypass — proceed offline so app features can still be tested
-                            Toast.makeText(this@SignInActivity, "No internet — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                            VeriteAlert.info(this@SignInActivity, "No internet — entering offline dev mode")
                             offlineDevLogin(email)
                         } else {
-                            Toast.makeText(this@SignInActivity, "No internet connection. Please check your WiFi or mobile data.", Toast.LENGTH_LONG).show()
+                            VeriteAlert.error(this@SignInActivity, "No internet connection. Please check your WiFi or mobile data.")
                         }
                         return@setOnClickListener
                     }
@@ -575,20 +572,20 @@ class SignInActivity : AppCompatActivity() {
                             when (e) {
                                 is FirebaseNetworkException -> {
                                     if (BuildConfig.DEBUG) {
-                                        Toast.makeText(this@SignInActivity, "Firebase unreachable — entering offline dev mode", Toast.LENGTH_SHORT).show()
+                                        VeriteAlert.info(this@SignInActivity, "Firebase unreachable — entering offline dev mode")
                                         offlineDevLogin(email)
                                     } else {
-                                        Toast.makeText(this@SignInActivity, "Cannot reach login server. Check your internet connection and try again.", Toast.LENGTH_LONG).show()
+                                        VeriteAlert.error(this@SignInActivity, "Cannot reach login server. Check your internet connection and try again.")
                                     }
                                 }
                                 else -> {
-                                    Toast.makeText(this@SignInActivity, "Login Failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                                    VeriteAlert.error(this@SignInActivity, "Login Failed: ${e.message}")
                                 }
                             }
                         }
                     }
                 } else {
-                     Toast.makeText(this@SignInActivity, "Please enter email and password", Toast.LENGTH_SHORT).show()
+                     VeriteAlert.warning(this@SignInActivity, "Please enter email and password")
                 }
             }
         }

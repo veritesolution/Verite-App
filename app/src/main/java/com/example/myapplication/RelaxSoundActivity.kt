@@ -39,6 +39,7 @@ import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class RelaxSoundActivity : AppCompatActivity() {
 
@@ -57,7 +58,7 @@ class RelaxSoundActivity : AppCompatActivity() {
             audioManager?.playSound(SoundType.RELAX)
         } catch (e: Exception) {
             android.util.Log.e("RelaxSound", "Audio init failed: ${e.message}")
-            Toast.makeText(this, "Audio playback unavailable", Toast.LENGTH_SHORT).show()
+            VeriteAlert.error(this, "Audio playback unavailable")
         }
 
         // Bio monitoring

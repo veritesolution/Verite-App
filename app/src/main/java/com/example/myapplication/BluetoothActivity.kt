@@ -32,6 +32,7 @@ import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.data.bluetooth.BluetoothLeManager
 import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.data.repository.DeviceRepository
+import com.example.myapplication.ui.components.VeriteAlert
 import kotlinx.coroutines.launch
 
 class BluetoothActivity : AppCompatActivity() {
@@ -52,7 +53,7 @@ class BluetoothActivity : AppCompatActivity() {
         if (allGranted) {
             startBluetoothDiscovery()
         } else {
-            Toast.makeText(this, "Permissions required for Bluetooth", Toast.LENGTH_SHORT).show()
+            VeriteAlert.warning(this, "Permissions required for Bluetooth")
         }
     }
 
@@ -243,7 +244,7 @@ class BluetoothActivity : AppCompatActivity() {
                         progressBarActive.visibility = View.GONE
                         // Sync with DB (Simulation: mark ID 1 as connected)
                         deviceRepository.updateConnectionStatus(1, true)
-                        Toast.makeText(this@BluetoothActivity, "Device Linked", Toast.LENGTH_SHORT).show()
+                        VeriteAlert.success(this@BluetoothActivity, "Device Linked")
                     }
                     BluetoothLeManager.ConnectionState.CONNECTING -> {
                         statusText.text = "Connecting..."

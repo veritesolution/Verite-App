@@ -1,5 +1,7 @@
 package com.example.myapplication.ui.components
 
+import android.graphics.BitmapFactory
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -8,17 +10,21 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.R
+import com.example.myapplication.data.local.AppDatabase
 import com.example.myapplication.ui.theme.AccentPrimary
 import com.example.myapplication.ui.theme.TextPrimary
 import com.example.myapplication.ui.theme.cormorantFamily
@@ -28,6 +34,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
 import com.example.myapplication.ui.notification.NotificationBell
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.withContext
+import java.io.File
 
 @Composable
 fun VeriteTopBar(
@@ -91,7 +101,7 @@ fun VeriteTopBar(
         // Right Section: Notification Bell + Profile Icon
         Row(
             modifier = Modifier.align(Alignment.CenterEnd),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             // Notification Bell
@@ -100,23 +110,63 @@ fun VeriteTopBar(
                 onClick = onNotificationClick
             )
 
-            // Profile Icon
-            Box(
+            // Profile Icon — loads actual user photo from DB
+            ProfileIconCompose(onClick = onProfileClick)
+        }
+    }
+}
+
+/**
+ * Profile icon that loads the user's actual profile photo from Room DB.
+ * Falls back to a bright, visible default icon if no photo is set.
+ */
+@Composable
+private fun ProfileIconCompose(onClick: () -> Unit) {
+    val context = LocalContext.current
+    var profileBitmap by remember { mutableStateOf<android.graphics.Bitmap?>(null) }
+
+    // Load user profile image from database
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            try {
+                val db = AppDatabase.getDatabase(context)
+                val user = db.userDao().getUser().firstOrNull()
+                user?.profileImagePath?.let { path ->
+                    val file = File(path)
+                    if (file.exists()) {
+                        profileBitmap = BitmapFactory.decodeFile(path)
+                    }
+                }
+            } catch (_: Exception) { }
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .size(38.dp)
+            .clip(CircleShape)
+            .background(Color(0xFF142824), CircleShape)
+            .border(1.5.dp, AccentPrimary, CircleShape)
+            .clickable { onClick() },
+        contentAlignment = Alignment.Center
+    ) {
+        if (profileBitmap != null) {
+            Image(
+                bitmap = profileBitmap!!.asImageBitmap(),
+                contentDescription = "Profile",
                 modifier = Modifier
-                    .size(40.dp)
-                    .background(Color(0xFF0F1B1B), CircleShape)
-                    .border(1.dp, Color(0xFF1C9C91), CircleShape)
-                    .clip(CircleShape)
-                    .clickable { onProfileClick() },
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_account),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color(180, 180, 180)
-                )
-            }
+                    .fillMaxSize()
+                    .clip(CircleShape),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            // Bright default icon — clearly visible on dark background
+            Icon(
+                painter = painterResource(id = R.drawable.ic_account),
+                contentDescription = "Profile",
+                modifier = Modifier.size(22.dp),
+                tint = Color.White
+            )
         }
     }
 }

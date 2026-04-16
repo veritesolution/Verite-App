@@ -32,6 +32,8 @@ fun TopBar(
     title: String? = null,
     onBackClick: () -> Unit,
     onProfileClick: () -> Unit,
+    notificationCount: Int = 0,
+    onNotificationClick: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -95,28 +97,40 @@ fun TopBar(
             )
         }
 
-        // Profile Icon with larger hit target
-        Box(
-            modifier = Modifier
-                .align(Alignment.CenterEnd)
-                .size(64.dp) // Larger hit area
-                .clickable { onProfileClick() },
-            contentAlignment = Alignment.Center
+        // Right Section: Notification and Profile
+        Row(
+            modifier = Modifier.align(Alignment.CenterEnd),
+            verticalAlignment = Alignment.CenterVertically
         ) {
+            // Notification Bell
+            com.example.myapplication.ui.notification.NotificationBell(
+                unreadCount = notificationCount,
+                onClick = onNotificationClick,
+                modifier = Modifier.padding(end = 4.dp)
+            )
+
+            // Profile Icon with larger hit target
             Box(
                 modifier = Modifier
-                    .size(41.dp) // Original visual size
-                    .background(Color(0xFF0F1B1B), CircleShape)
-                    .border(1.dp, Color(0xFF1C9C91), CircleShape)
-                    .clip(CircleShape),
+                    .size(64.dp) // Larger hit area
+                    .clickable { onProfileClick() },
                 contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    painter = androidx.compose.ui.res.painterResource(id = com.example.myapplication.R.drawable.ic_account),
-                    contentDescription = "Profile",
-                    modifier = Modifier.size(24.dp),
-                    tint = Color(180, 180, 180) // Grey icon
-                )
+                Box(
+                    modifier = Modifier
+                        .size(41.dp) // Original visual size
+                        .background(Color(0xFF0F1B1B), CircleShape)
+                        .border(1.dp, Color(0xFF1C9C91), CircleShape)
+                        .clip(CircleShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = androidx.compose.ui.res.painterResource(id = com.example.myapplication.R.drawable.ic_account),
+                        contentDescription = "Profile",
+                        modifier = Modifier.size(24.dp),
+                        tint = Color(180, 180, 180) // Grey icon
+                    )
+                }
             }
         }
     }

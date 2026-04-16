@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
 
@@ -40,7 +41,7 @@ class AilmentDetailActivity : AppCompatActivity() {
             val motivation = findViewById<EditText>(R.id.inputMotivation).text.toString()
 
             if (frequency.isBlank() || duration.isBlank() || trigger.isBlank() || motivation.isBlank()) {
-                Toast.makeText(this, "Please fill in all fields", Toast.LENGTH_SHORT).show()
+                VeriteAlert.warning(this, "Please fill in all fields")
                 return@setOnClickListener
             }
 

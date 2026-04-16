@@ -11,7 +11,7 @@ import com.example.myapplication.data.repository.BedtimeRepository
 import com.example.myapplication.ml.AnalyticsEngine
 import com.example.myapplication.ml.SentimentMoodTracker
 import android.util.Log
-import android.widget.Toast
+import com.example.myapplication.data.repository.NotificationRepository
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -158,12 +158,12 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                                         }
                                         refreshSnapshot()
                                         withContext(Dispatchers.Main) {
-                                            Toast.makeText(getApplication(), "AI Categorization Complete!", Toast.LENGTH_SHORT).show()
+                                            NotificationRepository.getInstance(getApplication()).pushSuccess("AI Complete", "Categorization finished successfully.")
                                         }
                                     } else {
                                         Log.e("DashboardViewModel", "AI returned valid JSON but no matching task IDs found!")
                                         withContext(Dispatchers.Main) {
-                                            Toast.makeText(getApplication(), "Failed to update categories. Try again.", Toast.LENGTH_SHORT).show()
+                                            NotificationRepository.getInstance(getApplication()).pushError("AI Error", "Failed to update categories. Try again.")
                                         }
                                     }
                                 }
@@ -171,7 +171,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
                         } else {
                             Log.e("DashboardViewModel", "Error fetching prioritization: ${response.code}")
                                 withContext(Dispatchers.Main) {
-                                    Toast.makeText(getApplication(), "AI Error: HTTP ${response.code}", Toast.LENGTH_SHORT).show()
+                                    NotificationRepository.getInstance(getApplication()).pushError("AI Error", "HTTP ${response.code}")
                                 }
                             }
                         }
@@ -180,7 +180,7 @@ class DashboardViewModel(application: Application) : AndroidViewModel(applicatio
             } catch (e: Exception) {
                 Log.e("DashboardViewModel", "Exception during auto prioritization", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(getApplication(), "AI Exception: ${e.message?.take(30)}", Toast.LENGTH_SHORT).show()
+                    NotificationRepository.getInstance(getApplication()).pushError("AI Exception", "${e.message?.take(50)}")
                 }
             } finally {
                 _isLoading.value = false

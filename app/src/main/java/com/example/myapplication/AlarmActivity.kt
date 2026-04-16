@@ -1,28 +1,32 @@
 package com.example.myapplication
 
-import android.app.TimePickerDialog
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.lifecycle.lifecycleScope
 import com.example.myapplication.data.local.AppDatabase
-import com.example.myapplication.data.model.Task
+import com.example.myapplication.data.repository.NotificationHelper
+import com.example.myapplication.data.repository.NotificationRepository
+import com.example.myapplication.ui.components.VeriteAlert
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
-import com.example.myapplication.TmrFeatureActivity
-import com.example.myapplication.TodoActivity
-import com.example.myapplication.DreamJournalActivity
-import com.example.myapplication.BioFeedbackActivity
-import com.example.myapplication.SleepDataActivity
-import com.example.myapplication.CustomSoundActivity
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import java.util.*
 
@@ -33,9 +37,14 @@ data class Alarm(
     var isActive: Boolean = true
 ) {
     val timeString: String
-        get() = String.format(Locale.getDefault(), "%02d:%02d", if (hour > 12) hour - 12 else if (hour == 0) 12 else hour, minute)
+        get() = String.format(
+            Locale.getDefault(), "%02d:%02d",
+            if (hour > 12) hour - 12 else if (hour == 0) 12 else hour, minute
+        )
     val amPm: String
         get() = if (hour >= 12) "PM" else "AM"
+    val displayTime: String
+        get() = "$timeString $amPm"
 }
 
 class AlarmActivity : AppCompatActivity() {
@@ -56,10 +65,11 @@ class AlarmActivity : AppCompatActivity() {
         setupDashboard()
         updateTodoPreview()
         updateNextAlarmDisplay()
+        setupNotificationBell()
 
         findViewById<ImageView>(R.id.backButton).setOnClickListener { finish() }
         findViewById<ImageView>(R.id.profileIcon).setOnClickListener {
-            startActivity(android.content.Intent(this, ProfileActivity::class.java))
+            startActivity(Intent(this, ProfileActivity::class.java))
         }
 
         findViewById<View>(R.id.fabAddAlarm).setOnClickListener {
@@ -67,30 +77,96 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    // ── Notification Bell ───────────────────────────────────
+
+    private fun setupNotificationBell() {
+        val bellContainer = findViewById<FrameLayout>(R.id.notificationBellContainer)
+        val badge = findViewById<TextView>(R.id.notificationBadge)
+        val notificationOverlay = findViewById<ComposeView>(R.id.notificationPanelOverlay)
+
+        val notifRepo = NotificationRepository.getInstance(this)
+
+        // Observe unread count
+        lifecycleScope.launch {
+            notifRepo.unreadCount.collectLatest { count ->
+                if (count > 0) {
+                    badge.text = if (count > 99) "99+" else count.toString()
+                    badge.visibility = View.VISIBLE
+                } else {
+                    badge.visibility = View.GONE
+                }
+            }
+        }
+
+        // Wire the bell to toggle the in-page notification panel
+        bellContainer.setOnClickListener {
+            if (notificationOverlay.visibility == View.VISIBLE) {
+                notificationOverlay.visibility = View.GONE
+            } else {
+                notificationOverlay.visibility = View.VISIBLE
+                notificationOverlay.setContent {
+                    com.example.myapplication.ui.theme.VeriteTheme {
+                        val notifications by notifRepo.allNotifications
+                            .collectAsState(initial = emptyList())
+
+                        androidx.compose.foundation.layout.Box(
+                            modifier = androidx.compose.ui.Modifier
+                                .fillMaxSize()
+                                .clickable { notificationOverlay.visibility = View.GONE }
+                        ) {
+                            com.example.myapplication.ui.notification.NotificationPanel(
+                                notifications = notifications,
+                                onMarkAllRead = {
+                                    lifecycleScope.launch { notifRepo.markAllAsRead() }
+                                },
+                                onClearAll = {
+                                    lifecycleScope.launch { notifRepo.clearAll() }
+                                    notificationOverlay.visibility = View.GONE
+                                },
+                                onNotificationClick = { notif ->
+                                    lifecycleScope.launch { notifRepo.markAsRead(notif.id) }
+                                },
+                                onDismiss = { id ->
+                                    lifecycleScope.launch { notifRepo.delete(id) }
+                                },
+                                onClose = {
+                                    notificationOverlay.visibility = View.GONE
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Dashboard Cards ─────────────────────────────────────
+
     private fun setupDashboard() {
         findViewById<View>(R.id.boxSleepData).setOnClickListener {
-            startActivity(android.content.Intent(this, SleepDataActivity::class.java))
+            startActivity(Intent(this, SleepDataActivity::class.java))
         }
         findViewById<View>(R.id.boxTmrFeature).setOnClickListener {
-            startActivity(android.content.Intent(this, TmrFeatureActivity::class.java))
+            startActivity(Intent(this, TmrFeatureActivity::class.java))
         }
         findViewById<View>(R.id.boxAdaptiveMusic).setOnClickListener {
-            startActivity(android.content.Intent(this, CustomSoundActivity::class.java))
+            startActivity(Intent(this, CustomSoundActivity::class.java))
         }
         findViewById<View>(R.id.boxTodoList).setOnClickListener {
-            startActivity(android.content.Intent(this, MindSetActivity::class.java))
+            startActivity(Intent(this, MindSetActivity::class.java))
         }
         findViewById<View>(R.id.boxMorningBrief).setOnClickListener {
-            startActivity(android.content.Intent(this, MorningBriefActivity::class.java))
+            startActivity(Intent(this, MorningBriefActivity::class.java))
         }
         findViewById<View>(R.id.boxBioFeedback).setOnClickListener {
-            startActivity(android.content.Intent(this, BioFeedbackActivity::class.java))
+            startActivity(Intent(this, BioFeedbackActivity::class.java))
         }
         findViewById<View>(R.id.boxAlarmSet).setOnClickListener {
-            // Maybe show a list of all alarms in a dialog or just use the FAB
             showTimePicker()
         }
     }
+
+    // ── Todo Preview ────────────────────────────────────────
 
     private fun updateTodoPreview() {
         val container = findViewById<LinearLayout>(R.id.todoPreviewContainer)
@@ -107,9 +183,10 @@ class AlarmActivity : AppCompatActivity() {
         }
     }
 
+    // ── Alarm Display ───────────────────────────────────────
+
     private fun updateNextAlarmDisplay() {
-        val activeAlarm = alarms.filter { it.isActive }.minByOrNull { 
-            // Simple logic for next alarm in 24h
+        val activeAlarm = alarms.filter { it.isActive }.minByOrNull {
             val now = Calendar.getInstance()
             val alarmTime = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, it.hour)
@@ -122,18 +199,20 @@ class AlarmActivity : AppCompatActivity() {
 
         activeAlarm?.let {
             val h = if (it.hour > 12) it.hour - 12 else if (it.hour == 0) 12 else it.hour
-            findViewById<TextView>(R.id.tvNextAlarmHour).text = String.format(Locale.getDefault(), "%02d", h)
-            findViewById<TextView>(R.id.tvNextAlarmMinute).text = String.format(Locale.getDefault(), "%02d", it.minute)
+            findViewById<TextView>(R.id.tvNextAlarmHour).text =
+                String.format(Locale.getDefault(), "%02d", h)
+            findViewById<TextView>(R.id.tvNextAlarmMinute).text =
+                String.format(Locale.getDefault(), "%02d", it.minute)
         }
     }
+
+    // ── Time Picker + Alarm Scheduling ──────────────────────
 
     @android.annotation.SuppressLint("InflateParams")
     private fun showTimePicker() {
         val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this)
         val view = layoutInflater.inflate(R.layout.dialog_apple_time_picker, null)
         dialog.setContentView(view)
-        
-        // Ensure background of bottom sheet is transparent so our custom rounded glass background shows well
         (view.parent as? View)?.setBackgroundColor(android.graphics.Color.TRANSPARENT)
 
         val timePicker = view.findViewById<android.widget.TimePicker>(R.id.appleTimePicker)
@@ -151,12 +230,89 @@ class AlarmActivity : AppCompatActivity() {
             val newAlarm = Alarm(hour = timePicker.hour, minute = timePicker.minute)
             alarms.add(newAlarm)
             saveAlarms()
+            scheduleAlarm(newAlarm)
             updateNextAlarmDisplay()
+
+            // Themed success alert (before dismiss to ensure activity is still valid)
+            VeriteAlert.success(this, "Alarm set for ${newAlarm.displayTime}")
+            NotificationHelper.onAlarmSet(this, newAlarm.displayTime)
+
             dialog.dismiss()
         }
 
         dialog.show()
     }
+
+    // ── AlarmManager Scheduling ─────────────────────────────
+
+    private fun scheduleAlarm(alarm: Alarm) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+
+        val intent = Intent(this, AlarmReceiver::class.java).apply {
+            putExtra(AlarmReceiver.EXTRA_ALARM_ID, alarm.id)
+            putExtra(AlarmReceiver.EXTRA_ALARM_HOUR, alarm.hour)
+            putExtra(AlarmReceiver.EXTRA_ALARM_MINUTE, alarm.minute)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, alarm.id.hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, alarm.hour)
+            set(Calendar.MINUTE, alarm.minute)
+            set(Calendar.SECOND, 0)
+            set(Calendar.MILLISECOND, 0)
+            if (before(Calendar.getInstance())) add(Calendar.DATE, 1)
+        }
+
+        try {
+            // Android 12+ (API 31) requires canScheduleExactAlarms() check
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                if (alarmManager.canScheduleExactAlarms()) {
+                    alarmManager.setExactAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                } else {
+                    // Fallback: use inexact alarm (still works, just less precise)
+                    alarmManager.setAndAllowWhileIdle(
+                        AlarmManager.RTC_WAKEUP,
+                        calendar.timeInMillis,
+                        pendingIntent
+                    )
+                    VeriteAlert.warning(this, "Grant exact alarm permission in Settings for precise alarms")
+                }
+            } else {
+                alarmManager.setExactAndAllowWhileIdle(
+                    AlarmManager.RTC_WAKEUP,
+                    calendar.timeInMillis,
+                    pendingIntent
+                )
+            }
+        } catch (e: SecurityException) {
+            // Fallback if exact alarm permission denied
+            alarmManager.set(
+                AlarmManager.RTC_WAKEUP,
+                calendar.timeInMillis,
+                pendingIntent
+            )
+            VeriteAlert.info(this, "Alarm set (approximate timing)")
+        }
+    }
+
+    private fun cancelAlarm(alarm: Alarm) {
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, AlarmReceiver::class.java)
+        val pendingIntent = PendingIntent.getBroadcast(
+            this, alarm.id.hashCode(), intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.cancel(pendingIntent)
+    }
+
+    // ── Persistence ─────────────────────────────────────────
 
     private fun saveAlarms() {
         val prefs = getSharedPreferences("VeriteAlarms", Context.MODE_PRIVATE)
@@ -172,6 +328,8 @@ class AlarmActivity : AppCompatActivity() {
             val savedAlarms: List<Alarm> = Gson().fromJson(json, type)
             alarms.clear()
             alarms.addAll(savedAlarms)
+            // Re-schedule all active alarms
+            alarms.filter { it.isActive }.forEach { scheduleAlarm(it) }
         }
     }
 }

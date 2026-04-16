@@ -107,9 +107,14 @@
             android:textColor="@color/white"
             android:textColorHint="#80FFFFFF"
             android:textSize="14sp"
-            android:maxLines="1"
+            android:maxLines="3"
+            android:minLines="1"
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:clickable="true"
+            android:cursorVisible="true"
             android:imeOptions="actionSend"
-            android:inputType="textCapSentences" />
+            android:inputType="textCapSentences|textMultiLine" />
 
         <ImageView
             android:id="@+id/btnCamera"

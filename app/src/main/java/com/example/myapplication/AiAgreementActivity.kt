@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.ui.platform.ComposeView
 import com.example.myapplication.ui.home.SkyBackground
 import com.example.myapplication.ui.theme.VeriteTheme
+import com.example.myapplication.ui.components.VeriteAlert
 
 class AiAgreementActivity : AppCompatActivity() {
 
@@ -22,7 +23,7 @@ class AiAgreementActivity : AppCompatActivity() {
         }
 
         findViewById<Button>(R.id.btnAccept).setOnClickListener {
-            Toast.makeText(this, "Plan Accepted! Good luck on your journey.", Toast.LENGTH_LONG).show()
+            VeriteAlert.success(this, "Plan Accepted! Good luck on your journey.")
                         // Get the plan ID from intent (should be passed from AiPlanActivity)
             val planId = intent.getLongExtra("PLAN_ID", -1L)
             

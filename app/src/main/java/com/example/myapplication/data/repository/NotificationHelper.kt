@@ -59,6 +59,31 @@ object NotificationHelper {
         )
     }
 
+    // ── Alarm Events ────────────────────────────────────────
+
+    fun onAlarmFired(context: Context, timeStr: String) {
+        repo(context).pushNotification(
+            title = "Alarm",
+            message = "Your alarm for $timeStr is ringing!",
+            type = NotificationType.SYSTEM
+        )
+    }
+
+    fun onAlarmSet(context: Context, timeStr: String) {
+        repo(context).pushSuccess(
+            title = "Alarm Set",
+            message = "Alarm scheduled for $timeStr."
+        )
+    }
+
+    fun onAlarmCancelled(context: Context, timeStr: String) {
+        repo(context).pushNotification(
+            title = "Alarm Cancelled",
+            message = "Alarm at $timeStr has been turned off.",
+            type = NotificationType.INFO
+        )
+    }
+
     // ── Error Events ────────────────────────────────────────
 
     fun onApiError(context: Context, detail: String) {

@@ -110,7 +110,8 @@ fun NotificationPanel(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .fillMaxHeight(0.75f)
+            .statusBarsPadding()
+            .fillMaxHeight(0.55f)
             .background(
                 brush = Brush.verticalGradient(
                     colors = listOf(

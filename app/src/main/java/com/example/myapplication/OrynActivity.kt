@@ -23,6 +23,7 @@ import com.example.myapplication.util.ProfileIconHelper
 import coil.load
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
+import com.example.myapplication.ui.components.VeriteAlert
 
 class OrynActivity : AppCompatActivity() {
 
@@ -106,6 +107,14 @@ class OrynActivity : AppCompatActivity() {
                 false
             }
         }
+
+        // Ensure EditText can receive focus and show keyboard when tapped
+        etChatInput.setOnClickListener {
+            etChatInput.isFocusableInTouchMode = true
+            etChatInput.requestFocus()
+            val imm = getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+            imm.showSoftInput(etChatInput, android.view.inputmethod.InputMethodManager.SHOW_IMPLICIT)
+        }
     }
 
     /**
@@ -132,22 +141,32 @@ class OrynActivity : AppCompatActivity() {
                         // Add initial greeting (not persisted — just UI decoration)
                     }
 
-                    // Loading state
-                    progressBar?.visibility = if (state.isLoading) View.VISIBLE else View.GONE
-                    etChatInput.isEnabled = !state.isLoading && !state.isConnecting
+                    // Loading state — keep input ALWAYS enabled for typing
+                    // Only show progress indicator while loading/connecting
+                    progressBar?.visibility = if (state.isLoading || state.isConnecting) View.VISIBLE else View.GONE
+                    // Never disable the EditText — users should always be able to type
+                    etChatInput.isEnabled = true
+
+                    // Update hint to show connection status
+                    if (state.isConnecting) {
+                        etChatInput.hint = "Connecting to Oryn..."
+                    } else if (state.isLoading) {
+                        etChatInput.hint = "Oryn is thinking..."
+                    } else {
+                        etChatInput.hint = "Write your message"
+                    }
 
                     // Crisis alert
                     if (state.isCrisisActive) {
-                        Toast.makeText(
+                        VeriteAlert.warning(
                             this@OrynActivity,
-                            "Crisis resources are available. Please reach out for help.",
-                            Toast.LENGTH_LONG
-                        ).show()
+                            "Crisis resources are available. Please reach out for help."
+                        )
                     }
 
                     // Error handling
                     state.error?.let { error ->
-                        Toast.makeText(this@OrynActivity, error, Toast.LENGTH_SHORT).show()
+                        VeriteAlert.error(this@OrynActivity, error)
                         viewModel.clearError()
                     }
                 }

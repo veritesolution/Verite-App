@@ -405,6 +405,21 @@
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Design.NoActionBar" />
 
+        <!-- Alarm Fired Fullscreen Activity (shows over lock screen) -->
+        <activity
+            android:name=".AlarmFiredActivity"
+            android:exported="false"
+            android:screenOrientation="portrait"
+            android:theme="@style/AppTheme"
+            android:showOnLockScreen="true"
+            android:turnScreenOn="true"
+            android:showWhenLocked="true" />
+
+        <!-- Alarm BroadcastReceiver -->
+        <receiver
+            android:name=".AlarmReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>
